@@ -67,7 +67,8 @@ The project's identity. The project does not need git; if it uses git, commit th
 
 - Local skills: the folder name inside `local/`, such as `db-migration`.
 - Remote skills: `<source>/<name>`, such as `anthropic/pdf`.
-- Collisions inside one source: `<source>/<plugin>/<name>`.
+- Collisions inside one source: `<source>/<plugin>/<name>`, or `<source>/<folder path>` when the skill has no plugin.
+- A skill at a repo's root is named after the source: `<source>/<source>`.
 
 ## Skills served in a project
 

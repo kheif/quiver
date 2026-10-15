@@ -48,7 +48,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK08](TASK08-library-local-skills.md) | Library (local skills) | TASK05 |
 | ✅ | [TASK09](TASK09-git-wrapper.md) | Git wrapper | TASK01 |
 | ✅ | [TASK10](TASK10-source-url-parsing.md) | Source URL parsing | — |
-|  | [TASK11](TASK11-skill-discovery.md) | Skill discovery | TASK05 |
+| ✅ | [TASK11](TASK11-skill-discovery.md) | Skill discovery | TASK05 |
 |  | [TASK12](TASK12-library-with-remote-sources.md) | Library with remote sources | TASK08, TASK11 |
 |  | [TASK13](TASK13-quiver-source-add-list-remove.md) | `quiver source add \| list \| remove` | TASK09, TASK10, TASK12 |
 |  | [TASK14](TASK14-quiver-add-quiver-remove.md) | `quiver add` / `quiver remove` | TASK07, TASK08 |
