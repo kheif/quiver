@@ -45,7 +45,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK08](TASK08-library-local-skills.md) | Library (local skills) | TASK05 |
+| ✅ | [TASK08](TASK08-library-local-skills.md) | Library (local skills) | TASK05 |
 |  | [TASK09](TASK09-git-wrapper.md) | Git wrapper | TASK01 |
 |  | [TASK10](TASK10-source-url-parsing.md) | Source URL parsing | — |
 |  | [TASK11](TASK11-skill-discovery.md) | Skill discovery | TASK05 |

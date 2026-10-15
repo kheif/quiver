@@ -128,10 +128,14 @@ task("TASK07", "Registry and assignments", "TASK02, TASK06", """
 phase("Phase 1 — Library and CLI")
 
 task("TASK08", "Library (local skills)", "TASK05", """
-1. `library.Load()` scans `~/.quiver/local/*/SKILL.md` and returns every skill with `Source = "local"` and `ID = name`.
+1. `library.Load()` scans `~/.quiver/local/*/SKILL.md` and returns every skill with `Source = "local"` and `ID = <folder name>` (see [data-model.md](data-model.md); folder names are unique, `name` values may not be).
 2. `library.Get(id)` returns the skill, or `ErrSkillNotFound` with "did you mean" suggestions based on edit distance.
 3. Invalid skills are reported as warnings and do not stop the scan.
 4. Design the API so remote sources can be plugged in later (TASK26) without changing callers.
+
+**Notes:**
+- A symlink inside `local/` is skipped without a warning, because `os.ReadDir` reports it as a file. If users link skills into `local/`, follow links that point to folders and warn about the rest.
+- `Library` is a snapshot. Long-running callers (the MCP server, TASK21) must call `Load` again after a change.
 
 **Done when:** Tests pass with a fixture library containing valid and invalid skills.
 """)
@@ -672,7 +676,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
