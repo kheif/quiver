@@ -40,6 +40,6 @@
 
 1. Opens `local/<name>/SKILL.md` in `$EDITOR`.
 2. After the editor closes, validates the skill and commits with the message `edit <name>`.
-3. For remote skills, refuses and suggests `fork` (TASK35).
+3. For remote skills, refuses through `library.CheckEditable` and suggests `fork` (TASK35).
 
 **Done when:** Create, assign and commit are tested for all three scopes. Duplicate names and path traversal are rejected.

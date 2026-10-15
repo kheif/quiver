@@ -175,7 +175,7 @@ task("TASK09", "`quiver new` and `quiver edit`", "TASK04, TASK07, TASK08", """
 
 1. Opens `local/<name>/SKILL.md` in `$EDITOR`.
 2. After the editor closes, validates the skill and commits with the message `edit <name>`.
-3. For remote skills, refuses and suggests `fork` (TASK34).
+3. For remote skills, refuses through `library.CheckEditable` and suggests `fork` (TASK34).
 
 **Done when:** Create, assign and commit are tested for all three scopes. Duplicate names and path traversal are rejected.
 """)
@@ -258,9 +258,10 @@ Check these, and report each one as `ok`, `warn` or `error`:
 2. `local/` is a git repo. Uncommitted changes are a warning.
 3. Every library skill passes validation.
 4. Every assigned ID exists in the library. An ID can go missing when a source is removed or a skill is renamed upstream.
-5. Projects whose paths all no longer exist on this machine are listed (they may still exist on another machine, so this is only a warning).
-6. Skill name clashes in the served set of any project.
-7. The MCP server is registered with Claude Code (`claude mcp get quiver`).
+5. Every source in `config.json` has its folder in `sources/`. The library only warns "not downloaded" when it is missing.
+6. Projects whose paths all no longer exist on this machine are listed (they may still exist on another machine, so this is only a warning).
+7. Skill name clashes in the served set of any project.
+8. The MCP server is registered with Claude Code (`claude mcp get quiver`).
 
 `--fix` applies the safe fixes: committing `local/` (after showing the changes) and unassigning missing IDs (after confirmation).
 
@@ -460,17 +461,21 @@ task("TASK25", "Skill discovery", "TASK05", """
 """)
 
 task("TASK26", "Library with remote sources", "TASK08, TASK25", """
-1. Extend `library.Load()` to run discovery on every source listed in the config.
-2. Remote skills get `Source = <name>` and `ID = <name>/<skill>`.
-3. Cache discovery results in `sources/<name>/.quiver-index.json`, keyed by the HEAD commit. Rescan only when HEAD changes.
-4. `edit` and `update_skill` refuse remote skills.
+1. Extend `library.Load()` to run discovery on every source listed in the config, in name order.
+2. Load each found folder with `skill.Load` and `skill.Validate`; problems become warnings, as for local skills.
+3. Remote skills get `Source = <name>` and `ID = <name>/<discovered ID>`.
+4. A source folder that is missing is a warning, not an error.
+5. Cache discovery results in `sources/<name>/.quiver-index.json`, keyed by the HEAD commit and an index version. Rescan only when either changes. A folder that is not a git repository is scanned every time.
+6. `library.CheckEditable` refuses remote skills with `ErrReadOnly`. `edit` and `update_skill` must call it.
 
 **Notes:**
-- `source.Discover` only finds folders. Load each one with `skill.Load` and `skill.Validate`, and turn problems into warnings as `addLocal` does.
 - IDs from discovery can hold slashes (`<plugin>/<name>` on collision), so a remote ID can have three parts. Code that splits IDs must split on the first `/` only.
+- Bump `indexVersion` whenever discovery rules change, or old caches keep the old result.
+- The index is an untracked file in the source's working tree. `git status` shows it, and an upstream file with the same name would block `git pull`. TASK28 must handle both.
+- `Load` now reads `config.json`, so a broken config fails every load, also for local skills.
 
 **Done when:**
-- `list` and `list_skills` show local and remote skills together.
+- `Library.All` returns local and remote skills together; `list` and `list_skills` build on it.
 - A second load uses the cache, verified by a test hook.
 """)
 
@@ -506,6 +511,7 @@ task("TASK28", "`quiver update`", "TASK27", """
 
 **Notes:**
 - Sources are shallow clones. After an upstream force-push, `--ff-only` fails and the old HEAD may be gone, so `DiffNames` cannot run. Offer a re-clone in that case.
+- Each source holds an untracked `.quiver-index.json` (TASK26). Do not treat it as a dirty tree, and never run `git clean`. If upstream adds a file with that name, delete the local one and pull again.
 
 **Done when:** A test pushes a change to a fixture bare repo, runs `update`, and `get_skill` returns the new content.
 """)
@@ -554,7 +560,7 @@ phase("Phase 5 — v2")
 
 task("TASK32", "`update_skill` MCP tool", "TASK19", """
 1. Input: `id`, and any of `description`, `body`, `files` (path to content; empty content deletes the file).
-2. Only local skills can be updated. For remote skills, return an error suggesting `fork`.
+2. Only local skills can be updated. Check with `library.CheckEditable`; for remote skills, return an error suggesting `fork`.
 3. Commit in `local/` with the message `update <name> (via MCP)`.
 4. The tool description asks the assistant to confirm the change with the user first.
 
@@ -708,7 +714,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

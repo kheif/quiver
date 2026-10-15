@@ -7,7 +7,7 @@
 **Depends on:** TASK24
 
 1. Input: `id`, and any of `description`, `body`, `files` (path to content; empty content deletes the file).
-2. Only local skills can be updated. For remote skills, return an error suggesting `fork`.
+2. Only local skills can be updated. Check with `library.CheckEditable`; for remote skills, return an error suggesting `fork`.
 3. Commit in `local/` with the message `update <name> (via MCP)`.
 4. The tool description asks the assistant to confirm the change with the user first.
 
