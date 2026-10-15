@@ -41,7 +41,7 @@ Assignments: which skills are global, and which projects get which skills.
 }
 ```
 
-`alwaysOn` lists skills whose content is sent in the MCP server's `instructions` at session start, so they apply from the first message. Every ID in an `alwaysOn` list must also be in the matching `global` or `skills` list.
+`alwaysOn` lists skills that apply from the first message. The MCP server's `instructions` name them and tell the assistant to load them with `get_skill` before its first reply. Every ID in an `alwaysOn` list must also be in the matching `global` or `skills` list.
 
 ## `<project>/.quiver.json`
 
