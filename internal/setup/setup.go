@@ -2,15 +2,13 @@
 package setup
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
+	"github.com/kheif/quiver/internal/git"
 	"github.com/kheif/quiver/internal/registry"
 )
 
@@ -94,13 +92,13 @@ func ensureJSON(path string, v any) ([]string, error) {
 func ensureLocalRepo(dir string) ([]string, error) {
 	var created []string
 	if _, err := os.Stat(filepath.Join(dir, ".git")); err != nil {
-		if err := git(dir, "init", "--quiet"); err != nil {
+		if err := git.Init(dir); err != nil {
 			return nil, err
 		}
 		created = append(created, filepath.Join(dir, ".git"))
 	}
-	if git(dir, "rev-parse", "--verify", "--quiet", "HEAD") == nil {
-		return created, nil // already has a commit
+	if git.HasCommit(dir) {
+		return created, nil
 	}
 	readme := filepath.Join(dir, "README.md")
 	if _, err := os.Stat(readme); err != nil {
@@ -109,26 +107,5 @@ func ensureLocalRepo(dir string) ([]string, error) {
 		}
 		created = append(created, readme)
 	}
-	if err := git(dir, "add", "README.md"); err != nil {
-		return created, err
-	}
-	return created, git(dir, "commit", "--quiet", "--no-verify", "-m", "Initialize Quiver skills")
-}
-
-// git runs a git command in dir. If the user has no git identity, commits
-// are made as "Quiver".
-func git(dir string, args ...string) error {
-	var pre []string
-	if out, _ := exec.Command("git", "config", "user.email").Output(); len(bytes.TrimSpace(out)) == 0 {
-		pre = []string{"-c", "user.name=Quiver", "-c", "user.email=quiver@localhost"}
-	}
-	cmd := exec.Command("git", append(append(pre, "-c", "commit.gpgsign=false"), args...)...)
-	cmd.Dir = dir
-	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("git %v: %w: %s", args, err, bytes.TrimSpace(stderr.Bytes()))
-	}
-	return nil
+	return created, git.Commit(dir, "Initialize Quiver skills", "README.md")
 }
