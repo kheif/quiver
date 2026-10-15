@@ -36,7 +36,7 @@ func Path() (string, error) {
 	return filepath.Join(home, "config.json"), nil
 }
 
-// Load reads config.json. A missing file gives the defaults.
+// Load reads and validates config.json. A missing file gives the defaults.
 func Load() (*Config, error) {
 	path, err := Path()
 	if err != nil {
@@ -51,6 +51,9 @@ func Load() (*Config, error) {
 	}
 	if c.Sources == nil {
 		c.Sources = map[string]Source{}
+	}
+	if err := c.Validate(); err != nil {
+		return nil, err
 	}
 	return c, nil
 }
@@ -76,6 +79,9 @@ func Update(fn func(*Config) error) error {
 }
 
 func write(c *Config) error {
+	if err := c.Validate(); err != nil {
+		return err
+	}
 	path, err := Path()
 	if err != nil {
 		return err
