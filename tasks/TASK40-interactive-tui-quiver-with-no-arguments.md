@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK34, TASK14
 
 Running `quiver` with no arguments in a terminal opens an interactive screen. Build it with Bubble Tea (`github.com/charmbracelet/bubbletea`, `bubbles` and `lipgloss`).

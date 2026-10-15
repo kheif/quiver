@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK12, TASK18
 
 1. Do a case-insensitive match on ID, name and description across the whole library.

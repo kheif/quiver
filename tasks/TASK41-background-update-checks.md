@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK40, TASK15
 
 Inside the TUI, check the remote sources for updates quietly, one at a time.

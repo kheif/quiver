@@ -2,6 +2,8 @@
 
 **Phase:** Phase 1 — Remote Sources
 
+**Status:** Todo
+
 **Depends on:** TASK01
 
 1. Provide `git.Clone(url, dir)`, `git.Pull(dir)`, `git.Fetch(dir)`, `git.Head(dir)`, `git.DiffNames(dir, from, to)`, `git.Diff(dir, from, to, paths)`, `git.Commit(dir, msg, paths)`.

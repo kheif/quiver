@@ -2,6 +2,8 @@
 
 **Phase:** Phase 1 — Remote Sources
 
+**Status:** Todo
+
 **Depends on:** —
 
 `source.Parse(input)` returns a clone URL and a suggested name:

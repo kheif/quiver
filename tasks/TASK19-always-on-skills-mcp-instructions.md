@@ -2,6 +2,8 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
+**Status:** Todo
+
 **Depends on:** TASK18, TASK14
 
 Some skills must be active from the first message, without the assistant deciding to load them. Caveman is the example: a communication style that applies to every answer. For these, Quiver puts a short pointer into the MCP server's `instructions`, and the assistant loads the skill with `get_skill` before its first reply.

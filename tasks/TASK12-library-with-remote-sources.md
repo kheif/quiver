@@ -2,6 +2,8 @@
 
 **Phase:** Phase 1 — Remote Sources
 
+**Status:** Todo
+
 **Depends on:** TASK08, TASK11
 
 1. Extend `library.Load()` to run discovery on every source listed in the config.

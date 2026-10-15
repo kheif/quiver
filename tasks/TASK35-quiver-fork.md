@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK12, TASK14
 
 1. `fork <source/skill> [--as <name>]` copies the skill into `local/<name>` and adds `forkedFrom: <id>@<commit>` to its frontmatter.

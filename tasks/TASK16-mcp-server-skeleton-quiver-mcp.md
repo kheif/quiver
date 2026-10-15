@@ -2,6 +2,8 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
+**Status:** Todo
+
 **Depends on:** TASK04, TASK08
 
 1. `quiver mcp` starts an MCP server on stdio using the official Go SDK.

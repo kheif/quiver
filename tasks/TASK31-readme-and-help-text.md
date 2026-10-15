@@ -2,6 +2,8 @@
 
 **Phase:** Phase 4 — v1 Release
 
+**Status:** Todo
+
 **Depends on:** TASK30
 
 1. Write a README with: what Quiver is, install, a 2-minute quickstart (`init` → `mcp install` → `new` → ask the assistant), the command reference, the MCP tool reference and a security note about remote sources.

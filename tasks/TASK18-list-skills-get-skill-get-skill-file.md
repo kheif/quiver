@@ -2,6 +2,8 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
+**Status:** Todo
+
 **Depends on:** TASK17
 
 **`list_skills`** (no input):

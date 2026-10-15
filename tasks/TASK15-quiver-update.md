@@ -2,6 +2,8 @@
 
 **Phase:** Phase 1 — Remote Sources
 
+**Status:** Todo
+
 **Depends on:** TASK13
 
 1. `update [<name>...]` runs `git pull --ff-only` for the given sources, or all of them.

@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** Todo
+
 **Depends on:** TASK02
 
 1. Define Go structs for `config.json` (see [data-model.md](data-model.md)).

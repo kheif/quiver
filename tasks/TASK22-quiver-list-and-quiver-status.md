@@ -2,6 +2,8 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
+**Status:** Todo
+
 **Depends on:** TASK07, TASK08
 
 **`list`:**

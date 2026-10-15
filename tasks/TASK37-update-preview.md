@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK15
 
 1. `update` fetches first, without merging.

@@ -2,6 +2,8 @@
 
 **Phase:** Phase 1 — Remote Sources
 
+**Status:** Todo
+
 **Depends on:** TASK09, TASK10, TASK12
 
 **`add <repo> [--name <n>]`:**

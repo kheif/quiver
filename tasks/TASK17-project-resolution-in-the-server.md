@@ -2,6 +2,8 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
+**Status:** Todo
+
 **Depends on:** TASK16, TASK06, TASK07
 
 The server must know which project it is serving. Resolve it once, at startup, because `instructions` (TASK18) are built before the first request:

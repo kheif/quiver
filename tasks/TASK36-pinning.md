@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK15
 
 1. `quiver pin <source/skill> [<commit>]` pins the skill to the current HEAD, or to the given commit.

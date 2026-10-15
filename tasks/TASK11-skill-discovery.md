@@ -2,6 +2,8 @@
 
 **Phase:** Phase 1 — Remote Sources
 
+**Status:** Todo
+
 **Depends on:** TASK05
 
 `discover.Find(repoDir)` returns the skill folders in a repository.

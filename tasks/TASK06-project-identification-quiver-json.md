@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** Todo
+
 **Depends on:** TASK02
 
 A project is identified by the `id` in its `.quiver.json` (see [data-model.md](data-model.md)).

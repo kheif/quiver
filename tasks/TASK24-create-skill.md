@@ -2,6 +2,8 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
+**Status:** Todo
+
 **Depends on:** TASK18, TASK23
 
 **Input:** `name`, `description`, `body` (markdown without frontmatter), optional `files` (map of relative path to text content), `scope` (`"project"` or `"global"`).

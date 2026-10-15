@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** ✅ Done
+
 **Depends on:** —
 
 1. Initialize the Go module: `go mod init github.com/kheif/quiver`.

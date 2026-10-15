@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK30
 
 1. `quiver sync init <git-remote>`: turns `~/.quiver` itself into a git repository that tracks `local/`, `config.json` and `registry.json`. `sources/` and `logs/` are ignored, because sources are re-cloned from the config.

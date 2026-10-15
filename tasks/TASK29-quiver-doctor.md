@@ -2,6 +2,8 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
+**Status:** Todo
+
 **Depends on:** TASK22, TASK27
 
 Check these, and report each one as `ok`, `warn` or `error`:

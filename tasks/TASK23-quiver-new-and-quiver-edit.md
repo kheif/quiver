@@ -2,6 +2,8 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
+**Status:** Todo
+
 **Depends on:** TASK04, TASK07, TASK08
 
 `new <name>` and the MCP tool `create_skill` (TASK24) share one function: `library.CreateLocal(name, description, body, files, scope, projectID)`.

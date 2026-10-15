@@ -2,6 +2,8 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
+**Status:** Todo
+
 **Depends on:** TASK07
 
 **`where <id>`:** Print `global` if applicable, then each project that has the skill, with its name and paths.

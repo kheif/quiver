@@ -2,6 +2,8 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
+**Status:** Todo
+
 **Depends on:** TASK23, TASK14
 
 Brings existing skills that are scattered across projects into the library.

@@ -2,6 +2,8 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
+**Status:** Todo
+
 **Depends on:** TASK18, TASK19
 
 The B01 spike (`spike/b01`, results in `docs/spike-b01-results.md`) answered the design questions with a throwaway server. Repeat its checks against the real `quiver mcp` before calling the first milestone done.

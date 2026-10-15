@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** Todo
+
 **Depends on:** TASK01
 
 1. `fsutil.QuiverHome()` returns `$QUIVER_HOME` if it is set, otherwise `~/.quiver`.

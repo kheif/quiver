@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** Todo
+
 **Depends on:** TASK02, TASK06
 
 1. Define Go structs for `registry.json` (see [data-model.md](data-model.md)).

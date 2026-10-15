@@ -666,6 +666,7 @@ flat = [tid for _, ids in ORDER for tid in ids]
 assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
+MARK = {"x": "✅", "~": "🚧"}
 STATUS = {"TASK01": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
@@ -683,8 +684,9 @@ for ptitle, tasks in PHASES:
     rows = []
     for tid, title, dep, body in tasks:
         fname = f"{tid}-{slug(title)}.md"
-        (OUT / fname).write_text(f"# {tid} — {title}\n\n**Phase:** {ptitle}\n\n**Depends on:** {dep}\n\n{body}\n")
-        rows.append(f"| [{STATUS.get(tid, ' ')}] | [{tid}]({fname}) | {title.replace('|', chr(92) + '|')} | {dep} |")
+        status = {"x": "✅ Done", "~": "🚧 In progress"}.get(STATUS.get(tid), "Todo")
+        (OUT / fname).write_text(f"# {tid} — {title}\n\n**Phase:** {ptitle}\n\n**Status:** {status}\n\n**Depends on:** {dep}\n\n{body}\n")
+        rows.append(f"| {MARK.get(STATUS.get(tid), '')} | [{tid}]({fname}) | {title.replace('|', chr(92) + '|')} | {dep} |")
     index.append(f"### {ptitle}\n\n| Status | Task | Title | Depends on |\n|---|---|---|---|\n" + "\n".join(rows))
 
 readme = """# Quiver — Implementation Tasks
@@ -698,7 +700,7 @@ This folder breaks [PROJECT.md](../PROJECT.md) into ordered tasks, one file per 
 
 ## Conventions
 
-- **Status** is tracked only in the index below: `[ ]` todo, `[~]` in progress, `[x]` done.
+- **Status** is set in `scripts/gen_tasks.py` (`STATUS`) and shown in the index below and at the top of each task: ✅ done, 🚧 in progress, empty for todo.
 - **Depends on:** tasks that must be finished first.
 - **Done when:** acceptance criteria. A task is not done until every item passes and has a test.
 - Every command needs unit tests. Every user-facing flow also needs an end-to-end test (see TASK30).

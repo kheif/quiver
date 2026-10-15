@@ -2,6 +2,8 @@
 
 **Phase:** Phase 4 — v1 Release
 
+**Status:** Todo
+
 **Depends on:** TASK31
 
 1. Set up GoReleaser for darwin/linux/windows on amd64 and arm64.

@@ -2,6 +2,8 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
+**Status:** Todo
+
 **Depends on:** TASK16
 
 Registers the server with assistants, so the user never edits MCP config by hand.

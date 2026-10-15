@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** Todo
+
 **Depends on:** TASK03
 
 1. Create `~/.quiver/`, `local/`, `sources/`, `config.json` and `registry.json`.

@@ -2,6 +2,8 @@
 
 **Phase:** Phase 5 — v2
 
+**Status:** Todo
+
 **Depends on:** TASK20
 
 1. Find out how Cursor, Claude Desktop, Codex and Gemini CLI register stdio MCP servers (config file path and format, or a CLI command).

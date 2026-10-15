@@ -2,6 +2,8 @@
 
 **Phase:** Phase 0 — Foundation
 
+**Status:** Todo
+
 **Depends on:** TASK01
 
 1. `skill.Load(dir)` reads `dir/SKILL.md` and parses its YAML frontmatter.
