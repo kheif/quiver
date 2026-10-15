@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kheif/quiver/internal/setup"
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +22,14 @@ func newRootCmd() *cobra.Command {
 		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		// Every command needs the Quiver home, so create it on first use.
+		PersistentPreRunE: func(*cobra.Command, []string) error {
+			return setup.EnsureInit()
+		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print more details")
 	cmd.SetVersionTemplate("quiver {{.Version}}\n")
+	cmd.AddCommand(newInitCmd())
 	return cmd
 }
 
