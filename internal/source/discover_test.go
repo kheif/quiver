@@ -128,3 +128,43 @@ func writeManifest(t *testing.T, root, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestDiscoverCollisions(t *testing.T) {
+	cases := map[string]struct {
+		skills   []Found
+		warnings []string
+	}{
+		"collide": {
+			skills: []Found{
+				{ID: "both/a/review", Dir: "both/a/review", Plugin: "both"},
+				{ID: "both/b/review", Dir: "both/b/review", Plugin: "both"},
+				{ID: "cli/lint", Dir: "cli/skills/lint", Plugin: "cli"},
+				{ID: "deploy", Dir: "web/skills/deploy", Plugin: "web"},
+				{ID: "web/lint", Dir: "web/skills/lint", Plugin: "web"},
+			},
+			warnings: []string{
+				`several skills are named "lint"; using IDs cli/lint, web/lint`,
+				`several skills are named "review"; using IDs both/a/review, both/b/review`,
+			},
+		},
+		"collide-plain": {
+			skills: []Found{
+				{ID: "backend/test", Dir: "backend/test"},
+				{ID: "docs", Dir: "docs"},
+				{ID: "frontend/test", Dir: "frontend/test"},
+			},
+			warnings: []string{`several skills are named "test"; using IDs backend/test, frontend/test`},
+		},
+	}
+	for repo, c := range cases {
+		t.Run(repo, func(t *testing.T) {
+			d := discover(t, filepath.Join("testdata", repo))
+			if !reflect.DeepEqual(d.Skills, c.skills) {
+				t.Errorf("got %+v", d.Skills)
+			}
+			if !reflect.DeepEqual(d.Warnings, c.warnings) {
+				t.Errorf("got %q", d.Warnings)
+			}
+		})
+	}
+}

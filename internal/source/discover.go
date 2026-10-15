@@ -40,6 +40,7 @@ func Discover(repoDir string) (*Discovery, error) {
 		f.ID = skillName(repoDir, f.Dir)
 		d.Skills = append(d.Skills, f)
 	}
+	d.qualifyCollisions()
 	sort.Slice(d.Skills, func(i, j int) bool { return d.Skills[i].ID < d.Skills[j].ID })
 	return d, nil
 }
@@ -62,6 +63,41 @@ func (d *Discovery) find(repoDir string) ([]Found, error) {
 		found[i] = Found{Dir: dir}
 	}
 	return found, err
+}
+
+// qualifyCollisions gives skills that share a name the ID <plugin>/<name>,
+// or their folder path when that is not unique either.
+func (d *Discovery) qualifyCollisions() {
+	var warnings []string
+	byID := map[string][]int{}
+	for i, f := range d.Skills {
+		byID[f.ID] = append(byID[f.ID], i)
+	}
+	for name, idx := range byID {
+		if len(idx) < 2 {
+			continue
+		}
+		ids := map[string]int{}
+		for _, i := range idx {
+			if f := d.Skills[i]; f.Plugin != "" {
+				ids[f.Plugin+"/"+f.ID]++
+			}
+		}
+		var used []string
+		for _, i := range idx {
+			f := &d.Skills[i]
+			if id := f.Plugin + "/" + f.ID; f.Plugin != "" && ids[id] == 1 {
+				f.ID = id
+			} else {
+				f.ID = f.Dir
+			}
+			used = append(used, f.ID)
+		}
+		sort.Strings(used)
+		warnings = append(warnings, fmt.Sprintf("several skills are named %q; using IDs %s", name, strings.Join(used, ", ")))
+	}
+	sort.Strings(warnings)
+	d.Warnings = append(d.Warnings, warnings...)
 }
 
 func (d *Discovery) warn(format string, args ...any) {

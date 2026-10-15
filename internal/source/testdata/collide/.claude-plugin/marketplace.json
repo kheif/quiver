@@ -1,0 +1,8 @@
+{
+  "name": "collide",
+  "plugins": [
+    {"name": "web", "source": "./web"},
+    {"name": "cli", "source": "./cli"},
+    {"name": "both", "source": "./both", "skills": ["./a/review", "./b/review"]}
+  ]
+}
