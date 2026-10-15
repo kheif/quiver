@@ -118,3 +118,15 @@ func (l *Library) addSkill(dir, source, id string) {
 	s.Source, s.ID = source, id
 	l.skills[id] = s
 }
+
+// ErrReadOnly matches the error CheckEditable returns for a remote skill.
+var ErrReadOnly = errors.New("skill is read-only")
+
+// CheckEditable returns an error unless s is a local skill. Remote skills
+// change only through "quiver update", so edits would be lost.
+func CheckEditable(s *skill.Skill) error {
+	if s.Source == LocalSource {
+		return nil
+	}
+	return fmt.Errorf("%w: %s comes from source %s; only local skills can be edited", ErrReadOnly, s.ID, s.Source)
+}

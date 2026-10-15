@@ -1,6 +1,7 @@
 package library
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -118,6 +119,25 @@ func TestLoadRemote(t *testing.T) {
 	for _, w := range []string{"skipped acme/bad", "source gone is not downloaded"} {
 		if !strings.Contains(all, w) {
 			t.Errorf("missing warning %q in\n%s", w, all)
+		}
+	}
+}
+
+func TestCheckEditable(t *testing.T) {
+	fixture(t)
+	remoteFixture(t)
+	l, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for id, editable := range map[string]bool{"pdf": true, "acme/pdf": false} {
+		s, err := l.Get(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = CheckEditable(s)
+		if (err == nil) != editable || (err != nil && !errors.Is(err, ErrReadOnly)) {
+			t.Errorf("%s: got %v", id, err)
 		}
 	}
 }
