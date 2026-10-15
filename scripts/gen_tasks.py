@@ -14,8 +14,8 @@ def task(tid, title, depends, body):
 phase("Phase 0 — Foundation")
 
 task("TASK01", "Repository setup", "—", """
-1. Initialize the Go module: `go mod init github.com/<owner>/quiver`.
-2. Create this layout:
+1. Initialize the Go module: `go mod init github.com/kheif/quiver`.
+2. Use this layout. Each package is created by the first task that needs it:
    ```
    cmd/quiver/main.go     # Entry point, only calls cli.Execute()
    internal/cli/          # One file per cobra command
@@ -31,12 +31,12 @@ task("TASK01", "Repository setup", "—", """
    ```
 3. Add a root `quiver` command with `--version` and a global `--verbose` flag.
 4. Add a `Makefile` with `build`, `test`, `lint` and `install` targets.
-5. Add GitHub Actions CI. It runs `go test ./...` and `golangci-lint` on macOS, Linux and Windows.
+5. CI is deferred until the project has a GitHub repository. Then add GitHub Actions that run `go test ./...` and `golangci-lint` on macOS, Linux and Windows.
 
 **Done when:**
 - `make build` produces `./bin/quiver`.
 - `quiver --version` prints the version.
-- CI passes on all three OSes.
+- `make test` and `make lint` pass.
 """)
 
 task("TASK02", "Paths, atomic writes and locking", "TASK01", """
@@ -666,6 +666,7 @@ flat = [tid for _, ids in ORDER for tid in ids]
 assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
+STATUS = {"TASK01": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
@@ -683,7 +684,7 @@ for ptitle, tasks in PHASES:
     for tid, title, dep, body in tasks:
         fname = f"{tid}-{slug(title)}.md"
         (OUT / fname).write_text(f"# {tid} — {title}\n\n**Phase:** {ptitle}\n\n**Depends on:** {dep}\n\n{body}\n")
-        rows.append(f"| [ ] | [{tid}]({fname}) | {title.replace('|', chr(92) + '|')} | {dep} |")
+        rows.append(f"| [{STATUS.get(tid, ' ')}] | [{tid}]({fname}) | {title.replace('|', chr(92) + '|')} | {dep} |")
     index.append(f"### {ptitle}\n\n| Status | Task | Title | Depends on |\n|---|---|---|---|\n" + "\n".join(rows))
 
 readme = """# Quiver — Implementation Tasks
