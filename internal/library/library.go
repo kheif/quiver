@@ -13,7 +13,6 @@ import (
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
 	"github.com/kheif/quiver/internal/skill"
-	"github.com/kheif/quiver/internal/source"
 )
 
 // LocalSource is the Source of the user's own skills.
@@ -90,7 +89,7 @@ func (l *Library) addRemote(dir, name string) error {
 		l.Warnings = append(l.Warnings, fmt.Sprintf("source %s is not downloaded; add it again", name))
 		return nil
 	}
-	d, err := source.Discover(dir)
+	d, err := discover(dir)
 	if err != nil {
 		return fmt.Errorf("source %s: %w", name, err)
 	}

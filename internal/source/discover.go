@@ -15,18 +15,18 @@ import (
 // Found is one skill folder inside a source repository.
 type Found struct {
 	// ID is unique inside the source, without the "<source>/" prefix.
-	ID string
+	ID string `json:"id"`
 	// Dir is the skill folder relative to the repo root, slash-separated.
-	Dir string
+	Dir string `json:"dir"`
 	// Plugin is the marketplace plugin that lists the skill, if any.
-	Plugin string
+	Plugin string `json:"plugin,omitempty"`
 }
 
 // Discovery is the result of scanning one repository.
 type Discovery struct {
-	Skills []Found
+	Skills []Found `json:"skills"`
 	// Warnings lists things that were skipped. They never stop a scan.
-	Warnings []string
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 // Discover returns the skill folders in repoDir, sorted by ID.
