@@ -119,6 +119,8 @@ task("TASK07", "Registry and assignments", "TASK02, TASK06", """
 5. Every change runs under the lock.
    - `fsutil.WithLock` is not re-entrant: calling `config.Save`, `config.Update` or another locking function inside it blocks forever. When one change touches both files, take the lock once and use the unlocked write helpers inside it.
 6. Replace the placeholder `emptyRegistry` in `internal/setup` with the registry's real default value.
+7. `project.Find` and `project.Register` return `filepath.Abs` paths; they do not resolve symlinks. The same folder reached through a symlink (macOS `/var` vs `/private/var`) gives a different `Root`. Compare paths with `filepath.EvalSymlinks` before deciding a folder was moved or copied.
+8. `project.Register` takes no lock. Two processes registering the same new folder at once can each write an ID; the last write wins and the other caller holds a stale ID. Callers that register must run `Register` and `EnsureProject` under the lock.
 
 **Done when:** Tests cover every function, a moved folder, a copied folder, concurrent writers and `Served` with overlapping lists.
 """)
@@ -670,7 +672,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
