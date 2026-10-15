@@ -222,6 +222,9 @@ task("TASK11", "`quiver list` and `quiver status`", "TASK07, TASK08", """
 task("TASK12", "`quiver where` and `quiver projects`", "TASK07", """
 **`where <id>`:** Print `global` if applicable, then each project that has the skill, with its name and paths.
 
+**Notes:**
+- `source remove` (TASK27) has its own lookup, `library.usage`, by source prefix. Share the output format with it.
+
 **`projects`:**
 
 1. `projects` lists every project: name, ID, skill count and paths. Paths that no longer exist on this machine are marked `(missing)`.
@@ -258,7 +261,7 @@ Check these, and report each one as `ok`, `warn` or `error`:
 2. `local/` is a git repo. Uncommitted changes are a warning.
 3. Every library skill passes validation.
 4. Every assigned ID exists in the library. An ID can go missing when a source is removed or a skill is renamed upstream.
-5. Every source in `config.json` has its folder in `sources/`. The library only warns "not downloaded" when it is missing.
+5. Every source in `config.json` has its folder in `sources/`. The library only warns "not downloaded" when it is missing. Leftover `sources/.add-*` and `sources/.remove-*` folders are a warning; `--fix` deletes them.
 6. Projects whose paths all no longer exist on this machine are listed (they may still exist on another machine, so this is only a warning).
 7. Skill name clashes in the served set of any project.
 8. The MCP server is registered with Claude Code (`claude mcp get quiver`).
@@ -482,22 +485,26 @@ task("TASK26", "Library with remote sources", "TASK08, TASK25", """
 task("TASK27", "`quiver source add | list | remove`", "TASK23, TASK24, TASK26", """
 **`add <repo> [--name <n>]`:**
 
-1. Parse the input (TASK24) and check that the name is free. Validate a `--name` value with `config.ValidateSourceName`.
-2. Clone into `sources/<name>`.
-3. Run discovery. If no skills are found, ask whether to keep the source anyway.
-4. Save it to the config and print the skills that were found.
+1. Parse the input (TASK24) and check that the name is free, before the slow clone. Validate a `--name` value with `config.ValidateSourceName`.
+2. `library.StageSource` clones into `sources/.add-<name>-*/<name>` and runs discovery.
+3. If no skills are found, ask whether to keep the source anyway. No answer means no.
+4. `Staged.Keep` moves the clone to `sources/<name>` and saves the config under one lock. Print the skills that were found.
 5. Print a reminder that skills from this source give instructions to the assistant and may contain scripts.
 
-**`list`:** Print each source's name, URL, skill count, current commit and last update time.
+**`list`:** Print each source's name, skill count, short commit, commit date and URL. A missing folder shows as `missing`.
 
 **`remove <name>`:**
 
-1. If any skill from the source is assigned, refuse and list where (using `where`).
-2. `--force` unassigns those skills first.
-3. Delete `sources/<name>` and remove it from the config.
+1. `library.RemoveSource` finds assigned IDs that start with `<name>/`, global and per project. If there are any, it refuses and lists where.
+2. `--force` unassigns those skills first, always-on marks included.
+3. Move `sources/<name>` aside, write the registry and the config, then delete the folder. A failed write puts the folder back.
 
 **Notes:**
 - The default name is the repository owner, so two repos from one owner (`anthropics/skills`, `anthropics/other`) collide. When the name is taken, suggest `--name` in the error.
+- An interrupted add or remove leaves a `sources/.add-*` or `sources/.remove-*` folder. TASK14 should report and delete them.
+- `git.Head` walks up to a parent repository. If `~/.quiver` is inside a git repo (dotfiles) and a source folder is not a repo, `list` and the index cache read the parent's HEAD.
+- `list` shows the HEAD commit date, not the time of the last pull.
+- If the config write fails after the registry write in `remove --force`, the skills stay unassigned while the source remains.
 
 **Done when:** An end-to-end test adds a source from a local bare repo, assigns one of its skills, gets refused on remove, then succeeds with `--force`.
 """)
@@ -714,7 +721,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

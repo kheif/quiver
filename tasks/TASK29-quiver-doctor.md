@@ -12,7 +12,7 @@ Check these, and report each one as `ok`, `warn` or `error`:
 2. `local/` is a git repo. Uncommitted changes are a warning.
 3. Every library skill passes validation.
 4. Every assigned ID exists in the library. An ID can go missing when a source is removed or a skill is renamed upstream.
-5. Every source in `config.json` has its folder in `sources/`. The library only warns "not downloaded" when it is missing.
+5. Every source in `config.json` has its folder in `sources/`. The library only warns "not downloaded" when it is missing. Leftover `sources/.add-*` and `sources/.remove-*` folders are a warning; `--fix` deletes them.
 6. Projects whose paths all no longer exist on this machine are listed (they may still exist on another machine, so this is only a warning).
 7. Skill name clashes in the served set of any project.
 8. The MCP server is registered with Claude Code (`claude mcp get quiver`).

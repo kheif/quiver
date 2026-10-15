@@ -8,6 +8,9 @@
 
 **`where <id>`:** Print `global` if applicable, then each project that has the skill, with its name and paths.
 
+**Notes:**
+- `source remove` (TASK13) has its own lookup, `library.usage`, by source prefix. Share the output format with it.
+
 **`projects`:**
 
 1. `projects` lists every project: name, ID, skill count and paths. Paths that no longer exist on this machine are marked `(missing)`.
