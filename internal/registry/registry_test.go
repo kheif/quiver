@@ -2,10 +2,12 @@ package registry
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -91,5 +93,29 @@ func TestLoadRejectsBadFile(t *testing.T) {
 				t.Errorf("got %v, want %q", err, c.want)
 			}
 		})
+	}
+}
+
+func TestConcurrentUpdatesKeepEveryChange(t *testing.T) {
+	setHome(t)
+	const writers = 8
+	var wg sync.WaitGroup
+	for i := range writers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := Update(func(r *Registry) error {
+				r.AssignGlobal(fmt.Sprintf("skill-%d", i))
+				return nil
+			})
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+	r, err := Load()
+	if err != nil || len(r.Global) != writers {
+		t.Errorf("got %v, %v", r.Global, err)
 	}
 }
