@@ -20,7 +20,7 @@ This folder breaks [PROJECT.md](../PROJECT.md) into ordered tasks, one file per 
 Phases 0–2 are the first usable version. After TASK21 you can run:
 
 ```bash
-quiver source add JuliusBrussee/caveman
+quiver source add JuliusBrussee/caveman --name caveman
 quiver add caveman/caveman --global --always
 quiver mcp install
 ```

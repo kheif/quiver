@@ -197,7 +197,7 @@ quiver doctor                       # Check the library and fix problems
 - Remote sources: `source add`, `update`
 - Global and project assignment, always-on skills
 - MCP server with `list_skills` and `get_skill`, `mcp install`
-- Goal: `quiver source add JuliusBrussee/caveman` → `quiver add caveman/caveman --global --always` works
+- Goal: `quiver source add JuliusBrussee/caveman --name caveman` → `quiver add caveman/caveman --global --always` works
 
 **v1**
 - Library, registry, project identification
