@@ -5,6 +5,8 @@ package source
 import (
 	"fmt"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -21,14 +23,17 @@ var (
 	schemes   = map[string]bool{"https": true, "http": true, "ssh": true, "git": true, "file": true}
 )
 
-// Parse reads input as owner/repo (GitHub), host/owner/repo, a git URL or
-// an scp-style address such as git@github.com:a/b.git.
+// Parse reads input as owner/repo (GitHub), host/owner/repo, a git URL, an
+// scp-style address such as git@github.com:a/b.git, or a local path that
+// starts with /, ./, ../ or ~/.
 func Parse(input string) (Parsed, error) {
 	in := strings.TrimSpace(input)
 	if err := checkSafe(in); err != nil {
 		return Parsed{}, err
 	}
 	switch {
+	case isLocalPath(in):
+		return parseLocal(in)
 	case strings.Contains(in, "://"):
 		return parseURL(in)
 	case scpRE.MatchString(in):
@@ -62,6 +67,33 @@ func checkSafe(in string) error {
 		return fmt.Errorf("source %q uses a git transport helper, which quiver does not allow", in)
 	}
 	return nil
+}
+
+func isLocalPath(in string) bool {
+	for _, prefix := range []string{"/", "./", "../", "~/"} {
+		if strings.HasPrefix(in, prefix) {
+			return true
+		}
+	}
+	return in == "." || in == ".." || in == "~"
+}
+
+// parseLocal makes the path absolute, because git clone runs from another
+// folder. The default name is the folder name.
+func parseLocal(in string) (Parsed, error) {
+	path := in
+	if path == "~" || strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return Parsed{}, err
+		}
+		path = filepath.Join(home, path[1:])
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return Parsed{}, err
+	}
+	return withName(abs, filepath.Base(abs))
 }
 
 func parseURL(in string) (Parsed, error) {

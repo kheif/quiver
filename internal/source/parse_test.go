@@ -1,6 +1,8 @@
 package source
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -27,6 +29,44 @@ func TestParse(t *testing.T) {
 			t.Errorf("Parse(%q) = %+v, %v; want %s, %s", c.in, got, err, c.url, c.name)
 		}
 	}
+}
+
+func TestParseLocalPath(t *testing.T) {
+	home, err := filepath.EvalSymlinks(t.TempDir()) // macOS: /var is /private/var
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", home)
+	chdir(t, home)
+	cases := []struct{ in, url, name string }{
+		{"/srv/repos/Team_Skills.git", "/srv/repos/Team_Skills.git", "team-skills"},
+		{"/srv/repos/skills/", "/srv/repos/skills", "skills"},
+		{"./work/skills", filepath.Join(home, "work", "skills"), "skills"},
+		{"../up", filepath.Join(filepath.Dir(home), "up"), "up"},
+		{"~/code/my-skills", filepath.Join(home, "code", "my-skills"), "my-skills"},
+	}
+	for _, c := range cases {
+		got, err := Parse(c.in)
+		if err != nil || got.URL != c.url || got.Name != c.name {
+			t.Errorf("Parse(%q) = %+v, %v; want %s, %s", c.in, got, err, c.url, c.name)
+		}
+	}
+	if _, err := Parse("/"); err == nil || !strings.Contains(err.Error(), "--name") {
+		t.Errorf("root: %v", err)
+	}
+}
+
+// chdir changes the working folder for one test. t.Chdir needs Go 1.24.
+func chdir(t *testing.T, dir string) {
+	t.Helper()
+	old, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(old) })
 }
 
 func TestParseRejects(t *testing.T) {
