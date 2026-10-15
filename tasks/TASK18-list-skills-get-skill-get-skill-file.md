@@ -27,6 +27,7 @@ Skills (reusable instructions for specific tasks). Before starting a task, check
 **`get_skill`** (`id`):
 
 1. Returns the `SKILL.md` body, the list of extra files, and the absolute path of the skill folder.
+   - `skill.Files` lists symlinks as they are. Drop any entry that resolves outside the skill folder.
 2. Ends with this note: `Scripts and files referenced by this skill are in <dir>. Use absolute paths.`
 3. An ID that is not served in this project is still returned if it exists in the library, with a note that it is not assigned here. Unknown IDs return an error with suggestions.
 

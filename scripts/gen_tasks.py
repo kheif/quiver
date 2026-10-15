@@ -117,6 +117,8 @@ task("TASK07", "Registry and assignments", "TASK02, TASK06", """
    - If it still has one, the folder was probably copied. Keep both paths and return a `PossibleCopy` warning.
 4. Keep every list sorted and free of duplicates.
 5. Every change runs under the lock.
+   - `fsutil.WithLock` is not re-entrant: calling `config.Save`, `config.Update` or another locking function inside it blocks forever. When one change touches both files, take the lock once and use the unlocked write helpers inside it.
+6. Replace the placeholder `emptyRegistry` in `internal/setup` with the registry's real default value.
 
 **Done when:** Tests cover every function, a moved folder, a copied folder, concurrent writers and `Served` with overlapping lists.
 """)
@@ -314,6 +316,7 @@ Skills (reusable instructions for specific tasks). Before starting a task, check
 **`get_skill`** (`id`):
 
 1. Returns the `SKILL.md` body, the list of extra files, and the absolute path of the skill folder.
+   - `skill.Files` lists symlinks as they are. Drop any entry that resolves outside the skill folder.
 2. Ends with this note: `Scripts and files referenced by this skill are in <dir>. Use absolute paths.`
 3. An ID that is not served in this project is still returned if it exists in the library, with a note that it is not assigned here. Unknown IDs return an error with suggestions.
 

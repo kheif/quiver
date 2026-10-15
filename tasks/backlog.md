@@ -81,3 +81,8 @@ Items are ordered by priority within each section.
 - **Proposal:** Use the plain skill `name` as the prompt name when it is unique among served skills (`/mcp__quiver__caveman`). Fall back to the full ID only on a clash. TASK25 depends only on TASK18, so it can move into Phase 2 if slash commands are wanted early.
 - **Not chosen:** Writing command files into `~/.claude/commands/` would give `/caveman`, but it brings back the generated files that Quiver avoids.
 - **Related:** TASK25
+
+### B16 — Stricter skill name rule
+- **Concern:** The Agent Skills format does not allow a trailing dash (`x-`) or two dashes in a row (`a--b`). `skill.Validate` accepts both, because TASK05 uses `^[a-z0-9][a-z0-9-]*$`.
+- **Proposal:** Report these names as warnings, not errors, so existing remote skills keep loading.
+- **Related:** TASK05, TASK25

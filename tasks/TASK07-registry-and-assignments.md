@@ -19,5 +19,7 @@
    - If it still has one, the folder was probably copied. Keep both paths and return a `PossibleCopy` warning.
 4. Keep every list sorted and free of duplicates.
 5. Every change runs under the lock.
+   - `fsutil.WithLock` is not re-entrant: calling `config.Save`, `config.Update` or another locking function inside it blocks forever. When one change touches both files, take the lock once and use the unlocked write helpers inside it.
+6. Replace the placeholder `emptyRegistry` in `internal/setup` with the registry's real default value.
 
 **Done when:** Tests cover every function, a moved folder, a copied folder, concurrent writers and `Served` with overlapping lists.
