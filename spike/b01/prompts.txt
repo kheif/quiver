@@ -1,0 +1,10 @@
+fit-sql1|Write a Postgres migration that adds a non-null email column to the users table (10M rows).
+fit-sql2|Review this migration: ALTER TABLE orders DROP COLUMN legacy_status; CREATE INDEX idx_orders_user ON orders(user_id);
+fit-rel1|Release notes for v2.3: added dark mode, fixed login crash.
+fit-rel2|Write the changelog entry for 1.4.0. We renamed the --out flag to --output and fixed a memory leak in the parser.
+fit-k8s1|My pod api-7f9 is stuck in CrashLoopBackOff. How do I find out why?
+fit-k8s2|Pods of my worker deployment keep getting OOMKilled after a few minutes. What should I check?
+none-1|What is the difference between a Go slice and an array? Answer in 3 sentences.
+none-2|Write a bash one-liner that counts lines in all .py files recursively.
+none-3|Explain what a CRDT is in two sentences.
+none-4|Suggest three names for a cat.
