@@ -45,7 +45,7 @@ Assignments: which skills are global, and which projects get which skills.
 
 ## `<project>/.quiver.json`
 
-The project's identity. Commit it to git.
+The project's identity. The project does not need git; if it uses git, commit this file.
 
 ```json
 { "id": "app-k3f9q2" }

@@ -75,7 +75,7 @@ A project is identified by a small `.quiver.json` file in its root:
 
 - The file holds only the ID. Which skills the project gets is stored in Quiver.
 - It is created the first time you assign a skill to the project, from the TUI, the CLI or a conversation.
-- Commit it to git. The project is then recognized wherever it is cloned, moved or renamed, with or without git.
+- The project does not need git. The ID survives moves and renames. If the project uses git, commit the file so clones are recognized too.
 - A folder without `.quiver.json` gets only the global skills.
 - If a project folder is copied, both copies have the same ID. Quiver notices this and `quiver projects split` gives the copy its own ID.
 
