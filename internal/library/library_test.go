@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/kheif/quiver/internal/config"
 )
 
 // fixture builds a local library with valid and invalid skills.
@@ -65,5 +67,57 @@ func TestLoadNoLocalFolder(t *testing.T) {
 	l, err := Load()
 	if err != nil || len(l.All()) != 0 || len(l.Warnings) != 0 {
 		t.Errorf("got %+v, %v", l, err)
+	}
+}
+
+// remoteFixture adds a source "acme" with two valid skills and one broken
+// one, and a source "gone" that was never downloaded.
+func remoteFixture(t *testing.T) string {
+	t.Helper()
+	home := os.Getenv("QUIVER_HOME")
+	cfg := config.Default()
+	cfg.Sources["acme"] = config.Source{Repo: "https://example.com/acme.git"}
+	cfg.Sources["gone"] = config.Source{Repo: "https://example.com/gone.git"}
+	if err := config.Save(cfg); err != nil {
+		t.Fatal(err)
+	}
+	repo := filepath.Join(home, "sources", "acme")
+	files := map[string]string{
+		"skills/review/SKILL.md": "---\nname: review\ndescription: Review code.\n---\n",
+		"tools/pdf/SKILL.md":     "---\nname: pdf\ndescription: Remote PDFs.\n---\n",
+		"bad/SKILL.md":           "no frontmatter",
+	}
+	for name, content := range files {
+		p := filepath.Join(repo, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return repo
+}
+
+func TestLoadRemote(t *testing.T) {
+	fixture(t)
+	remoteFixture(t)
+	l, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	for _, s := range l.All() {
+		ids = append(ids, s.Source+":"+s.ID)
+	}
+	want := "acme:acme/pdf,acme:acme/review,local:db-migration,local:pdf,local:renamed"
+	if got := strings.Join(ids, ","); got != want {
+		t.Errorf("ids %s", got)
+	}
+	all := strings.Join(l.Warnings, "\n")
+	for _, w := range []string{"skipped acme/bad", "source gone is not downloaded"} {
+		if !strings.Contains(all, w) {
+			t.Errorf("missing warning %q in\n%s", w, all)
+		}
 	}
 }

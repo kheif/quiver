@@ -1,5 +1,5 @@
 // Package library collects every skill Quiver knows: the user's local skills
-// and, later, skills from remote sources.
+// and skills from remote sources.
 package library
 
 import (
@@ -10,8 +10,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
 	"github.com/kheif/quiver/internal/skill"
+	"github.com/kheif/quiver/internal/source"
 )
 
 // LocalSource is the Source of the user's own skills.
@@ -25,15 +27,29 @@ type Library struct {
 	Warnings []string
 }
 
-// Load scans every source. Today that is only ~/.quiver/local.
+// Load scans ~/.quiver/local and every source in the config.
 func Load() (*Library, error) {
 	home, err := fsutil.QuiverHome()
+	if err != nil {
+		return nil, err
+	}
+	cfg, err := config.Load()
 	if err != nil {
 		return nil, err
 	}
 	l := &Library{skills: map[string]*skill.Skill{}}
 	if err := l.addLocal(filepath.Join(home, "local")); err != nil {
 		return nil, err
+	}
+	names := make([]string, 0, len(cfg.Sources))
+	for name := range cfg.Sources {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		if err := l.addRemote(filepath.Join(home, "sources", name), name); err != nil {
+			return nil, err
+		}
 	}
 	return l, nil
 }
@@ -63,6 +79,26 @@ func (l *Library) addLocal(dir string) error {
 			continue
 		}
 		l.addSkill(filepath.Join(dir, e.Name()), LocalSource, e.Name())
+	}
+	return nil
+}
+
+// addRemote adds the skills discovery finds in a source repository. Their
+// ID is "<source>/<discovered ID>". A missing folder is a warning.
+func (l *Library) addRemote(dir, name string) error {
+	if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
+		l.Warnings = append(l.Warnings, fmt.Sprintf("source %s is not downloaded; add it again", name))
+		return nil
+	}
+	d, err := source.Discover(dir)
+	if err != nil {
+		return fmt.Errorf("source %s: %w", name, err)
+	}
+	for _, w := range d.Warnings {
+		l.Warnings = append(l.Warnings, fmt.Sprintf("source %s: %s", name, w))
+	}
+	for _, f := range d.Skills {
+		l.addSkill(filepath.Join(dir, filepath.FromSlash(f.Dir)), name, name+"/"+f.ID)
 	}
 	return nil
 }
