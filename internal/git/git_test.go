@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // newRepo returns an empty repository with no git identity, so tests do not
@@ -46,6 +47,9 @@ func TestCommitAndHead(t *testing.T) {
 	first, err := Head(dir)
 	if err != nil || len(first) != 40 {
 		t.Fatalf("head %q, %v", first, err)
+	}
+	if at, err := HeadTime(dir); err != nil || time.Since(at) > time.Minute {
+		t.Errorf("head time %v, %v", at, err)
 	}
 	author, _ := run(dir, "log", "-1", "--format=%an <%ae>")
 	if author != "Quiver <quiver@localhost>" {

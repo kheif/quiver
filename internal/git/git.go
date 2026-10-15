@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // ErrNotInstalled is returned when no git binary is on PATH.
@@ -37,6 +38,15 @@ func run(dir string, args ...string) (string, error) {
 // Head returns the commit hash HEAD points to.
 func Head(dir string) (string, error) {
 	return run(dir, "rev-parse", "HEAD")
+}
+
+// HeadTime returns the commit time of HEAD.
+func HeadTime(dir string) (time.Time, error) {
+	out, err := run(dir, "log", "-1", "--format=%cI")
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Parse(time.RFC3339, out)
 }
 
 // HasCommit reports whether dir is a repository with at least one commit.

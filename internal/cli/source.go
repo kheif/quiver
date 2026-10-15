@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/source"
@@ -16,7 +17,7 @@ func newSourceCmd() *cobra.Command {
 		Use:   "source",
 		Short: "Manage the git repositories that skills come from",
 	}
-	cmd.AddCommand(newSourceAddCmd())
+	cmd.AddCommand(newSourceAddCmd(), newSourceListCmd())
 	return cmd
 }
 
@@ -71,6 +72,39 @@ func addSource(cmd *cobra.Command, name, url string) error {
 	}
 	fmt.Fprintln(out, "Note: skills give instructions to your assistant and may contain scripts. Review them before you assign them.")
 	return nil
+}
+
+func newSourceListCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "list",
+		Short: "List sources with their skill count and current commit",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			l, err := library.Load()
+			if err != nil {
+				return err
+			}
+			sources, err := l.Sources()
+			if err != nil {
+				return err
+			}
+			out := cmd.OutOrStdout()
+			if len(sources) == 0 {
+				fmt.Fprintln(out, "No sources. Add one with: quiver source add <repo>")
+				return nil
+			}
+			w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, "NAME\tSKILLS\tCOMMIT\tUPDATED\tREPO")
+			for _, s := range sources {
+				commit, updated := s.Commit, s.Updated.Format("2006-01-02")
+				if commit == "" {
+					commit, updated = "missing", "-"
+				}
+				fmt.Fprintf(w, "%s\t%d\t%s\t%s\t%s\n", s.Name, s.Skills, commit, updated, s.Repo)
+			}
+			return w.Flush()
+		},
+	}
 }
 
 // confirm asks a yes/no question. Anything but y or yes, and no input at

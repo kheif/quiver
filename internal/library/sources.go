@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"time"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
@@ -118,4 +120,44 @@ func checkFree(c *config.Config, target, name string) error {
 		return fmt.Errorf("folder %s already exists: remove it or pick another name with --name", target)
 	}
 	return nil
+}
+
+// SourceInfo describes one configured source for "quiver source list".
+type SourceInfo struct {
+	Name   string
+	Repo   string
+	Skills int
+	// Commit is the short HEAD hash and Updated its commit time. Both are
+	// empty when the folder is missing or not a git repository.
+	Commit  string
+	Updated time.Time
+}
+
+// Sources returns every configured source, sorted by name. Skills counts
+// the valid skills in l.
+func (l *Library) Sources() ([]SourceInfo, error) {
+	c, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+	dir, err := SourcesDir()
+	if err != nil {
+		return nil, err
+	}
+	counts := map[string]int{}
+	for _, s := range l.skills {
+		counts[s.Source]++
+	}
+	out := make([]SourceInfo, 0, len(c.Sources))
+	for name, src := range c.Sources {
+		info := SourceInfo{Name: name, Repo: src.Repo, Skills: counts[name]}
+		repo := filepath.Join(dir, name)
+		if head, err := git.Head(repo); err == nil {
+			info.Commit = head[:min(7, len(head))]
+			info.Updated, _ = git.HeadTime(repo)
+		}
+		out = append(out, info)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out, nil
 }

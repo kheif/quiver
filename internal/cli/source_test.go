@@ -150,3 +150,35 @@ func TestSourceAddNoSkills(t *testing.T) {
 		t.Errorf("config sources %v", got)
 	}
 }
+
+func TestSourceList(t *testing.T) {
+	home := sourceEnv(t)
+	if out, _ := runIn(t, "", "source", "list"); !strings.Contains(out, "No sources") {
+		t.Errorf("empty list: %q", out)
+	}
+	repo := skillRepo(t, "acme", "pdf", "review")
+	if _, err := runIn(t, "", "source", "add", repo); err != nil {
+		t.Fatal(err)
+	}
+	// A source whose folder is gone shows as missing.
+	if err := os.RemoveAll(filepath.Join(home, "sources", "acme")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runIn(t, "", "source", "add", repo, "--name", "beta"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "source", "list")
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("got\n%s", out)
+	}
+	if f := strings.Fields(lines[1]); f[0] != "acme" || f[1] != "0" || f[2] != "missing" {
+		t.Errorf("acme row %q", lines[1])
+	}
+	if f := strings.Fields(lines[2]); f[0] != "beta" || f[1] != "2" || len(f[2]) != 7 || f[4] != repo {
+		t.Errorf("beta row %q", lines[2])
+	}
+}
