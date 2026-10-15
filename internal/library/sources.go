@@ -6,11 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
 	"github.com/kheif/quiver/internal/git"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/kheif/quiver/internal/source"
 )
 
@@ -160,4 +162,135 @@ func (l *Library) Sources() ([]SourceInfo, error) {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
+}
+
+// Usage lists where the skills of one source are assigned.
+type Usage struct {
+	Global   []string
+	Projects []ProjectUse
+}
+
+// ProjectUse is the source's skills assigned to one project.
+type ProjectUse struct {
+	ID     string
+	Name   string
+	Paths  []string
+	Skills []string
+}
+
+// Empty reports whether no skill of the source is assigned.
+func (u Usage) Empty() bool { return len(u.Global) == 0 && len(u.Projects) == 0 }
+
+// InUseError is returned by RemoveSource when skills of the source are
+// assigned and force is false.
+type InUseError struct {
+	Source string
+	Usage
+}
+
+func (e *InUseError) Error() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "skills from source %q are assigned:", e.Source)
+	if len(e.Global) > 0 {
+		fmt.Fprintf(&b, "\n  global: %s", strings.Join(e.Global, ", "))
+	}
+	for _, p := range e.Projects {
+		fmt.Fprintf(&b, "\n  project %s (%s): %s", p.Name, strings.Join(p.Paths, ", "), strings.Join(p.Skills, ", "))
+	}
+	b.WriteString("\nrun again with --force to unassign them")
+	return b.String()
+}
+
+// usage collects the assigned IDs that start with "<name>/". IDs that no
+// longer exist in the source count too.
+func usage(r *registry.Registry, name string) Usage {
+	prefix := name + "/"
+	from := func(ids []string) []string {
+		var out []string
+		for _, id := range ids {
+			if strings.HasPrefix(id, prefix) {
+				out = append(out, id)
+			}
+		}
+		return out
+	}
+	u := Usage{Global: from(r.Global)}
+	for id, p := range r.Projects {
+		if skills := from(p.Skills); len(skills) > 0 {
+			u.Projects = append(u.Projects, ProjectUse{ID: id, Name: p.Name, Paths: p.Paths, Skills: skills})
+		}
+	}
+	sort.Slice(u.Projects, func(i, j int) bool { return u.Projects[i].Name < u.Projects[j].Name })
+	return u
+}
+
+// RemoveSource deletes a source and its folder. If its skills are assigned,
+// it returns an *InUseError, unless force is set: then it unassigns them and
+// returns what it unassigned.
+func RemoveSource(name string, force bool) (Usage, error) {
+	dir, err := SourcesDir()
+	if err != nil {
+		return Usage{}, err
+	}
+	var u Usage
+	var trash string
+	err = fsutil.WithLock(func() error {
+		c, err := config.Load()
+		if err != nil {
+			return err
+		}
+		if _, ok := c.Sources[name]; !ok {
+			return fmt.Errorf("source %q not found", name)
+		}
+		r, err := registry.Load()
+		if err != nil {
+			return err
+		}
+		u = usage(r, name)
+		if !u.Empty() && !force {
+			return &InUseError{Source: name, Usage: u}
+		}
+		r.UnassignGlobal(u.Global...)
+		for _, p := range u.Projects {
+			if _, err := r.Unassign(p.ID, p.Skills...); err != nil {
+				return err
+			}
+		}
+		// Move the folder aside first, so a failed write can put it back.
+		target := filepath.Join(dir, name)
+		if _, err := os.Stat(target); err == nil {
+			if trash, err = os.MkdirTemp(dir, ".remove-"+name+"-"); err != nil {
+				return err
+			}
+			if err := os.Rename(target, filepath.Join(trash, name)); err != nil {
+				return err
+			}
+		}
+		if !u.Empty() {
+			if err := registry.Write(r); err != nil {
+				return restore(trash, target, err)
+			}
+		}
+		delete(c.Sources, name)
+		if err := config.Write(c); err != nil {
+			return restore(trash, target, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return u, err
+	}
+	if trash != "" {
+		return u, os.RemoveAll(trash)
+	}
+	return u, nil
+}
+
+// restore moves a source folder back from trash after a failed removal.
+func restore(trash, target string, cause error) error {
+	if trash != "" {
+		_ = os.Rename(filepath.Join(trash, filepath.Base(target)), target)
+		_ = os.RemoveAll(trash)
+	}
+	return cause
 }

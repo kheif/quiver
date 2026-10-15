@@ -3,12 +3,14 @@ package cli
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/git"
+	"github.com/kheif/quiver/internal/registry"
 )
 
 // runIn runs quiver with stdin and returns the output and the error.
@@ -180,5 +182,66 @@ func TestSourceList(t *testing.T) {
 	}
 	if f := strings.Fields(lines[2]); f[0] != "beta" || f[1] != "2" || len(f[2]) != 7 || f[4] != repo {
 		t.Errorf("beta row %q", lines[2])
+	}
+}
+
+// TestSourceRemoveAssigned is the end-to-end flow: add a source from a
+// bare repository, assign its skills, get refused, then force the removal.
+func TestSourceRemoveAssigned(t *testing.T) {
+	home := sourceEnv(t)
+	bare := filepath.Join(t.TempDir(), "acme.git")
+	if out, err := exec.Command("git", "clone", "--quiet", "--bare", skillRepo(t, "acme", "pdf", "review"), bare).CombinedOutput(); err != nil {
+		t.Fatalf("%v: %s", err, out)
+	}
+	if _, err := runIn(t, "", "source", "add", bare); err != nil {
+		t.Fatal(err)
+	}
+	err := registry.Update(func(r *registry.Registry) error {
+		_ = r.EnsureProject("p1", "/work/web")
+		r.Projects["p1"].Name = "web"
+		r.AssignGlobal("acme/pdf", "local-skill")
+		return r.Assign("p1", "acme/review")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = runIn(t, "", "source", "remove", "acme")
+	if err == nil {
+		t.Fatal("remove of an assigned source succeeded")
+	}
+	for _, want := range []string{"global: acme/pdf", "project web (/work/web): acme/review", "--force"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("missing %q in %v", want, err)
+		}
+	}
+	if got := sourceNames(t); len(got) != 1 {
+		t.Errorf("refused remove changed config: %v", got)
+	}
+
+	out, err := runIn(t, "", "source", "remove", "acme", "--force")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Unassigned globally: acme/pdf", "Unassigned from web: acme/review", `Removed source "acme"`} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in\n%s", want, out)
+		}
+	}
+	r, err := registry.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(r.Global) != 1 || r.Global[0] != "local-skill" || len(r.Projects["p1"].Skills) != 0 {
+		t.Errorf("registry after remove: %+v, %+v", r.Global, r.Projects["p1"])
+	}
+	if got := sourceNames(t); len(got) != 0 {
+		t.Errorf("config sources %v", got)
+	}
+	if extra := leftovers(t, home); len(extra) != 0 {
+		t.Errorf("left behind %v", extra)
+	}
+	if _, err := runIn(t, "", "source", "remove", "acme"); err == nil || !strings.Contains(err.Error(), "not found") {
+		t.Errorf("second remove: %v", err)
 	}
 }

@@ -17,7 +17,7 @@ func newSourceCmd() *cobra.Command {
 		Use:   "source",
 		Short: "Manage the git repositories that skills come from",
 	}
-	cmd.AddCommand(newSourceAddCmd(), newSourceListCmd())
+	cmd.AddCommand(newSourceAddCmd(), newSourceListCmd(), newSourceRemoveCmd())
 	return cmd
 }
 
@@ -105,6 +105,33 @@ func newSourceListCmd() *cobra.Command {
 			return w.Flush()
 		},
 	}
+}
+
+func newSourceRemoveCmd() *cobra.Command {
+	var force bool
+	cmd := &cobra.Command{
+		Use:   "remove <name>",
+		Short: "Delete a source and its skills",
+		Long:  "Delete a source and its skills. It refuses while skills from the source are assigned, unless --force is given.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			u, err := library.RemoveSource(args[0], force)
+			if err != nil {
+				return err
+			}
+			out := cmd.OutOrStdout()
+			if len(u.Global) > 0 {
+				fmt.Fprintf(out, "Unassigned globally: %s\n", strings.Join(u.Global, ", "))
+			}
+			for _, p := range u.Projects {
+				fmt.Fprintf(out, "Unassigned from %s: %s\n", p.Name, strings.Join(p.Skills, ", "))
+			}
+			fmt.Fprintf(out, "Removed source %q.\n", args[0])
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&force, "force", false, "unassign the source's skills first")
+	return cmd
 }
 
 // confirm asks a yes/no question. Anything but y or yes, and no input at

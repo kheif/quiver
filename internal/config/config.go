@@ -60,7 +60,7 @@ func Load() (*Config, error) {
 
 // Save writes c to config.json atomically, under the Quiver lock.
 func Save(c *Config) error {
-	return fsutil.WithLock(func() error { return write(c) })
+	return fsutil.WithLock(func() error { return Write(c) })
 }
 
 // Update loads the config, applies fn and saves the result, all under one
@@ -74,11 +74,13 @@ func Update(fn func(*Config) error) error {
 		if err := fn(c); err != nil {
 			return err
 		}
-		return write(c)
+		return Write(c)
 	})
 }
 
-func write(c *Config) error {
+// Write validates and saves c without taking the lock. Call it only inside
+// fsutil.WithLock, for example when one change touches several files.
+func Write(c *Config) error {
 	if err := c.Validate(); err != nil {
 		return err
 	}
