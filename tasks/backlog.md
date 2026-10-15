@@ -1,0 +1,83 @@
+# Backlog
+
+Open concerns from the design review. They are not tasks yet. Before starting the related task, decide on each item, then either turn it into a task or move it into that task's file.
+
+Items are ordered by priority within each section.
+
+## Architecture
+
+### B01 — Run the behaviour spike first
+- **Resolved 2026-10-15:** Spike done before TASK01. With the catalog in `instructions`, fitting prompts loaded the skill 6 of 6 times and non-fitting prompts never did. Tool descriptions are invisible because Claude Code defers MCP tools. See `docs/spike-b01-results.md`; design updated in TASK18.
+
+### B02 — Verify always-on via `instructions`
+- **Resolved 2026-10-15:** `instructions` are cut at about 4096 characters, too short for caveman. Always-on now uses a pointer plus `get_skill` (10 of 10 runs, held over five turns). Subagents are unreliable. Compaction is still checked in TASK21.
+
+### B03 — Project resolution beyond cwd
+- **Resolved 2026-10-15:** MCP roots cannot be used (protocol 2026-07-28, SEP-2322). TASK17 now uses `QUIVER_PROJECT`, then the working directory, walking up to `.quiver.json`.
+
+## Data model
+
+### B04 — Split synced and machine-local state
+- **Concern:** `~/.quiver/` is meant to be versioned with git, but `registry.json` holds absolute `paths`. Syncing between machines will conflict constantly.
+- **Proposal:** Move `paths`, last update checks and other machine-local data into a gitignored `~/.quiver/state.json`. Keep only portable data in `registry.json`.
+- **Related:** TASK07, data-model.md, Multiple Machines in PROJECT.md
+
+### B05 — Stable skill IDs
+- **Concern:** `<source>/<plugin>/<name>` is used only when names collide. If an update introduces a new collision, an existing ID changes and its assignments break silently.
+- **Proposal:** Fix the ID when a skill is first discovered and keep it. Alternatively, always use plugin-qualified IDs for marketplace repos.
+- **Related:** TASK11, data-model.md
+
+## Security
+
+### B06 — Review changes to remote always-on skills
+- **Concern:** After `quiver update`, a remote always-on skill's new text goes straight into every session's system prompt. This is a supply-chain risk. PROJECT.md also says `quiver update` shows what changed, but the roadmap puts the diff preview in v2.
+- **Proposal:** Move the diff preview into v1, at least for always-on skills. Fix the contradiction in PROJECT.md.
+- **Related:** TASK15, PROJECT.md (Security, Roadmap)
+
+### B07 — Approval for global `create_skill`
+- **Concern:** A prompt injection in a conversation can make the assistant write a persistent global skill.
+- **Proposal:** Save skills created with `scope: "global"` as pending. Activate them only after `quiver approve <id>` (or a TUI confirmation).
+- **Related:** create_skill task (Phase 3)
+
+## Practical
+
+### B08 — Non-interactive git
+- **Concern:** If a private repo asks for credentials, a background `git ls-remote` or `git pull` hangs.
+- **Proposal:** Always run git with `GIT_TERMINAL_PROMPT=0` and a timeout.
+- **Related:** TASK09, background update checks (Phase 5)
+
+### B09 — `mcp install` writes an absolute path
+- **Concern:** GUI apps such as Claude Desktop do not see the shell's `PATH`, so a bare `quiver` command may not start.
+- **Proposal:** Write the absolute path of the binary into the MCP config.
+- **Related:** TASK20
+
+### B10 — Cap the `list_skills` description
+- **Resolved 2026-10-15:** The catalog moved into `instructions`, with a 3800-character budget and a `list_skills` hint (TASK18).
+
+### B11 — File watching and platform support
+- **Concern:** `list_changed` needs file watching, but decisions.md lists no library for it. `flock` is Unix-only, and it is not decided whether Windows is a target.
+- **Proposal:** Add `fsnotify` to decisions.md. Decide on Windows support. If it is a target, choose a cross-platform lock.
+- **Related:** decisions.md, TASK02
+
+### B12 — Roadmap duplication
+- **Concern:** "First usable version" and v1 in PROJECT.md list the same items.
+- **Proposal:** Keep only the additions under v1.
+- **Related:** PROJECT.md (Roadmap)
+
+## Other
+
+### B13 — Native duplicates
+- **Concern:** A skill can be served by Quiver and also be installed natively (`~/.claude/skills`, plugins), so it loads twice. Example: the caveman plugin.
+- **Proposal:** `quiver doctor` detects these duplicates and suggests disabling the native copy.
+- **Related:** doctor task (Phase 3)
+
+### B14 — Name collision
+- **Concern:** "Quiver" is already used by other products, for example a notes app.
+- **Proposal:** Check the name and the binary name before release.
+- **Related:** Phase 4
+
+### B15 — Short slash command names
+- **Concern:** TASK25 names prompts after the full skill ID, so `caveman/caveman` becomes `/mcp__quiver__caveman__caveman`. That is long to type.
+- **Proposal:** Use the plain skill `name` as the prompt name when it is unique among served skills (`/mcp__quiver__caveman`). Fall back to the full ID only on a clash. TASK25 depends only on TASK18, so it can move into Phase 2 if slash commands are wanted early.
+- **Not chosen:** Writing command files into `~/.claude/commands/` would give `/caveman`, but it brings back the generated files that Quiver avoids.
+- **Related:** TASK25
