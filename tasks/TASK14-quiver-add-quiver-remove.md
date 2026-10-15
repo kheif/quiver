@@ -10,6 +10,7 @@
 
 1. Resolve every ID through the library. Fail on any unknown ID before changing anything.
 2. Without `--global`: find the current project (or `--project <path>`). If it has no `.quiver.json`, register it (TASK06) and print that the file was created and should be committed. Then call `EnsureProject` and `Assign`.
+   - `project.Register` takes no lock. Two processes registering the same new folder at once can each write an ID; the last write wins and the other caller holds a stale ID. Run `Register`, `EnsureProject` and `Assign` inside one `registry.Update` call.
 3. With `--global`: call `AssignGlobal`.
 4. If an added skill has the same `name` as another skill served in that project, warn about the clash.
 5. Print what the project serves now, as `status` does.

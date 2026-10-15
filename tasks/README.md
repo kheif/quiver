@@ -39,7 +39,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK04](TASK04-quiver-init.md) | `quiver init` | TASK03 |
 | ✅ | [TASK05](TASK05-skill-parsing-and-validation.md) | Skill parsing and validation | TASK01 |
 | ✅ | [TASK06](TASK06-project-identification-quiver-json.md) | Project identification (`.quiver.json`) | TASK02 |
-|  | [TASK07](TASK07-registry-and-assignments.md) | Registry and assignments | TASK02, TASK06 |
+| ✅ | [TASK07](TASK07-registry-and-assignments.md) | Registry and assignments | TASK02, TASK06 |
 
 ### Phase 1 — Remote Sources
 
