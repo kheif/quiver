@@ -421,8 +421,13 @@ task("TASK24", "Source URL parsing", "—", """
 | `git@github.com:a/b.git` | unchanged | `a` |
 | `/path/to/repo` | unchanged (local path) | folder name |
 
+- Local paths start with `/`, `./`, `../` or `~/` and are made absolute.
+- URL schemes: `https`, `http`, `ssh`, `git`, `file`. HTTP(S) URLs get `.git` appended.
+- The default name is lowercased and cleaned to match `config.ValidateSourceName`.
+- Input that starts with `-` or uses a git transport helper (`ext::`, `fd::`) is rejected. Both can run commands through git (see TASK23).
+
 **Notes:**
-- Reject input that starts with `-` and git transport prefixes such as `ext::`. They can run commands through git (see TASK23).
+- `Parse` keeps credentials in a URL such as `https://user:token@host/a/b`. `source add` must refuse or strip them, or the token ends up in `config.json` as plain text.
 
 **Done when:** Table tests cover every row and invalid input.
 """)
@@ -459,7 +464,7 @@ task("TASK26", "Library with remote sources", "TASK08, TASK25", """
 task("TASK27", "`quiver source add | list | remove`", "TASK23, TASK24, TASK26", """
 **`add <repo> [--name <n>]`:**
 
-1. Parse the input (TASK24) and check that the name is free.
+1. Parse the input (TASK24) and check that the name is free. Validate a `--name` value with `config.ValidateSourceName`.
 2. Clone into `sources/<name>`.
 3. Run discovery. If no skills are found, ask whether to keep the source anyway.
 4. Save it to the config and print the skills that were found.
@@ -472,6 +477,9 @@ task("TASK27", "`quiver source add | list | remove`", "TASK23, TASK24, TASK26", 
 1. If any skill from the source is assigned, refuse and list where (using `where`).
 2. `--force` unassigns those skills first.
 3. Delete `sources/<name>` and remove it from the config.
+
+**Notes:**
+- The default name is the repository owner, so two repos from one owner (`anthropics/skills`, `anthropics/other`) collide. When the name is taken, suggest `--name` in the error.
 
 **Done when:** An end-to-end test adds a source from a local bare repo, assigns one of its skills, gets refused on remove, then succeeds with `--force`.
 """)
@@ -687,7 +695,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

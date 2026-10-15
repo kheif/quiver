@@ -2,7 +2,7 @@
 
 **Phase:** Phase 1 — Remote Sources
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** —
 
@@ -16,7 +16,12 @@
 | `git@github.com:a/b.git` | unchanged | `a` |
 | `/path/to/repo` | unchanged (local path) | folder name |
 
+- Local paths start with `/`, `./`, `../` or `~/` and are made absolute.
+- URL schemes: `https`, `http`, `ssh`, `git`, `file`. HTTP(S) URLs get `.git` appended.
+- The default name is lowercased and cleaned to match `config.ValidateSourceName`.
+- Input that starts with `-` or uses a git transport helper (`ext::`, `fd::`) is rejected. Both can run commands through git (see TASK09).
+
 **Notes:**
-- Reject input that starts with `-` and git transport prefixes such as `ext::`. They can run commands through git (see TASK09).
+- `Parse` keeps credentials in a URL such as `https://user:token@host/a/b`. `source add` must refuse or strip them, or the token ends up in `config.json` as plain text.
 
 **Done when:** Table tests cover every row and invalid input.

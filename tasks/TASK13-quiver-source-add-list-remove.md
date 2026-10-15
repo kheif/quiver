@@ -8,7 +8,7 @@
 
 **`add <repo> [--name <n>]`:**
 
-1. Parse the input (TASK10) and check that the name is free.
+1. Parse the input (TASK10) and check that the name is free. Validate a `--name` value with `config.ValidateSourceName`.
 2. Clone into `sources/<name>`.
 3. Run discovery. If no skills are found, ask whether to keep the source anyway.
 4. Save it to the config and print the skills that were found.
@@ -21,5 +21,8 @@
 1. If any skill from the source is assigned, refuse and list where (using `where`).
 2. `--force` unassigns those skills first.
 3. Delete `sources/<name>` and remove it from the config.
+
+**Notes:**
+- The default name is the repository owner, so two repos from one owner (`anthropics/skills`, `anthropics/other`) collide. When the name is taken, suggest `--name` in the error.
 
 **Done when:** An end-to-end test adds a source from a local bare repo, assigns one of its skills, gets refused on remove, then succeeds with `--force`.
