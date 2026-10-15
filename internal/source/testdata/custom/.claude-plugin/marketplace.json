@@ -1,0 +1,10 @@
+{
+  "name": "custom",
+  "metadata": {"pluginRoot": "./plugins"},
+  "plugins": [
+    {"name": "formatter", "source": "formatter"},
+    {"name": "bundle", "source": "./bundle", "skills": "./extra"},
+    {"name": "remote", "source": {"source": "github", "repo": "someone/else"}},
+    {"name": "escape", "source": "./", "skills": ["../outside", "./missing"]}
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "anthropic-agent-skills",
+  "owner": {
+    "name": "Keith Lazuka",
+    "email": "klazuka@anthropic.com"
+  },
+  "metadata": {
+    "description": "Anthropic example skills",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "document-skills",
+      "description": "Collection of document processing suite including Excel, Word, PowerPoint, and PDF capabilities",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/xlsx",
+        "./skills/pdf"
+      ]
+    },
+    {
+      "name": "example-skills",
+      "description": "Collection of example skills",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/skill-creator"
+      ]
+    }
+  ]
+}

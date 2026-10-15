@@ -1,6 +1,7 @@
 package source
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -31,15 +32,40 @@ type Discovery struct {
 // Discover returns the skill folders in repoDir, sorted by ID.
 func Discover(repoDir string) (*Discovery, error) {
 	d := &Discovery{}
-	dirs, err := walkSkills(repoDir)
+	found, err := d.find(repoDir)
 	if err != nil {
 		return nil, err
 	}
-	for _, dir := range dirs {
-		d.Skills = append(d.Skills, Found{ID: skillName(repoDir, dir), Dir: dir})
+	for _, f := range found {
+		f.ID = skillName(repoDir, f.Dir)
+		d.Skills = append(d.Skills, f)
 	}
 	sort.Slice(d.Skills, func(i, j int) bool { return d.Skills[i].ID < d.Skills[j].ID })
 	return d, nil
+}
+
+// find uses the marketplace manifest when there is one, and otherwise walks
+// the repository. A broken manifest falls back to the walk.
+func (d *Discovery) find(repoDir string) ([]Found, error) {
+	m, ok, err := readMarketplace(repoDir)
+	if ok && err == nil {
+		return m.skillDirs(repoDir, d), nil
+	}
+	if ok {
+		d.warn("%v; searching the whole repository instead", err)
+	} else if err != nil {
+		return nil, err
+	}
+	dirs, err := walkSkills(repoDir)
+	found := make([]Found, len(dirs))
+	for i, dir := range dirs {
+		found[i] = Found{Dir: dir}
+	}
+	return found, err
+}
+
+func (d *Discovery) warn(format string, args ...any) {
+	d.Warnings = append(d.Warnings, fmt.Sprintf(format, args...))
 }
 
 // walkSkills returns every folder under root that holds a SKILL.md, relative
