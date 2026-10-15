@@ -34,7 +34,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | Status | Task | Title | Depends on |
 |---|---|---|---|
 | ✅ | [TASK01](TASK01-repository-setup.md) | Repository setup | — |
-|  | [TASK02](TASK02-paths-atomic-writes-and-locking.md) | Paths, atomic writes and locking | TASK01 |
+| ✅ | [TASK02](TASK02-paths-atomic-writes-and-locking.md) | Paths, atomic writes and locking | TASK01 |
 |  | [TASK03](TASK03-config.md) | Config | TASK02 |
 |  | [TASK04](TASK04-quiver-init.md) | `quiver init` | TASK03 |
 |  | [TASK05](TASK05-skill-parsing-and-validation.md) | Skill parsing and validation | TASK01 |
