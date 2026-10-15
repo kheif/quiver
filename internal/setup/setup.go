@@ -11,21 +11,13 @@ import (
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
+	"github.com/kheif/quiver/internal/registry"
 )
 
 const localReadme = `# Quiver skills
 
 Your own skills, managed by Quiver. Each folder with a SKILL.md is one skill.
 `
-
-// emptyRegistry is the initial registry.json. The registry package (TASK07)
-// owns the full format.
-var emptyRegistry = map[string]any{
-	"version":  1,
-	"global":   []string{},
-	"alwaysOn": []string{},
-	"projects": map[string]any{},
-}
 
 // Init creates the Quiver home and everything in it that is missing. It never
 // overwrites existing files. It returns the paths it created.
@@ -46,7 +38,7 @@ func Init() ([]string, error) {
 			}
 			created = append(created, c...)
 		}
-		files := map[string]any{"config.json": config.Default(), "registry.json": emptyRegistry}
+		files := map[string]any{"config.json": config.Default(), "registry.json": registry.Default()}
 		for _, name := range []string{"config.json", "registry.json"} {
 			c, err := ensureJSON(filepath.Join(home, name), files[name])
 			if err != nil {
