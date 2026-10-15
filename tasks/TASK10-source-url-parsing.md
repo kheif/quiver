@@ -16,4 +16,7 @@
 | `git@github.com:a/b.git` | unchanged | `a` |
 | `/path/to/repo` | unchanged (local path) | folder name |
 
+**Notes:**
+- Reject input that starts with `-` and git transport prefixes such as `ext::`. They can run commands through git (see TASK09).
+
 **Done when:** Table tests cover every row and invalid input.
