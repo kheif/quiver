@@ -2,12 +2,15 @@
 package project
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/kheif/quiver/internal/fsutil"
 )
 
 // FileName is the file that marks a project root.
@@ -46,6 +49,83 @@ func Find(dir string) (*Project, error) {
 		return &Project{ID: id, Root: d}, nil
 	}
 	return nil, ErrNotRegistered
+}
+
+// Register returns the project that dir belongs to, creating it if needed.
+// An existing .quiver.json found by Find wins. Otherwise the root is the
+// nearest folder with .git, or dir itself, and a new ID is written there.
+func Register(dir string) (*Project, error) {
+	p, err := Find(dir)
+	if err == nil || !errors.Is(err, ErrNotRegistered) {
+		return p, err
+	}
+	dir, err = filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
+	home, _ := os.UserHomeDir()
+	if home != "" && dir == filepath.Clean(home) {
+		return nil, errors.New("cannot register the home directory as a project")
+	}
+	root := dir
+	for d := range parents(dir, home) {
+		if _, err := os.Stat(filepath.Join(d, ".git")); err == nil {
+			root = d
+			break
+		}
+	}
+	id := newID(filepath.Base(root))
+	if err := SetID(root, id); err != nil {
+		return nil, err
+	}
+	return &Project{ID: id, Root: root}, nil
+}
+
+// SetID writes id to root/.quiver.json. Other keys in an existing file are
+// kept.
+func SetID(root, id string) error {
+	if !validID(id) {
+		return fmt.Errorf("invalid project id %q", id)
+	}
+	path := filepath.Join(root, FileName)
+	fields, err := readFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		fields = map[string]json.RawMessage{}
+	} else if err != nil {
+		return err
+	}
+	raw, err := json.Marshal(id)
+	if err != nil {
+		return err
+	}
+	fields["id"] = raw
+	return fsutil.WriteJSONAtomic(path, fields)
+}
+
+// idChars is Crockford base32: 32 chars, no i/l/o/u, so 0 and 1 are unambiguous.
+const idChars = "0123456789abcdefghjkmnpqrstvwxyz"
+
+// newID returns "<name>-<6 random chars>", with name reduced to lowercase
+// letters, digits and dashes.
+func newID(folder string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(folder) {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else {
+			b.WriteRune('-')
+		}
+	}
+	name := strings.Trim(b.String(), "-")
+	if name == "" {
+		name = "project"
+	}
+	suffix := make([]byte, 6)
+	_, _ = rand.Read(suffix) // never fails on supported platforms
+	for i, c := range suffix {
+		suffix[i] = idChars[int(c)%len(idChars)]
+	}
+	return name + "-" + string(suffix)
 }
 
 // parents yields dir and each parent folder, stopping before home and
