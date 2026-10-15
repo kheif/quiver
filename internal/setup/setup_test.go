@@ -92,3 +92,32 @@ func TestEnsureInit(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestEnsureInitEmptyHome(t *testing.T) {
+	home := t.TempDir() // exists, but empty
+	t.Setenv("QUIVER_HOME", home)
+	if err := EnsureInit(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(home, "config.json")); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestEnsureInitRepairsHalfInit(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("QUIVER_HOME", home)
+	path := os.Getenv("PATH")
+	t.Setenv("PATH", "") // no git: Init fails after creating the folders
+	if err := EnsureInit(); err == nil {
+		t.Fatal("want error without git")
+	}
+
+	t.Setenv("PATH", path)
+	if err := EnsureInit(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(home, "local", ".git")); err != nil {
+		t.Error(err)
+	}
+}

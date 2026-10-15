@@ -61,17 +61,21 @@ func Init() ([]string, error) {
 	return created, err
 }
 
-// EnsureInit runs Init only if the Quiver home does not exist yet.
+// EnsureInit runs Init if any part of the Quiver home is missing, for
+// example when the home folder exists but is empty, or an earlier Init
+// failed halfway.
 func EnsureInit() error {
 	home, err := fsutil.QuiverHome()
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(home); err == nil {
-		return nil
+	for _, p := range []string{"config.json", "registry.json", "sources", filepath.Join("local", ".git")} {
+		if _, err := os.Stat(filepath.Join(home, p)); err != nil {
+			_, err = Init()
+			return err
+		}
 	}
-	_, err = Init()
-	return err
+	return nil
 }
 
 func ensureDir(path string) ([]string, error) {
