@@ -29,7 +29,7 @@ func newRootCmd() *cobra.Command {
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print more details")
 	cmd.SetVersionTemplate("quiver {{.Version}}\n")
-	cmd.AddCommand(newInitCmd(), newSourceCmd(), newAddCmd())
+	cmd.AddCommand(newInitCmd(), newSourceCmd(), newAddCmd(), newRemoveCmd())
 	return cmd
 }
 

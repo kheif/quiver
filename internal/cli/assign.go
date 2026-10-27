@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
@@ -128,7 +129,95 @@ func add(out io.Writer, t target, ids []string) error {
 	for _, c := range clashes(l, reg.Served(projectID), ids) {
 		fmt.Fprintln(out, "warning:", c)
 	}
-	return printServed(out, reg, projectID)
+	where := "every folder"
+	if projectID != "" {
+		where = reg.Projects[projectID].Name
+	}
+	return printServed(out, reg, projectID, where)
+}
+
+func newRemoveCmd() *cobra.Command {
+	var t target
+	cmd := &cobra.Command{
+		Use:   "remove <id>...",
+		Short: "Unassign skills from this project, or from every folder with --global",
+		Long:  "Unassign skills from this project, or from every folder with --global. The skills stay in the library.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return remove(cmd.OutOrStdout(), t, args)
+		},
+	}
+	t.flags(cmd)
+	return cmd
+}
+
+// remove does not look IDs up in the library, so a skill that was deleted or
+// renamed in its source can still be unassigned.
+func remove(out io.Writer, t target, ids []string) error {
+	var p *project.Project
+	if !t.global {
+		dir, err := t.dir()
+		if err != nil {
+			return err
+		}
+		p, err = project.Find(dir)
+		if errors.Is(err, project.ErrNotRegistered) {
+			return fmt.Errorf("%s is not a Quiver project, so it has no skills of its own; use --global for global skills", dir)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	var (
+		reg         *registry.Registry
+		notAssigned []string
+	)
+	err := registry.Update(func(r *registry.Registry) error {
+		reg = r
+		if t.global {
+			notAssigned = r.UnassignGlobal(ids...)
+			return nil
+		}
+		if _, ok := r.Projects[p.ID]; !ok {
+			notAssigned = ids
+			return nil
+		}
+		var err error
+		notAssigned, err = r.Unassign(p.ID, ids...)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	projectID, where := "", "every folder"
+	if !t.global {
+		projectID, where = p.ID, filepath.Base(p.Root)
+		if rp, ok := reg.Projects[p.ID]; ok {
+			where = rp.Name
+		}
+	}
+	skip := map[string]bool{}
+	for _, id := range notAssigned {
+		skip[id] = true
+		switch {
+		case t.global:
+			fmt.Fprintf(out, "note: %s was not global\n", id)
+		case slices.Contains(reg.Global, id):
+			fmt.Fprintf(out, "note: %s is global; remove it with --global\n", id)
+		default:
+			fmt.Fprintf(out, "note: %s was not assigned to %s\n", id, where)
+		}
+	}
+	var removed []string
+	for _, id := range ids {
+		if !skip[id] {
+			removed = append(removed, id)
+		}
+	}
+	if len(removed) > 0 {
+		fmt.Fprintf(out, "Removed from %s: %s\n", where, strings.Join(removed, ", "))
+	}
+	return printServed(out, reg, projectID, where)
 }
 
 // clashes describes added skills that share their name with another served
@@ -154,13 +243,10 @@ func clashes(l *library.Library, served, added []string) []string {
 }
 
 // printServed lists the skills served in the project, each marked global or
-// project. An empty projectID lists only the global skills.
-func printServed(out io.Writer, r *registry.Registry, projectID string) error {
-	if p, ok := r.Projects[projectID]; ok {
-		fmt.Fprintf(out, "Served in %s:\n", p.Name)
-	} else {
-		fmt.Fprintln(out, "Served in every folder:")
-	}
+// project. An empty projectID lists only the global skills. where names the
+// place in the heading.
+func printServed(out io.Writer, r *registry.Registry, projectID, where string) error {
+	fmt.Fprintf(out, "Served in %s:\n", where)
 	served := r.Served(projectID)
 	if len(served) == 0 {
 		fmt.Fprintln(out, "  (none)")

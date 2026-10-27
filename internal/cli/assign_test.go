@@ -176,3 +176,96 @@ func TestAddBadTarget(t *testing.T) {
 		t.Error("--global with --project: want error")
 	}
 }
+
+func TestRemoveProject(t *testing.T) {
+	dir := assignEnv(t, "pdf", "tdd")
+	home := os.Getenv("QUIVER_HOME")
+	if _, err := runIn(t, "", "add", "pdf", "tdd", "--project", dir); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "remove", "pdf", "--project", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := project.Find(dir)
+	if got := loadRegistry(t).Projects[p.ID].Skills; !reflect.DeepEqual(got, []string{"tdd"}) {
+		t.Errorf("skills = %v", got)
+	}
+	if !strings.Contains(out, "Removed from app: pdf") || !strings.Contains(out, "tdd  project") {
+		t.Errorf("output:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(home, "local", "pdf", "SKILL.md")); err != nil {
+		t.Error("skill left the library:", err)
+	}
+}
+
+func TestRemoveGlobal(t *testing.T) {
+	assignEnv(t, "pdf", "tdd")
+	if _, err := runIn(t, "", "add", "pdf", "tdd", "--global"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "remove", "tdd", "nope", "--global")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := loadRegistry(t).Global; !reflect.DeepEqual(got, []string{"pdf"}) {
+		t.Errorf("global = %v", got)
+	}
+	for _, want := range []string{"note: nope was not global", "Removed from every folder: tdd"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestRemoveNotAssigned(t *testing.T) {
+	dir := assignEnv(t, "pdf", "tdd")
+	if _, err := runIn(t, "", "add", "tdd", "--global"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := project.Register(dir); err != nil {
+		t.Fatal(err)
+	}
+	// The project is not in the registry yet, and nope is not in the library.
+	out, err := runIn(t, "", "remove", "pdf", "tdd", "nope", "--project", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"note: pdf was not assigned to app", "note: tdd is global; remove it with --global", "note: nope was not assigned"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "Removed") {
+		t.Errorf("claims a removal:\n%s", out)
+	}
+}
+
+func TestRemoveDeletedSkill(t *testing.T) {
+	dir := assignEnv(t, "pdf")
+	home := os.Getenv("QUIVER_HOME")
+	if _, err := runIn(t, "", "add", "pdf", "--project", dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.RemoveAll(filepath.Join(home, "local", "pdf")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runIn(t, "", "remove", "pdf", "--project", dir); err != nil {
+		t.Fatal(err)
+	}
+	p, _ := project.Find(dir)
+	if got := loadRegistry(t).Projects[p.ID].Skills; len(got) != 0 {
+		t.Errorf("skills = %v", got)
+	}
+}
+
+func TestRemoveUnregistered(t *testing.T) {
+	dir := assignEnv(t, "pdf")
+	_, err := runIn(t, "", "remove", "pdf", "--project", dir)
+	if err == nil || !strings.Contains(err.Error(), "not a Quiver project") {
+		t.Fatalf("got %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, project.FileName)); err == nil {
+		t.Error(".quiver.json was created")
+	}
+}
