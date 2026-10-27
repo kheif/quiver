@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -14,7 +15,8 @@ import (
 )
 
 func newUpdateCmd() *cobra.Command {
-	return &cobra.Command{
+	var reset bool
+	cmd := &cobra.Command{
 		Use:   "update [<name>...]",
 		Short: "Pull the latest skills of the given sources, or of all sources",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,9 +36,12 @@ func newUpdateCmd() *cobra.Command {
 			// One failed source does not stop the others.
 			var failed []string
 			for _, name := range names {
-				u, err := library.UpdateSource(name)
+				u, err := library.UpdateSource(name, reset)
 				if err != nil {
 					fmt.Fprintf(out, "%s: failed: %v\n", name, err)
+					if errors.Is(err, library.ErrDiverged) {
+						fmt.Fprintf(out, "  run quiver update %s --reset to take the remote history\n", name)
+					}
 					failed = append(failed, name)
 					continue
 				}
@@ -48,6 +53,8 @@ func newUpdateCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&reset, "reset", false, "replace a rewritten history (after a force-push) with the remote one")
+	return cmd
 }
 
 // updateNames returns the sources to update: the given names, which must
@@ -78,7 +85,11 @@ func printUpdate(out io.Writer, u *library.Update, r *registry.Registry) {
 		fmt.Fprintf(out, "%s: up to date (%s)\n", u.Source, short(u.To))
 		return
 	}
-	fmt.Fprintf(out, "%s: %s..%s\n", u.Source, short(u.From), short(u.To))
+	reset := ""
+	if u.Reset {
+		reset = " (reset to the rewritten remote history)"
+	}
+	fmt.Fprintf(out, "%s: %s..%s%s\n", u.Source, short(u.From), short(u.To), reset)
 	for _, group := range []struct {
 		label string
 		ids   []string

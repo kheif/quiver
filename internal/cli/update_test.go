@@ -124,8 +124,19 @@ func TestUpdateContinuesAfterFailure(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "could not update aaa") {
 		t.Fatalf("got %v", err)
 	}
-	if !strings.Contains(out, "aaa: failed:") || !strings.Contains(out, "added    bbb/new") {
+	if !strings.Contains(out, "aaa: failed:") || !strings.Contains(out, "quiver update aaa --reset") || !strings.Contains(out, "added    bbb/new") {
 		t.Errorf("output:\n%s", out)
+	}
+
+	out, err = runIn(t, "", "update", "aaa", "--reset")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "(reset to the rewritten remote history)") {
+		t.Errorf("output:\n%s", out)
+	}
+	if out, _ := runIn(t, "", "update", "aaa"); !strings.Contains(out, "aaa: up to date") {
+		t.Errorf("after reset:\n%s", out)
 	}
 }
 

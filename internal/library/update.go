@@ -18,14 +18,22 @@ type Update struct {
 	// From and To are HEAD before and after the pull. They are equal when
 	// the source was up to date.
 	From, To string
-	Added    []string
-	Changed  []string
-	Removed  []string
+	// Reset is set when a rewritten history was replaced by the remote one.
+	Reset   bool
+	Added   []string
+	Changed []string
+	Removed []string
 }
 
+// ErrDiverged is returned by UpdateSource when the remote history was
+// rewritten (for example force-pushed), so a pull cannot fast-forward.
+var ErrDiverged = errors.New("the remote history was rewritten, so it cannot be fast-forwarded")
+
 // UpdateSource fast-forwards a source to its remote and compares its skills
-// before and after.
-func UpdateSource(name string) (*Update, error) {
+// before and after. If the remote history was rewritten, it returns
+// ErrDiverged, unless reset is set: then it replaces the local history with
+// the remote one.
+func UpdateSource(name string, reset bool) (*Update, error) {
 	dir, err := SourcesDir()
 	if err != nil {
 		return nil, err
@@ -42,22 +50,31 @@ func UpdateSource(name string) (*Update, error) {
 	if err != nil {
 		return nil, err
 	}
+	u := &Update{Source: name, From: from}
 	if err := git.Pull(repo); err != nil {
+		// A failed pull has still fetched, so @{u} is the new remote head.
+		if ok, aerr := git.IsAncestor(repo, "HEAD", "@{u}"); aerr != nil || ok {
+			return nil, err
+		}
+		if !reset {
+			return nil, ErrDiverged
+		}
+		if err := git.ResetToUpstream(repo); err != nil {
+			return nil, err
+		}
+		u.Reset = true
+	}
+	if u.To, err = git.Head(repo); err != nil {
 		return nil, err
 	}
-	to, err := git.Head(repo)
-	if err != nil {
-		return nil, err
-	}
-	u := &Update{Source: name, From: from, To: to}
-	if from == to {
+	if u.From == u.To {
 		return u, nil
 	}
 	after, err := discover(repo)
 	if err != nil {
 		return nil, err
 	}
-	paths, err := git.DiffNames(repo, from, to)
+	paths, err := git.DiffNames(repo, u.From, u.To)
 	if err != nil {
 		return nil, err
 	}

@@ -94,3 +94,40 @@ func TestCloneBadURL(t *testing.T) {
 		t.Errorf("got %v", err)
 	}
 }
+
+func TestResetAfterRewrite(t *testing.T) {
+	work, url := newRemote(t)
+	dir := filepath.Join(t.TempDir(), "clone")
+	if err := Clone(url, dir); err != nil {
+		t.Fatal(err)
+	}
+	old, _ := Head(dir)
+
+	write(t, work, "pdf/SKILL.md", "rewritten")
+	if _, err := run(work, "commit", "--quiet", "--amend", "-am", "v1b"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := run(work, "push", "--quiet", "--force", "origin", "HEAD"); err != nil {
+		t.Fatal(err)
+	}
+	want, _ := Head(work)
+
+	if err := Pull(dir); err == nil {
+		t.Fatal("pull of a rewritten history succeeded")
+	}
+	if ok, err := IsAncestor(dir, "HEAD", "@{u}"); ok || err != nil {
+		t.Fatalf("IsAncestor = %v, %v; want false", ok, err)
+	}
+	if err := ResetToUpstream(dir); err != nil {
+		t.Fatal(err)
+	}
+	if h, _ := Head(dir); h != want {
+		t.Errorf("head %s, want %s", h, want)
+	}
+	if names, err := DiffNames(dir, old, want); err != nil || len(names) != 1 || names[0] != "pdf/SKILL.md" {
+		t.Errorf("diff with the old head: %v, %v", names, err)
+	}
+	if ok, err := IsAncestor(dir, old, "HEAD"); ok || err != nil {
+		t.Errorf("IsAncestor(old) = %v, %v; want false", ok, err)
+	}
+}
