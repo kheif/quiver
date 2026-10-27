@@ -14,6 +14,7 @@ import (
 // server's own logs and the SDK's.
 func New(version string, log *slog.Logger) *mcp.Server {
 	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: version}, &mcp.ServerOptions{Logger: log})
+	s.AddReceivingMiddleware(recoverPanics(log))
 	addPing(s)
 	return s
 }
