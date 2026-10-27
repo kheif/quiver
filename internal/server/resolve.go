@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/kheif/quiver/internal/fsutil"
 	"github.com/kheif/quiver/internal/project"
+	"github.com/kheif/quiver/internal/registry"
 )
 
 // ProjectEnv names the folder to serve instead of the working directory.
@@ -72,4 +74,30 @@ func Resolve() (Where, error) {
 	}
 	w.Project = p
 	return w, nil
+}
+
+// errUnchanged stops registry.Update from writing when nothing changed.
+var errUnchanged = errors.New("unchanged")
+
+// recordPath records the project's folder in the registry, so the path of
+// a moved project is updated. It writes only when the paths change, and
+// leaves out projects the registry does not know: they have no skills here.
+func recordPath(p *project.Project) (*registry.PossibleCopy, error) {
+	var copied *registry.PossibleCopy
+	err := registry.Update(func(r *registry.Registry) error {
+		rp, ok := r.Projects[p.ID]
+		if !ok {
+			return errUnchanged
+		}
+		before := slices.Clone(rp.Paths)
+		copied = r.EnsureProject(p.ID, p.Root)
+		if slices.Equal(before, rp.Paths) {
+			return errUnchanged
+		}
+		return nil
+	})
+	if errors.Is(err, errUnchanged) {
+		err = nil
+	}
+	return copied, err
 }

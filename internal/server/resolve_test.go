@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/kheif/quiver/internal/project"
+	"github.com/kheif/quiver/internal/registry"
 )
 
 // projectDir returns a folder registered as a project, with a subfolder.
@@ -92,4 +93,50 @@ func mustReal(t *testing.T, p string) string {
 		t.Fatal(err)
 	}
 	return real
+}
+
+func TestRecordPath(t *testing.T) {
+	t.Setenv("QUIVER_HOME", t.TempDir())
+	root, _, p := projectDir(t)
+	// Unknown projects are not added.
+	if _, err := recordPath(p); err != nil {
+		t.Fatal(err)
+	}
+	if r := load(t); len(r.Projects) != 0 {
+		t.Fatalf("unknown project added: %+v", r.Projects)
+	}
+
+	// A known project that moved drops its old path.
+	err := registry.Update(func(r *registry.Registry) error {
+		_ = r.EnsureProject(p.ID, "/gone/app")
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if copied, err := recordPath(p); err != nil || copied != nil {
+		t.Fatalf("got %v, %v", copied, err)
+	}
+	if got := load(t).Projects[p.ID].Paths; len(got) != 1 || got[0] != root {
+		t.Errorf("paths = %v", got)
+	}
+
+	// Nothing changed, so registry.json is not written again.
+	path, _ := registry.Path()
+	before, _ := os.Stat(path)
+	if _, err := recordPath(p); err != nil {
+		t.Fatal(err)
+	}
+	if after, _ := os.Stat(path); !os.SameFile(before, after) {
+		t.Error("registry.json was rewritten")
+	}
+}
+
+func load(t *testing.T) *registry.Registry {
+	t.Helper()
+	r, err := registry.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
 }

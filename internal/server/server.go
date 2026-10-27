@@ -36,6 +36,15 @@ func Run(ctx context.Context, version string) error {
 	if err != nil {
 		log.Warn("no project found, serving global skills only", "err", err)
 	}
+	if w.Project != nil {
+		copied, err := recordPath(w.Project)
+		if err != nil {
+			log.Warn("could not record the project folder", "err", err)
+		}
+		if copied != nil {
+			log.Warn(copied.Error())
+		}
+	}
 	log.Info("server started", "version", version, "dir", w.Dir, "from", w.From, "project", w.ProjectID())
 	err = New(Options{Version: version, Log: log, Where: w}).Run(ctx, &mcp.StdioTransport{})
 	if err != nil {
