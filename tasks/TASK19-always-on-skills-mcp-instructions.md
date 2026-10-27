@@ -22,6 +22,9 @@ The full skill text does not go into `instructions`: Claude Code cuts them at ab
    - Plugin hooks (such as caveman's per-message reminder) are not run. Only the skill text is delivered.
    - Subagents are not reliable: in the spike, one of two subagents followed the always-on skill.
 
+**Notes:**
+- `add` and `remove` share their flags through `target` in `internal/cli/assign.go`. Add `--always` there, and mark always-on skills in `printServed`.
+
 **Done when:**
 - A harness test gets the pointer in `instructions`, ahead of the catalog.
 - In Claude Code, a new session follows a global always-on caveman skill from the first message, with the caveman plugin disabled (checked in TASK21).

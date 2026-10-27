@@ -196,6 +196,13 @@ task("TASK10", "`quiver add` / `quiver remove`", "TASK07, TASK08", """
 2. Unassign only. The skill stays in the library.
 3. Removing an ID that is not assigned prints a note, not an error.
 
+**Notes:**
+- `add --global` checks name clashes only among the global skills. A global skill can still clash with a skill of some project; `doctor` (TASK14) reports those.
+- If the registry write fails after `.quiver.json` was created, the file stays without a registry entry. The next `add` reuses its ID, so nothing breaks.
+- `remove` does not look IDs up in the library, so a skill deleted from its source can still be unassigned. The cost: a typo only prints a note and exits 0.
+- `remove` does not call `EnsureProject`, so a moved project keeps its old path in the registry until the next `add` or until the server resolves it (TASK16).
+- The `add` tests use `os.Chdir` (go 1.23 has no `t.Chdir`), so `internal/cli` tests must not run in parallel.
+
 **Done when:** Tests cover project and global assignment, `--project`, unknown IDs and name clashes.
 """)
 
@@ -215,6 +222,9 @@ task("TASK11", "`quiver list` and `quiver status`", "TASK07, TASK08", """
 2. Print the skills the MCP server would serve here (`registry.Served`), each marked `global` or `project`.
 3. If there is no `.quiver.json`, print `not registered; only global skills are served`.
 4. Show the `PossibleCopy` warning from TASK07 with the fix: `quiver projects split`.
+
+**Notes:**
+- `printServed` in `internal/cli/assign.go` already prints the served list after `add` and `remove`. Use it here, so both outputs stay the same.
 
 **Done when:** Output matches golden files for a fixture library and registry.
 """)
@@ -701,6 +711,9 @@ The full skill text does not go into `instructions`: Claude Code cuts them at ab
    - Plugin hooks (such as caveman's per-message reminder) are not run. Only the skill text is delivered.
    - Subagents are not reliable: in the spike, one of two subagents followed the always-on skill.
 
+**Notes:**
+- `add` and `remove` share their flags through `target` in `internal/cli/assign.go`. Add `--always` there, and mark always-on skills in `printServed`.
+
 **Done when:**
 - A harness test gets the pointer in `instructions`, ahead of the catalog.
 - In Claude Code, a new session follows a global always-on caveman skill from the first message, with the caveman plugin disabled (checked in TASK18).
@@ -721,7 +734,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

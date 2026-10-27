@@ -22,4 +22,7 @@
 3. If there is no `.quiver.json`, print `not registered; only global skills are served`.
 4. Show the `PossibleCopy` warning from TASK07 with the fix: `quiver projects split`.
 
+**Notes:**
+- `printServed` in `internal/cli/assign.go` already prints the served list after `add` and `remove`. Use it here, so both outputs stay the same.
+
 **Done when:** Output matches golden files for a fixture library and registry.

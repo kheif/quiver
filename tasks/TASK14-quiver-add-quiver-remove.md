@@ -2,7 +2,7 @@
 
 **Phase:** Phase 1 — Remote Sources
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK07, TASK08
 
@@ -20,5 +20,12 @@
 1. Same project and `--global` resolution as `add`.
 2. Unassign only. The skill stays in the library.
 3. Removing an ID that is not assigned prints a note, not an error.
+
+**Notes:**
+- `add --global` checks name clashes only among the global skills. A global skill can still clash with a skill of some project; `doctor` (TASK29) reports those.
+- If the registry write fails after `.quiver.json` was created, the file stays without a registry entry. The next `add` reuses its ID, so nothing breaks.
+- `remove` does not look IDs up in the library, so a skill deleted from its source can still be unassigned. The cost: a typo only prints a note and exits 0.
+- `remove` does not call `EnsureProject`, so a moved project keeps its old path in the registry until the next `add` or until the server resolves it (TASK17).
+- The `add` tests use `os.Chdir` (go 1.23 has no `t.Chdir`), so `internal/cli` tests must not run in parallel.
 
 **Done when:** Tests cover project and global assignment, `--project`, unknown IDs and name clashes.
