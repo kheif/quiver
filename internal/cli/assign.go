@@ -112,18 +112,45 @@ func add(out io.Writer, t target, ids []string) error {
 	if err != nil {
 		return err
 	}
+	projectID := ""
 	if t.global {
 		fmt.Fprintf(out, "Assigned globally: %s\n", strings.Join(ids, ", "))
-		return printServed(out, reg, "")
+	} else {
+		projectID = p.ID
+		if created {
+			fmt.Fprintf(out, "Created %s. Commit it, so the project keeps its ID.\n", filepath.Join(p.Root, project.FileName))
+		}
+		if copied != nil {
+			fmt.Fprintln(out, "warning:", copied)
+		}
+		fmt.Fprintf(out, "Assigned to %s: %s\n", reg.Projects[p.ID].Name, strings.Join(ids, ", "))
 	}
-	if created {
-		fmt.Fprintf(out, "Created %s. Commit it, so the project keeps its ID.\n", filepath.Join(p.Root, project.FileName))
+	for _, c := range clashes(l, reg.Served(projectID), ids) {
+		fmt.Fprintln(out, "warning:", c)
 	}
-	if copied != nil {
-		fmt.Fprintln(out, "warning:", copied)
+	return printServed(out, reg, projectID)
+}
+
+// clashes describes added skills that share their name with another served
+// skill. Assistants pick skills by name, so only one of them would be used.
+func clashes(l *library.Library, served, added []string) []string {
+	byName := map[string][]string{}
+	for _, id := range served {
+		if s, err := l.Get(id); err == nil {
+			byName[s.Name] = append(byName[s.Name], id)
+		}
 	}
-	fmt.Fprintf(out, "Assigned to %s: %s\n", reg.Projects[p.ID].Name, strings.Join(ids, ", "))
-	return printServed(out, reg, p.ID)
+	var out []string
+	seen := map[string]bool{}
+	for _, id := range added {
+		s, err := l.Get(id)
+		if err != nil || seen[s.Name] || len(byName[s.Name]) < 2 {
+			continue
+		}
+		seen[s.Name] = true
+		out = append(out, fmt.Sprintf("skills %s share the name %q; keep only one", strings.Join(byName[s.Name], ", "), s.Name))
+	}
+	return out
 }
 
 // printServed lists the skills served in the project, each marked global or

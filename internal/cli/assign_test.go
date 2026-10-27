@@ -67,6 +67,26 @@ func TestAddGlobal(t *testing.T) {
 			t.Errorf("output missing %q:\n%s", want, out)
 		}
 	}
+	if strings.Contains(out, "warning") {
+		t.Errorf("unexpected warning:\n%s", out)
+	}
+}
+
+func TestAddNameClash(t *testing.T) {
+	dir := assignEnv(t, "pdf", "pdf-old:pdf", "tdd")
+	if _, err := runIn(t, "", "add", "pdf", "--global"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "add", "pdf-old", "tdd", "--project", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `warning: skills pdf, pdf-old share the name "pdf"`; !strings.Contains(out, want) {
+		t.Errorf("output missing %q:\n%s", want, out)
+	}
+	if strings.Count(out, "warning") != 1 {
+		t.Errorf("want one warning:\n%s", out)
+	}
 }
 
 func TestAddProjectRegisters(t *testing.T) {
