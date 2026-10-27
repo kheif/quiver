@@ -20,10 +20,25 @@ type Options struct {
 
 // New returns the MCP server with every tool registered.
 func New(opts Options) *mcp.Server {
-	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{Logger: opts.Log})
+	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{
+		Logger:       opts.Log,
+		Instructions: instructions(opts),
+	})
 	s.AddReceivingMiddleware(recoverPanics(opts.Log))
 	addSkillTools(s, opts.Where)
 	return s
+}
+
+// instructions returns the text the assistant adds to its system prompt:
+// the catalog of skills served in the project. It is built once, so skills
+// assigned later reach it in the next session.
+func instructions(opts Options) string {
+	_, skills, err := loadServed(opts.Where.ProjectID())
+	if err != nil {
+		opts.Log.Warn("no skill catalog in the instructions", "err", err)
+		return ""
+	}
+	return catalog(skills, maxInstructions)
 }
 
 // Run serves MCP over stdin and stdout until the client disconnects.
