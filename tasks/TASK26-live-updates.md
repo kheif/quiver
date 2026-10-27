@@ -11,4 +11,7 @@
 3. Content changes to a skill need no notification, because `get_skill` always reads from disk.
 4. A failed reload keeps the last good state and logs the error.
 
+**Notes:**
+- `recoverPanics` (TASK16) does not cover the watcher goroutine. Recover inside it, so a bad event does not end the server.
+
 **Done when:** A harness test runs `quiver add` from another goroutine and receives the notification. The new skill appears in `list_skills`.

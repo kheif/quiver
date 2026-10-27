@@ -291,6 +291,14 @@ task("TASK15", "MCP server skeleton (`quiver mcp`)", "TASK04, TASK08", """
 5. Register a placeholder `ping` tool to prove the wiring. Remove it in TASK17.
 6. Add an in-memory test harness that connects a client to the server through the SDK's in-memory transport, with no subprocess. Every later MCP task uses it.
 
+**Notes:**
+- The SDK (v1.8.0) needs Go 1.25, so `go.mod` moved from 1.23 to 1.25. See decisions.md.
+- The harness is `connect` and `call` in `internal/server/harness_test.go`.
+- `logs/mcp.log` is never rotated, and every server process appends to it. `doctor` (TASK14) could warn when it gets large, or the server could rotate it at startup.
+- The log records the folder each server starts in, so it lists the user's project paths. Mention this before anyone shares a log.
+- `recoverPanics` only covers the handler's own goroutine. A panic in a goroutine that a handler or the server starts (for example the watcher in TASK21) still ends the process.
+- `TestMCPStdoutHasOnlyMessages` re-runs the test binary as `quiver mcp`. If the server ever stops answering, the test hangs until the `go test` timeout.
+
 **Done when:**
 - The harness test can list tools and call `ping`.
 - Running `claude mcp add quiver -- ./bin/quiver mcp` by hand shows the server as connected in Claude Code.
@@ -346,6 +354,7 @@ Skills (reusable instructions for specific tasks). Before starting a task, check
 
 **Notes:**
 - TASK28 checked `update` only through `library.Get`. Add a test that runs `update` and gets the new content through `get_skill`.
+- Remove `addPing` from `internal/server/server.go`. `TestPing` expects exactly one tool; replace it.
 
 **Done when:** Harness tests cover all three tools, path traversal attempts, binary files and the `instructions` budget.
 """)
@@ -392,6 +401,9 @@ task("TASK21", "Live updates", "TASK19, TASK20", """
 2. When the served set changes, reload it and send `notifications/prompts/list_changed`. `list_skills` returns the new set on its next call. The catalog in `instructions` stays as it was until the next session (TASK17).
 3. Content changes to a skill need no notification, because `get_skill` always reads from disk.
 4. A failed reload keeps the last good state and logs the error.
+
+**Notes:**
+- `recoverPanics` (TASK15) does not cover the watcher goroutine. Recover inside it, so a bad event does not end the server.
 
 **Done when:** A harness test runs `quiver add` from another goroutine and receives the notification. The new skill appears in `list_skills`.
 """)
@@ -742,7 +754,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "~"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

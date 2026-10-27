@@ -38,5 +38,6 @@ Skills (reusable instructions for specific tasks). Before starting a task, check
 
 **Notes:**
 - TASK15 checked `update` only through `library.Get`. Add a test that runs `update` and gets the new content through `get_skill`.
+- Remove `addPing` from `internal/server/server.go`. `TestPing` expects exactly one tool; replace it.
 
 **Done when:** Harness tests cover all three tools, path traversal attempts, binary files and the `instructions` budget.
