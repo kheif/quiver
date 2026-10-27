@@ -316,6 +316,14 @@ Then:
 - If there is no `.quiver.json`, serve only global skills. Do not create the file until the user creates or assigns a skill there. Remember the folder, so `create_skill` can register it.
 - Do not use MCP roots. Under protocol version 2026-07-28 the server cannot send `roots/list` while serving a request (SEP-2322), and Claude Code never triggered the `initialized` handler in the spike. See `docs/spike-b01-results.md`.
 
+**Notes:**
+- `server.Resolve` returns a `Where`: `Dir` (the folder to register later), `From`, and `Project` (nil without `.quiver.json`).
+- No tool reads `Where` yet, so its tests call `Resolve` directly. TASK17 should cover the served set per project through the harness.
+- A missing `QUIVER_PROJECT` folder or a broken `.quiver.json` does not stop the server. It serves the global skills and only logs a warning, so the assistant never hears about it. TASK17 could mention it in `list_skills`.
+- At startup the server also records the folder of a known project (`recordPath`), so a moved project gets its new path. It writes `registry.json` only when the paths change, and does not add projects the registry does not know.
+- `Where` is fixed for the session. If `quiver add` registers the folder during a session, the server keeps serving only the global skills until the next session, unless TASK21 resolves again.
+- Checked by hand: Claude Code starts the server in the project folder (`dir=` in `logs/mcp.log`).
+
 **Done when:**
 - Harness tests cover both sources and a start inside a subfolder.
 - The resolved key is logged at startup.
@@ -754,7 +762,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
