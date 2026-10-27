@@ -180,7 +180,7 @@ quiver projects                     # List projects; rename, forget or split the
 quiver source add <repo> [--name <n>]
 quiver source list
 quiver source remove <name>
-quiver update [<source>]
+quiver update [<source>...] [--reset]  # Pull sources; --reset takes a force-pushed history
 
 # Maintenance
 quiver import [<dir>]               # Pull existing skills (e.g. .claude/skills) into the library

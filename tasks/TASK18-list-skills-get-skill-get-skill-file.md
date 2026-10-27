@@ -36,4 +36,7 @@ Skills (reusable instructions for specific tasks). Before starting a task, check
 1. Resolve the path inside the skill folder. Reject any path that escapes it, including through symlinks.
 2. Text files up to 256 KB are returned as text. For larger or binary files, return their absolute path and size instead.
 
+**Notes:**
+- TASK15 checked `update` only through `library.Get`. Add a test that runs `update` and gets the new content through `get_skill`.
+
 **Done when:** Harness tests cover all three tools, path traversal attempts, binary files and the `instructions` budget.
