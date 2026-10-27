@@ -22,7 +22,7 @@ type Options struct {
 func New(opts Options) *mcp.Server {
 	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{Logger: opts.Log})
 	s.AddReceivingMiddleware(recoverPanics(opts.Log))
-	addPing(s)
+	addSkillTools(s, opts.Where)
 	return s
 }
 
@@ -53,15 +53,6 @@ func Run(ctx context.Context, version string) error {
 		log.Info("server stopped")
 	}
 	return err
-}
-
-// addPing registers a placeholder tool that proves the wiring. Remove it
-// once the real tools exist.
-func addPing(s *mcp.Server) {
-	mcp.AddTool(s, &mcp.Tool{Name: "ping", Description: "Check that the Quiver server responds."},
-		func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, any, error) {
-			return text("pong"), nil, nil
-		})
 }
 
 // text returns a tool result with one text block.

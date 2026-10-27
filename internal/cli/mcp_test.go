@@ -48,7 +48,7 @@ func TestMCPStdoutHasOnlyMessages(t *testing.T) {
 	for _, msg := range []string{
 		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"t","version":"0"}}}`,
 		`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
-		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ping","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_skills","arguments":{}}}`,
 	} {
 		if _, err := stdin.Write([]byte(msg + "\n")); err != nil {
 			t.Fatal(err)
@@ -70,7 +70,7 @@ func TestMCPStdoutHasOnlyMessages(t *testing.T) {
 	if err := cmd.Wait(); err != nil {
 		t.Fatalf("%v\nstderr:\n%s", err, stderr.String())
 	}
-	if len(replies) != 2 || !strings.Contains(replies[1], "pong") {
+	if len(replies) != 2 || !strings.Contains(replies[1], `"skills"`) {
 		t.Errorf("replies: %q", replies)
 	}
 	if !strings.Contains(stderr.String(), "server started") || !strings.Contains(stderr.String(), "project="+p.ID) {
