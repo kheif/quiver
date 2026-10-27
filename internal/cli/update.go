@@ -3,11 +3,13 @@ package cli
 import (
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/library"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +27,10 @@ func newUpdateCmd() *cobra.Command {
 				fmt.Fprintln(out, "No sources. Add one with: quiver source add <repo>")
 				return nil
 			}
+			r, err := registry.Load()
+			if err != nil {
+				return err
+			}
 			// One failed source does not stop the others.
 			var failed []string
 			for _, name := range names {
@@ -34,7 +40,7 @@ func newUpdateCmd() *cobra.Command {
 					failed = append(failed, name)
 					continue
 				}
-				printUpdate(out, u)
+				printUpdate(out, u, r)
 			}
 			if len(failed) > 0 {
 				return fmt.Errorf("could not update %s", strings.Join(failed, ", "))
@@ -67,7 +73,7 @@ func updateNames(args []string) ([]string, error) {
 	return names, nil
 }
 
-func printUpdate(out io.Writer, u *library.Update) {
+func printUpdate(out io.Writer, u *library.Update, r *registry.Registry) {
 	if u.From == u.To {
 		fmt.Fprintf(out, "%s: up to date (%s)\n", u.Source, short(u.To))
 		return
@@ -83,6 +89,20 @@ func printUpdate(out io.Writer, u *library.Update) {
 	}
 	if len(u.Added)+len(u.Changed)+len(u.Removed) == 0 {
 		fmt.Fprintln(out, "  no skill changes")
+	}
+	// Assignments of removed skills stay, so the user decides what replaces
+	// them. doctor keeps reporting them.
+	for _, id := range u.Removed {
+		var where []string
+		if slices.Contains(r.Global, id) {
+			where = append(where, "global")
+		}
+		for _, pid := range r.ProjectsUsing(id) {
+			where = append(where, "project "+r.Projects[pid].Name)
+		}
+		if len(where) > 0 {
+			fmt.Fprintf(out, "  warning: %s was removed upstream but is still assigned (%s); unassign it with quiver remove\n", id, strings.Join(where, ", "))
+		}
 	}
 }
 

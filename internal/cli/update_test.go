@@ -4,10 +4,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/kheif/quiver/internal/library"
+	"github.com/kheif/quiver/internal/registry"
 )
 
 func gitIn(t *testing.T, dir string, args ...string) {
@@ -61,6 +63,15 @@ func push(t *testing.T, bare string, files map[string]string, force bool, extra 
 func TestUpdate(t *testing.T) {
 	sourceEnv(t)
 	bare := bareSource(t, "acme", "pdf", "review", "old")
+	err := registry.Update(func(r *registry.Registry) error {
+		_ = r.EnsureProject("p1", "/work/web")
+		r.Projects["p1"].Name = "web"
+		r.AssignGlobal("acme/old", "acme/pdf")
+		return r.Assign("p1", "acme/old")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	push(t, bare, map[string]string{
 		"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Updated.\n---\n",
 		"skills/new/SKILL.md": "---\nname: new\ndescription: New.\n---\n",
@@ -72,10 +83,17 @@ func TestUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"added    acme/new", "changed  acme/pdf", "removed  acme/old"} {
+	for _, want := range []string{"added    acme/new", "changed  acme/pdf", "removed  acme/old",
+		"warning: acme/old was removed upstream but is still assigned (global, project web)"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output missing %q:\n%s", want, out)
 		}
+	}
+	if strings.Count(out, "warning") != 1 {
+		t.Errorf("want one warning:\n%s", out)
+	}
+	if r := loadRegistry(t); !slices.Contains(r.Global, "acme/old") || !slices.Contains(r.Projects["p1"].Skills, "acme/old") {
+		t.Errorf("removed skill was unassigned: %+v", r)
 	}
 	if strings.Contains(out, "acme/review") {
 		t.Errorf("unchanged skill listed:\n%s", out)
