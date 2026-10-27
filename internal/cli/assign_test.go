@@ -133,14 +133,7 @@ func TestAddCurrentFolder(t *testing.T) {
 	if _, err := project.Register(dir); err != nil {
 		t.Fatal(err)
 	}
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chdir(sub); err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = os.Chdir(wd) }()
+	t.Chdir(sub)
 	if _, err := runIn(t, "", "add", "pdf"); err != nil {
 		t.Fatal(err)
 	}
