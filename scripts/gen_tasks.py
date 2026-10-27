@@ -478,13 +478,13 @@ task("TASK26", "Library with remote sources", "TASK08, TASK25", """
 2. Load each found folder with `skill.Load` and `skill.Validate`; problems become warnings, as for local skills.
 3. Remote skills get `Source = <name>` and `ID = <name>/<discovered ID>`.
 4. A source folder that is missing is a warning, not an error.
-5. Cache discovery results in `sources/<name>/.quiver-index.json`, keyed by the HEAD commit and an index version. Rescan only when either changes. A folder that is not a git repository is scanned every time.
+5. Cache discovery results in `sources/<name>/.git/quiver-index.json`, keyed by the HEAD commit and an index version. Rescan only when either changes. A folder that is not a git repository is scanned every time.
 6. `library.CheckEditable` refuses remote skills with `ErrReadOnly`. `edit` and `update_skill` must call it.
 
 **Notes:**
 - IDs from discovery can hold slashes (`<plugin>/<name>` on collision), so a remote ID can have three parts. Code that splits IDs must split on the first `/` only.
 - Bump `indexVersion` whenever discovery rules change, or old caches keep the old result.
-- The index is an untracked file in the source's working tree. `git status` shows it, and an upstream file with the same name would block `git pull`. TASK28 must handle both.
+- The index first lived in the working tree, where `git status` showed it and an upstream file with the same name would block `git pull`. TASK28 moved it into `.git/`.
 - `Load` now reads `config.json`, so a broken config fails every load, also for local skills.
 
 **Done when:**
@@ -528,7 +528,7 @@ task("TASK28", "`quiver update`", "TASK27", """
 
 **Notes:**
 - Sources are shallow clones. After an upstream force-push, `--ff-only` fails and the old HEAD may be gone, so `DiffNames` cannot run. Offer a re-clone in that case.
-- Each source holds an untracked `.quiver-index.json` (TASK26). Do not treat it as a dirty tree, and never run `git clean`. If upstream adds a file with that name, delete the local one and pull again.
+- The discovery index lives in `.git/quiver-index.json` (TASK26), outside the working tree, so it never blocks a pull. A source without its own `.git` folder (for example a submodule) gets no index and is scanned on every load.
 
 **Done when:** A test pushes a change to a fixture bare repo, runs `update`, and `get_skill` returns the new content.
 """)

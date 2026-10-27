@@ -14,6 +14,6 @@
 
 **Notes:**
 - Sources are shallow clones. After an upstream force-push, `--ff-only` fails and the old HEAD may be gone, so `DiffNames` cannot run. Offer a re-clone in that case.
-- Each source holds an untracked `.quiver-index.json` (TASK12). Do not treat it as a dirty tree, and never run `git clean`. If upstream adds a file with that name, delete the local one and pull again.
+- The discovery index lives in `.git/quiver-index.json` (TASK12), outside the working tree, so it never blocks a pull. A source without its own `.git` folder (for example a submodule) gets no index and is scanned on every load.
 
 **Done when:** A test pushes a change to a fixture bare repo, runs `update`, and `get_skill` returns the new content.

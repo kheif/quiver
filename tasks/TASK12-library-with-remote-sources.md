@@ -10,13 +10,13 @@
 2. Load each found folder with `skill.Load` and `skill.Validate`; problems become warnings, as for local skills.
 3. Remote skills get `Source = <name>` and `ID = <name>/<discovered ID>`.
 4. A source folder that is missing is a warning, not an error.
-5. Cache discovery results in `sources/<name>/.quiver-index.json`, keyed by the HEAD commit and an index version. Rescan only when either changes. A folder that is not a git repository is scanned every time.
+5. Cache discovery results in `sources/<name>/.git/quiver-index.json`, keyed by the HEAD commit and an index version. Rescan only when either changes. A folder that is not a git repository is scanned every time.
 6. `library.CheckEditable` refuses remote skills with `ErrReadOnly`. `edit` and `update_skill` must call it.
 
 **Notes:**
 - IDs from discovery can hold slashes (`<plugin>/<name>` on collision), so a remote ID can have three parts. Code that splits IDs must split on the first `/` only.
 - Bump `indexVersion` whenever discovery rules change, or old caches keep the old result.
-- The index is an untracked file in the source's working tree. `git status` shows it, and an upstream file with the same name would block `git pull`. TASK15 must handle both.
+- The index first lived in the working tree, where `git status` showed it and an upstream file with the same name would block `git pull`. TASK15 moved it into `.git/`.
 - `Load` now reads `config.json`, so a broken config fails every load, also for local skills.
 
 **Done when:**

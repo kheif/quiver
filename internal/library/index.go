@@ -8,8 +8,9 @@ import (
 	"github.com/kheif/quiver/internal/source"
 )
 
-// IndexFile caches discovery results inside each source folder.
-const IndexFile = ".quiver-index.json"
+// IndexFile caches discovery results inside each source's .git folder, so
+// it never shows in git status or clashes with a file from upstream.
+const IndexFile = "quiver-index.json"
 
 // indexVersion must change whenever discovery rules change, so old caches
 // are rebuilt.
@@ -32,7 +33,7 @@ func discover(dir string) (*source.Discovery, error) {
 	if err != nil {
 		return scan(dir)
 	}
-	path := filepath.Join(dir, IndexFile)
+	path := filepath.Join(dir, ".git", IndexFile)
 	var cached index
 	if fsutil.ReadJSON(path, &cached) == nil && cached.Version == indexVersion && cached.Head == head {
 		return &cached.Discovery, nil

@@ -2,6 +2,7 @@ package library
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -57,6 +58,9 @@ func TestIndexCache(t *testing.T) {
 	if *scans != 1 {
 		t.Fatalf("second load scanned again: %d scans", *scans)
 	}
+	if out, err := exec.Command("git", "-C", repo, "status", "--porcelain").Output(); err != nil || len(out) > 0 {
+		t.Fatalf("index dirties the tree: %q, %v", out, err)
+	}
 
 	// A new commit changes HEAD, so the next load scans again.
 	p := filepath.Join(repo, "new", "SKILL.md")
@@ -78,7 +82,7 @@ func TestIndexBrokenCacheRescans(t *testing.T) {
 	t.Setenv("QUIVER_HOME", t.TempDir())
 	repo := remoteFixture(t)
 	gitRepo(t, repo)
-	if err := os.WriteFile(filepath.Join(repo, IndexFile), []byte("{"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo, ".git", IndexFile), []byte("{"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	scans := countScans(t)
