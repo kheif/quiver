@@ -2,7 +2,7 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done
 
 **Depends on:** TASK04, TASK08
 
