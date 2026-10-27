@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/kheif/quiver/internal/project"
 )
 
 // TestMCPStdoutHasOnlyMessages runs "quiver mcp" in a child process (this
@@ -19,8 +21,16 @@ func TestMCPStdoutHasOnlyMessages(t *testing.T) {
 		os.Exit(Execute())
 	}
 	home := sourceEnv(t)
+	dir := filepath.Join(t.TempDir(), "app")
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p, err := project.Register(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
 	cmd := exec.Command(os.Args[0], "-test.run=^TestMCPStdoutHasOnlyMessages$")
-	cmd.Env = append(os.Environ(), "QUIVER_MCP_CHILD=1")
+	cmd.Env = append(os.Environ(), "QUIVER_MCP_CHILD=1", "QUIVER_PROJECT="+dir)
 	var stderr strings.Builder
 	cmd.Stderr = &stderr
 	stdin, err := cmd.StdinPipe()
@@ -63,7 +73,7 @@ func TestMCPStdoutHasOnlyMessages(t *testing.T) {
 	if len(replies) != 2 || !strings.Contains(replies[1], "pong") {
 		t.Errorf("replies: %q", replies)
 	}
-	if !strings.Contains(stderr.String(), "server started") {
+	if !strings.Contains(stderr.String(), "server started") || !strings.Contains(stderr.String(), "project="+p.ID) {
 		t.Errorf("stderr:\n%s", stderr.String())
 	}
 	if data, err := os.ReadFile(filepath.Join(home, "logs", "mcp.log")); err != nil || !strings.Contains(string(data), "server started") {

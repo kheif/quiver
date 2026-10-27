@@ -5,16 +5,23 @@ package server
 import (
 	"context"
 	"log/slog"
-	"os"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// New returns the MCP server with every tool registered. log gets the
-// server's own logs and the SDK's.
-func New(version string, log *slog.Logger) *mcp.Server {
-	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: version}, &mcp.ServerOptions{Logger: log})
-	s.AddReceivingMiddleware(recoverPanics(log))
+// Options configure a server.
+type Options struct {
+	Version string
+	// Log gets the server's own logs and the SDK's.
+	Log *slog.Logger
+	// Where is the project to serve, from Resolve.
+	Where Where
+}
+
+// New returns the MCP server with every tool registered.
+func New(opts Options) *mcp.Server {
+	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{Logger: opts.Log})
+	s.AddReceivingMiddleware(recoverPanics(opts.Log))
 	addPing(s)
 	return s
 }
@@ -25,9 +32,12 @@ func New(version string, log *slog.Logger) *mcp.Server {
 func Run(ctx context.Context, version string) error {
 	log, closeLog := openLog()
 	defer closeLog()
-	wd, _ := os.Getwd()
-	log.Info("server started", "version", version, "dir", wd)
-	err := New(version, log).Run(ctx, &mcp.StdioTransport{})
+	w, err := Resolve()
+	if err != nil {
+		log.Warn("no project found, serving global skills only", "err", err)
+	}
+	log.Info("server started", "version", version, "dir", w.Dir, "from", w.From, "project", w.ProjectID())
+	err = New(Options{Version: version, Log: log, Where: w}).Run(ctx, &mcp.StdioTransport{})
 	if err != nil {
 		log.Error("server stopped", "err", err)
 	} else {

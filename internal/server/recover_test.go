@@ -12,7 +12,7 @@ import (
 
 func TestPanicBecomesToolError(t *testing.T) {
 	var logs bytes.Buffer
-	s := New("dev", slog.New(slog.NewTextHandler(&logs, nil)))
+	s := New(Options{Version: "dev", Log: slog.New(slog.NewTextHandler(&logs, nil))})
 	mcp.AddTool(s, &mcp.Tool{Name: "boom"}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, any, error) {
 		panic("kaboom")
 	})
