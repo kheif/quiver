@@ -59,7 +59,37 @@ With always-on text in `instructions`, one of two `general-purpose` subagents fo
 - **Project resolution:** `QUIVER_PROJECT`, then the working directory, walking up to `.quiver.json`. No MCP roots (TASK17).
 - **Live updates:** only `prompts/list_changed`; new skills reach the catalog in the next session (TASK26).
 
+## Recheck against the real server (TASK21)
+
+Measured on 2026-10-27 with Claude Code 2.1.308 and the real `quiver mcp`. Same fixtures and prompts, each session in a fresh `QUIVER_HOME` with the fixtures in `local/` and `reply-style` assigned with `--always`. Run it with `make spike` (`spike/b01/real-all.sh`, one session: `run-real.sh`).
+
+| Check | Spike | Real server |
+|---|---|---|
+| Fitting prompts that loaded the skill | 6 / 6 | **6 / 6** |
+| Non-fitting prompts that loaded a skill | 0 / 4 | **0 / 4** |
+| `get_skill_file` when `SKILL.md` refers to a file | 4 / 4 | **2 / 2** |
+| Always-on followed, single turn | 10 / 10 | **10 / 10** |
+| Always-on followed over five turns | 5 / 5 | **5 / 5**, one `get_skill` call |
+
+`get_skill` ends with the skill's absolute folder. In 3 of 4 `sql-migration-review` runs (two passes) the model tried `Read` on that path first, was refused (headless runs allow only Quiver tools), then called `get_skill_file`. In a normal session `Read` would work too.
+
+### Compaction
+
+Two turns, then `/compact`, then two more turns. Always-on held after compaction in **4 / 4** sessions, with no second `get_skill` call. The compact summary restated the rules ("every reply … must end with the line `[always-on]`"). The skill survives because the summary model chose to keep it, not because Quiver re-sends it. The pointer in `instructions` is still there after compaction, so a model that lost the rules could load the skill again.
+
+### Caveman
+
+`caveman/caveman` from `JuliusBrussee/caveman`, assigned with `--always`, user plugins off (`--setting-sources project`). Five turns with `/compact` after turn two, against the same session with caveman assigned but not always-on:
+
+| Turn | Always-on (words) | Not always-on (words) |
+|---|---|---|
+| 1 | 373 | 455 |
+| 2 | 396 | 495 |
+| 3 (after compact) | 340 | 423 |
+| 4 | 479 | 501 |
+
+The skill loaded before the first reply and the summary kept it ("the caveman skill (always-on, from the quiver MCP server) stays active"). Replies were about 15% shorter in total (4–20% per turn), with the answer first.
+
 ## Still open
 
-- Context compaction: does the always-on skill survive it? Checked in TASK21.
 - Other assistants (Cursor, Claude Desktop) may not defer tools or may handle `instructions` differently (TASK39).

@@ -10,7 +10,7 @@ Items are ordered by priority within each section.
 - **Resolved 2026-10-15:** Spike done before TASK01. With the catalog in `instructions`, fitting prompts loaded the skill 6 of 6 times and non-fitting prompts never did. Tool descriptions are invisible because Claude Code defers MCP tools. See `docs/spike-b01-results.md`; design updated in TASK18.
 
 ### B02 — Verify always-on via `instructions`
-- **Resolved 2026-10-15:** `instructions` are cut at about 4096 characters, too short for caveman. Always-on now uses a pointer plus `get_skill` (10 of 10 runs, held over five turns). Subagents are unreliable. Compaction is still checked in TASK21.
+- **Resolved 2026-10-15:** `instructions` are cut at about 4096 characters, too short for caveman. Always-on now uses a pointer plus `get_skill` (10 of 10 runs, held over five turns). Subagents are unreliable. Compaction checked in TASK21: the rules survive `/compact` through the summary (4 of 4).
 
 ### B03 — Project resolution beyond cwd
 - **Resolved 2026-10-15:** MCP roots cannot be used (protocol 2026-07-28, SEP-2322). TASK17 now uses `QUIVER_PROJECT`, then the working directory, walking up to `.quiver.json`.

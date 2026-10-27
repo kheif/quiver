@@ -382,6 +382,13 @@ The B01 spike (`spike/b01`, results in `docs/spike-b01-results.md`) answered the
 3. Check what the spike did not cover: context compaction, and a real caveman session with the caveman plugin disabled.
 4. Add the results to `docs/spike-b01-results.md`.
 
+**Notes:**
+- `make spike` runs `spike/b01/real-all.sh`: the ten prompts, a five-turn session and a compacted session, each in a fresh `QUIVER_HOME` with the fixture skills in `local/`. `run-real.sh` runs one session. Every run is a real `claude -p` session and costs tokens.
+- Results on 2026-10-27 match the spike: 6 of 6, 0 of 4, `get_skill_file` 2 of 2, always-on 10 of 10 and 5 of 5 turns. A second full pass gave the same numbers.
+- Always-on survives `/compact` (4 of 4) because the compact summary restates the skill's rules. `get_skill` is not called again. A summary that drops the rules would lose the skill; the server cannot detect that.
+- Caveman from the real source (`caveman/caveman`, always-on, user plugins off) loaded in turn one and held after compaction. Replies were about 15% shorter than the same session with caveman assigned but not always-on.
+- `get_skill` ends with the skill's absolute folder, so the model may try `Read` before `get_skill_file`. In the headless runs `Read` was not allowed and it fell back to `get_skill_file`.
+
 **Done when:** The real server matches the spike results, and compaction behaviour is recorded.
 """)
 
@@ -780,7 +787,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
