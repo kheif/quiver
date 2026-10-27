@@ -6,14 +6,14 @@ import (
 )
 
 func TestServerInfo(t *testing.T) {
-	info := connect(t, New("1.2.3")).InitializeResult().ServerInfo
+	info := connect(t, New("1.2.3", discard)).InitializeResult().ServerInfo
 	if info.Name != "quiver" || info.Version != "1.2.3" {
 		t.Errorf("got %+v", info)
 	}
 }
 
 func TestPing(t *testing.T) {
-	cs := connect(t, New("dev"))
+	cs := connect(t, New("dev", discard))
 	tools, err := cs.ListTools(context.Background(), nil)
 	if err != nil {
 		t.Fatal(err)

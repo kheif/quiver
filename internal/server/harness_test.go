@@ -2,10 +2,15 @@ package server
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+// discard is the logger for tests that do not check logs.
+var discard = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 // connect runs s on an in-memory transport and returns a client connected
 // to it, with no subprocess. Every server test uses it.
