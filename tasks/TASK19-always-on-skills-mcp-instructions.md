@@ -2,7 +2,7 @@
 
 **Phase:** Phase 2 — MCP Server (first usable version)
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK18, TASK14
 
@@ -24,6 +24,10 @@ The full skill text does not go into `instructions`: Claude Code cuts them at ab
 
 **Notes:**
 - `add` and `remove` share their flags through `target` in `internal/cli/assign.go`. Add `--always` there, and mark always-on skills in `printServed`.
+- `quiver add --always` assigns and marks in one registry update; `quiver remove --always` only unmarks. The registry methods are `MarkAlwaysOn`, `UnmarkAlwaysOn`, their `Global` variants and `AlwaysOnServed`, in `internal/registry/assign.go`. Marking a skill that is not assigned in the same place is an error.
+- `remove --always` in a project, for a skill that is always-on globally, prints a note to use `--global`. `printServed` adds an `always-on` column.
+- The pointer is built by `pointer` in `internal/server/catalog.go`. `catalog` gets the budget left after it. Always-on IDs that are no longer in the library are left out, like in the catalog.
+- The README does not exist yet. TASK31 must document the three limits above.
 
 **Done when:**
 - A harness test gets the pointer in `instructions`, ahead of the catalog.

@@ -590,7 +590,7 @@ task("TASK29", "End-to-end test suite", "TASK22, TASK28", """
 """)
 
 task("TASK30", "README and help text", "TASK29", """
-1. Write a README with: what Quiver is, install, a 2-minute quickstart (`init` → `mcp install` → `new` → ask the assistant), the command reference, the MCP tool reference and a security note about remote sources.
+1. Write a README with: what Quiver is, install, a 2-minute quickstart (`init` → `mcp install` → `new` → ask the assistant), the command reference, the MCP tool reference, the limits of always-on skills (see TASKA1) and a security note about remote sources.
 2. Give every cobra command a `Short`, a `Long` and an `Example`.
 3. Add shell completion with `quiver completion zsh|bash|fish`. Skill, source and project arguments complete with real values.
 
@@ -748,6 +748,10 @@ The full skill text does not go into `instructions`: Claude Code cuts them at ab
 
 **Notes:**
 - `add` and `remove` share their flags through `target` in `internal/cli/assign.go`. Add `--always` there, and mark always-on skills in `printServed`.
+- `quiver add --always` assigns and marks in one registry update; `quiver remove --always` only unmarks. The registry methods are `MarkAlwaysOn`, `UnmarkAlwaysOn`, their `Global` variants and `AlwaysOnServed`, in `internal/registry/assign.go`. Marking a skill that is not assigned in the same place is an error.
+- `remove --always` in a project, for a skill that is always-on globally, prints a note to use `--global`. `printServed` adds an `always-on` column.
+- The pointer is built by `pointer` in `internal/server/catalog.go`. `catalog` gets the budget left after it. Always-on IDs that are no longer in the library are left out, like in the catalog.
+- The README does not exist yet. TASK30 must document the three limits above.
 
 **Done when:**
 - A harness test gets the pointer in `instructions`, ahead of the catalog.
@@ -769,7 +773,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

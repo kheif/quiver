@@ -61,7 +61,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK16](TASK16-mcp-server-skeleton-quiver-mcp.md) | MCP server skeleton (`quiver mcp`) | TASK04, TASK08 |
 | ✅ | [TASK17](TASK17-project-resolution-in-the-server.md) | Project resolution in the server | TASK16, TASK06, TASK07 |
 | ✅ | [TASK18](TASK18-list-skills-get-skill-get-skill-file.md) | `list_skills`, `get_skill`, `get_skill_file` | TASK17 |
-|  | [TASK19](TASK19-always-on-skills-mcp-instructions.md) | Always-on skills (MCP instructions) | TASK18, TASK14 |
+| ✅ | [TASK19](TASK19-always-on-skills-mcp-instructions.md) | Always-on skills (MCP instructions) | TASK18, TASK14 |
 |  | [TASK20](TASK20-quiver-mcp-install.md) | `quiver mcp install` | TASK16 |
 |  | [TASK21](TASK21-behaviour-check-against-the-real-server.md) | Behaviour check against the real server | TASK18, TASK19 |
 
