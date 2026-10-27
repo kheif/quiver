@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kheif/quiver/internal/assistant/assistanttest"
 	"github.com/kheif/quiver/internal/project"
 )
 
@@ -78,5 +79,92 @@ func TestMCPStdoutHasOnlyMessages(t *testing.T) {
 	}
 	if data, err := os.ReadFile(filepath.Join(home, "logs", "mcp.log")); err != nil || !strings.Contains(string(data), "server started") {
 		t.Errorf("log file: %v\n%s", err, data)
+	}
+}
+
+// fakeExecutable makes mcp install see bin as the quiver binary.
+func fakeExecutable(t *testing.T, bin string) {
+	t.Helper()
+	old := executable
+	executable = func() (string, error) { return bin, nil }
+	t.Cleanup(func() { executable = old })
+}
+
+func TestMCPInstall(t *testing.T) {
+	f := assistanttest.Install(t)
+	fakeExecutable(t, "/opt/homebrew/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Registered with Claude Code: /opt/homebrew/bin/quiver mcp") || !strings.Contains(out, "Start a new Claude Code session") {
+		t.Errorf("output:\n%s", out)
+	}
+	if f.User() != "/opt/homebrew/bin/quiver|mcp" {
+		t.Errorf("user %q", f.User())
+	}
+
+	out, err = runIn(t, "", "mcp", "install")
+	if err != nil || !strings.Contains(out, "Already registered") || strings.Contains(out, "new Claude Code session") {
+		t.Errorf("second install: %v\n%s", err, out)
+	}
+
+	fakeExecutable(t, "/usr/local/bin/quiver")
+	out, err = runIn(t, "", "mcp", "install")
+	if err != nil || !strings.Contains(out, "Updated the Claude Code registration to /usr/local/bin/quiver mcp") {
+		t.Errorf("moved binary: %v\n%s", err, out)
+	}
+
+	out, err = runIn(t, "", "mcp", "uninstall")
+	if err != nil || !strings.Contains(out, "Removed from Claude Code.") || f.User() != "" {
+		t.Errorf("uninstall: %v, user %q\n%s", err, f.User(), out)
+	}
+	out, err = runIn(t, "", "mcp", "uninstall")
+	if err != nil || !strings.Contains(out, "was not registered") {
+		t.Errorf("second uninstall: %v\n%s", err, out)
+	}
+}
+
+func TestMCPInstallHidden(t *testing.T) {
+	f := assistanttest.Install(t)
+	t.Chdir(t.TempDir())
+	f.SetLocal(t, "/dev/quiver", "mcp")
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "warning: in this folder, a registration from Local config (private to you in this project) runs /dev/quiver mcp instead"; !strings.Contains(out, want) {
+		t.Errorf("output:\n%s", out)
+	}
+}
+
+func TestMCPInstallPrint(t *testing.T) {
+	f := assistanttest.Install(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install", "--print")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"claude mcp add --scope user quiver -- /opt/bin/quiver mcp", `"command": "/opt/bin/quiver"`} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+	if len(f.Calls()) != 0 {
+		t.Errorf("ran claude: %q", f.Calls())
+	}
+}
+
+func TestMCPInstallNoClaude(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install")
+	if err != nil || !strings.Contains(out, "run:\n  claude mcp add --scope user quiver -- /opt/bin/quiver mcp") {
+		t.Errorf("install: %v\n%s", err, out)
+	}
+	out, err = runIn(t, "", "mcp", "uninstall")
+	if err != nil || !strings.Contains(out, "run:\n  claude mcp remove quiver --scope user") {
+		t.Errorf("uninstall: %v\n%s", err, out)
 	}
 }
