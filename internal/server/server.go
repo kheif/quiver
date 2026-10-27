@@ -30,15 +30,17 @@ func New(opts Options) *mcp.Server {
 }
 
 // instructions returns the text the assistant adds to its system prompt:
-// the catalog of skills served in the project. It is built once, so skills
-// assigned later reach it in the next session.
+// the pointer to the always-on skills, then the catalog of skills served in
+// the project. It is built once, so skills assigned later reach it in the
+// next session.
 func instructions(opts Options) string {
 	_, skills, err := loadServed(opts.Where.ProjectID())
 	if err != nil {
 		opts.Log.Warn("no skill catalog in the instructions", "err", err)
 		return ""
 	}
-	return catalog(skills, maxInstructions)
+	p := pointer(skills)
+	return p + catalog(skills, maxInstructions-len(p))
 }
 
 // Run serves MCP over stdin and stdout until the client disconnects.

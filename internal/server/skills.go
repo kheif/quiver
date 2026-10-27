@@ -29,7 +29,8 @@ type SkillInfo struct {
 // servedSkill is a skill served in the project.
 type servedSkill struct {
 	*skill.Skill
-	Scope string
+	Scope    string
+	AlwaysOn bool
 }
 
 // loadServed reads the library and the registry, and returns the library
@@ -46,6 +47,7 @@ func loadServed(projectID string) (*library.Library, []servedSkill, error) {
 		return nil, nil, err
 	}
 	var out []servedSkill
+	always := r.AlwaysOnServed(projectID)
 	for _, id := range r.Served(projectID) {
 		s, err := l.Get(id)
 		if err != nil {
@@ -55,7 +57,7 @@ func loadServed(projectID string) (*library.Library, []servedSkill, error) {
 		if slices.Contains(r.Global, id) {
 			scope = "global"
 		}
-		out = append(out, servedSkill{s, scope})
+		out = append(out, servedSkill{s, scope, slices.Contains(always, id)})
 	}
 	return l, out, nil
 }

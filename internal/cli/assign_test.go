@@ -262,3 +262,77 @@ func TestRemoveUnregistered(t *testing.T) {
 		t.Error(".quiver.json was created")
 	}
 }
+
+func TestAddAlwaysGlobal(t *testing.T) {
+	assignEnv(t, "caveman", "pdf")
+	out, err := runIn(t, "", "add", "caveman", "--global", "--always")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runIn(t, "", "add", "pdf", "--global"); err != nil {
+		t.Fatal(err)
+	}
+	r := loadRegistry(t)
+	if !reflect.DeepEqual(r.Global, []string{"caveman", "pdf"}) || !reflect.DeepEqual(r.AlwaysOn, []string{"caveman"}) {
+		t.Errorf("global = %v, alwaysOn = %v", r.Global, r.AlwaysOn)
+	}
+	for _, want := range []string{"Assigned as always-on globally: caveman", "caveman  global  always-on"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestAddAlwaysProject(t *testing.T) {
+	dir := assignEnv(t, "pdf", "tdd")
+	out, err := runIn(t, "", "add", "tdd", "pdf", "--project", dir, "--always")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := project.Find(dir)
+	rp := loadRegistry(t).Projects[p.ID]
+	if !reflect.DeepEqual(rp.Skills, []string{"pdf", "tdd"}) || !reflect.DeepEqual(rp.AlwaysOn, []string{"pdf", "tdd"}) {
+		t.Errorf("project = %+v", rp)
+	}
+	if !strings.Contains(out, "Assigned as always-on to app: tdd, pdf") || !strings.Contains(out, "tdd  project  always-on") {
+		t.Errorf("output:\n%s", out)
+	}
+}
+
+func TestRemoveAlways(t *testing.T) {
+	dir := assignEnv(t, "caveman", "pdf")
+	if _, err := runIn(t, "", "add", "caveman", "--global", "--always"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runIn(t, "", "add", "pdf", "--project", dir, "--always"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "remove", "pdf", "caveman", "--project", dir, "--always")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := project.Find(dir)
+	r := loadRegistry(t)
+	if rp := r.Projects[p.ID]; !reflect.DeepEqual(rp.Skills, []string{"pdf"}) || len(rp.AlwaysOn) != 0 {
+		t.Errorf("project = %+v", rp)
+	}
+	for _, want := range []string{"note: caveman is always-on globally; remove the mark with --global", "No longer always-on in app: pdf", "pdf      project"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+
+	out, err = runIn(t, "", "remove", "caveman", "pdf", "--global", "--always")
+	if err != nil {
+		t.Fatal(err)
+	}
+	r = loadRegistry(t)
+	if !reflect.DeepEqual(r.Global, []string{"caveman"}) || len(r.AlwaysOn) != 0 {
+		t.Errorf("global = %v, alwaysOn = %v", r.Global, r.AlwaysOn)
+	}
+	for _, want := range []string{"note: pdf was not always-on globally", "No longer always-on in every folder: caveman"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/kheif/quiver/internal/skill"
 )
 
@@ -30,6 +31,46 @@ func TestInstructions(t *testing.T) {
 	got = connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
 	if want := header + "- pdf: Read, create and edit PDF files.\n"; got != want {
 		t.Errorf("no project: got %q", got)
+	}
+}
+
+func TestInstructionsAlwaysOn(t *testing.T) {
+	w, _ := skillsEnv(t)
+	err := registry.Update(func(r *registry.Registry) error {
+		if err := r.MarkAlwaysOnGlobal("pdf"); err != nil {
+			return err
+		}
+		// gone is assigned but not in the library, so it is left out.
+		return r.MarkAlwaysOn(w.ProjectID(), "db-migration", "gone")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	const rule = ". Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n"
+	catalog := header + "- db-migration: Rules for database migrations.\n- pdf: Read, create and edit PDF files.\n"
+	got := connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
+	if want := "Always-on skills: db-migration, pdf" + rule + catalog; got != want {
+		t.Errorf("got %q\nwant %q", got, want)
+	}
+
+	w.Project = nil
+	got = connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
+	if want := "Always-on skills: pdf" + rule + header + "- pdf: Read, create and edit PDF files.\n"; got != want {
+		t.Errorf("no project: got %q", got)
+	}
+}
+
+func TestPointerKeepsBudget(t *testing.T) {
+	var many []servedSkill
+	for i := range 500 {
+		many = append(many, servedSkill{Skill: &skill.Skill{ID: fmt.Sprintf("source/skill-%03d", i)}, AlwaysOn: i < 3})
+	}
+	p := pointer(many)
+	if !strings.HasPrefix(p, "Always-on skills: source/skill-000, source/skill-001, source/skill-002. ") {
+		t.Errorf("pointer %q", p)
+	}
+	if got := p + catalog(many, maxInstructions-len(p)); len(got) > maxInstructions {
+		t.Errorf("%d bytes", len(got))
 	}
 }
 

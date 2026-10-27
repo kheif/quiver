@@ -15,6 +15,23 @@ const maxDescription = 150
 
 const catalogHeader = "Skills (reusable instructions for specific tasks). Before starting a task, check whether one fits. If it does, call the get_skill tool of this server with its id and follow it.\n"
 
+// pointer tells the assistant to load the always-on skills before its first
+// reply. Only a pointer fits: Claude Code cuts the instructions at about 4096
+// characters, and a whole SKILL.md can be longer. It returns "" when no
+// skill is always-on.
+func pointer(skills []servedSkill) string {
+	var ids []string
+	for _, s := range skills {
+		if s.AlwaysOn {
+			ids = append(ids, s.ID)
+		}
+	}
+	if len(ids) == 0 {
+		return ""
+	}
+	return "Always-on skills: " + strings.Join(ids, ", ") + ". Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n"
+}
+
 // catalog lists the skills for the server's instructions, in at most
 // budget bytes. Descriptions are shortened to maxDescription characters.
 // If the list is still too long, descriptions are dropped from the end,

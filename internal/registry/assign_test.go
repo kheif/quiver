@@ -77,3 +77,42 @@ func TestProjectsUsing(t *testing.T) {
 		t.Errorf("got %v", got)
 	}
 }
+
+func TestAlwaysOn(t *testing.T) {
+	r := withProject()
+	r.AssignGlobal("caveman", "pdf")
+	_ = r.Assign("app", "db")
+	if err := r.MarkAlwaysOnGlobal("caveman"); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.MarkAlwaysOn("app", "db"); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.MarkAlwaysOnGlobal("db"); err == nil {
+		t.Error("marked a skill that is not global")
+	}
+	if err := r.MarkAlwaysOn("app", "pdf"); err == nil {
+		t.Error("marked a skill not assigned to the project")
+	}
+	if err := r.MarkAlwaysOn("nope", "db"); err == nil {
+		t.Error("marked in an unknown project")
+	}
+	if got := r.AlwaysOnServed("app"); !reflect.DeepEqual(got, []string{"caveman", "db"}) {
+		t.Errorf("always-on in app %v", got)
+	}
+	if got := r.AlwaysOnServed(""); !reflect.DeepEqual(got, []string{"caveman"}) {
+		t.Errorf("always-on without project %v", got)
+	}
+
+	notMarked, err := r.UnmarkAlwaysOn("app", "db", "pdf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(notMarked, []string{"pdf"}) || len(r.Projects["app"].AlwaysOn) != 0 || !reflect.DeepEqual(r.Projects["app"].Skills, []string{"db"}) {
+		t.Errorf("got %v, %+v", notMarked, r.Projects["app"])
+	}
+	notMarked = r.UnmarkAlwaysOnGlobal("caveman", "pdf")
+	if !reflect.DeepEqual(notMarked, []string{"pdf"}) || len(r.AlwaysOn) != 0 || !reflect.DeepEqual(r.Global, []string{"caveman", "pdf"}) {
+		t.Errorf("got %v, %+v", notMarked, r)
+	}
+}
