@@ -363,6 +363,13 @@ Skills (reusable instructions for specific tasks). Before starting a task, check
 **Notes:**
 - TASK28 checked `update` only through `library.Get`. Add a test that runs `update` and gets the new content through `get_skill`.
 - Remove `addPing` from `internal/server/server.go`. `TestPing` expects exactly one tool; replace it.
+- The tools are in `internal/server/skills.go`, the catalog in `catalog.go`. Every call loads the library and the registry again, so skills assigned or updated during the session show at once. `TestGetSkillAfterUpdate` covers `update`.
+- `New` now reads the library and the registry to build `instructions`, so every test that calls it must set `QUIVER_HOME`.
+- A skill that is both global and assigned to the project has scope `global`. Assigned IDs that are no longer in the library are left out without a warning.
+- `list_skills` returns structured output. The SDK also puts the same JSON into the text content.
+- The budget counts bytes, which are never fewer than characters (`maxInstructions`). Descriptions are dropped from the last skill backwards, so skills early in ID order keep theirs. TASKA1 must pass `catalog` the budget left after its pointer.
+- `get_skill_file` also refuses hidden files (a skill at the root of a source repository has `.git` in its folder) and anything that is not a regular file. `get_skill` leaves the same entries out of its file list, so broken symlinks and links to folders are not listed. Text that is not valid UTF-8 or has a NUL byte counts as binary.
+- Still open from TASK16: a startup resolve error is only logged; `list_skills` does not mention it.
 
 **Done when:** Harness tests cover all three tools, path traversal attempts, binary files and the `instructions` budget.
 """)
@@ -762,7 +769,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
