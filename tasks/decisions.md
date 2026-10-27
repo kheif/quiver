@@ -4,7 +4,7 @@ These apply to every task. Change them here first if you change them at all.
 
 | Topic | Decision | Reason |
 |---|---|---|
-| Language | Go 1.23+ | Ships as a single binary with no runtime. The CLI and the MCP server are the same binary. |
+| Language | Go 1.25+ | Ships as a single binary with no runtime. The CLI and the MCP server are the same binary. 1.25 is the minimum of the MCP SDK (v1.8.0). |
 | CLI framework | `spf13/cobra` | The standard choice for Go CLIs. Provides subcommands, flags and shell completion. |
 | MCP | Official Go SDK `github.com/modelcontextprotocol/go-sdk`, stdio transport | Maintained alongside the MCP spec. Stdio is what Claude Code, Cursor and Claude Desktop launch by default. |
 | TUI | Bubble Tea (`charmbracelet/bubbletea`, `bubbles`, `lipgloss`) | The most widely used Go TUI stack. Its models can be tested without a real terminal. |
