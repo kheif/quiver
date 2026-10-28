@@ -224,6 +224,11 @@ task("TASK11", "`quiver list` and `quiver status`", "TASK07, TASK08", """
 
 **Notes:**
 - `printServed` in `internal/cli/assign.go` already prints the served list after `add` and `remove`. Use it here, so both outputs stay the same.
+- The commands are in `internal/cli/list.go` and `internal/cli/status.go`. Columns are ID, ASSIGNED, DESCRIPTION: the description comes last, so cutting it to the terminal width keeps the table aligned. A skill both global and in projects shows `global, 2 projects`.
+- Width and dim text come from `golang.org/x/term` (`internal/cli/term.go`). Output that is not a terminal is never cut or coloured, and `NO_COLOR` turns dim text off.
+- `--json` prints `{"skills": [...], "warnings": [...]}`; each skill has `id`, `name`, `source`, `description`, `global` and `projects` (project IDs).
+- `status` finds the project with `server.Resolve`, so it honours `$QUIVER_PROJECT` like the server. It checks for a `PossibleCopy` on an in-memory copy of the registry and writes nothing. It also warns about assigned skills that are no longer in the library, which the server leaves out.
+- Golden files are in `internal/cli/testdata`; rewrite them with `go test ./internal/cli -update`.
 
 **Done when:** Output matches golden files for a fixture library and registry.
 """)
@@ -787,7 +792,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

@@ -69,7 +69,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK22](TASK22-quiver-list-and-quiver-status.md) | `quiver list` and `quiver status` | TASK07, TASK08 |
+| ✅ | [TASK22](TASK22-quiver-list-and-quiver-status.md) | `quiver list` and `quiver status` | TASK07, TASK08 |
 |  | [TASK23](TASK23-quiver-new-and-quiver-edit.md) | `quiver new` and `quiver edit` | TASK04, TASK07, TASK08 |
 |  | [TASK24](TASK24-create-skill.md) | `create_skill` | TASK18, TASK23 |
 |  | [TASK25](TASK25-skills-as-mcp-prompts.md) | Skills as MCP prompts | TASK18 |
