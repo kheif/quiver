@@ -29,6 +29,7 @@ func New(opts Options) *mcp.Server {
 	sess := &session{where: opts.Where}
 	addSkillTools(s, sess)
 	addCreateTool(s, sess)
+	addSkillPrompts(s, sess, opts.Log)
 	return s
 }
 

@@ -72,7 +72,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK22](TASK22-quiver-list-and-quiver-status.md) | `quiver list` and `quiver status` | TASK07, TASK08 |
 | ✅ | [TASK23](TASK23-quiver-new-and-quiver-edit.md) | `quiver new` and `quiver edit` | TASK04, TASK07, TASK08 |
 | ✅ | [TASK24](TASK24-create-skill.md) | `create_skill` | TASK18, TASK23 |
-|  | [TASK25](TASK25-skills-as-mcp-prompts.md) | Skills as MCP prompts | TASK18 |
+| ✅ | [TASK25](TASK25-skills-as-mcp-prompts.md) | Skills as MCP prompts | TASK18 |
 |  | [TASK26](TASK26-live-updates.md) | Live updates | TASK24, TASK25 |
 |  | [TASK27](TASK27-quiver-where-and-quiver-projects.md) | `quiver where` and `quiver projects` | TASK07 |
 |  | [TASK28](TASK28-quiver-import.md) | `quiver import` | TASK23, TASK14 |

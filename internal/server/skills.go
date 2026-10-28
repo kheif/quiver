@@ -97,21 +97,14 @@ func addSkillTools(s *mcp.Server, sess *session) {
 		if err != nil {
 			return nil, nil, err
 		}
-		files, err := extraFiles(sk)
+		content, err := skillText(sk)
 		if err != nil {
 			return nil, nil, err
 		}
-		var b strings.Builder
 		if !slices.ContainsFunc(skills, func(s servedSkill) bool { return s.ID == sk.ID }) {
-			fmt.Fprintf(&b, "Note: %s is not assigned in this project. The user can assign it with \"quiver add %s\".\n\n", sk.ID, sk.ID)
+			content = fmt.Sprintf("Note: %s is not assigned in this project. The user can assign it with \"quiver add %s\".\n\n", sk.ID, sk.ID) + content
 		}
-		b.WriteString(strings.TrimSpace(sk.Body))
-		b.WriteString("\n\n---\n")
-		if len(files) > 0 {
-			fmt.Fprintf(&b, "Extra files (load with get_skill_file): %s\n", strings.Join(files, ", "))
-		}
-		fmt.Fprintf(&b, "Scripts and files referenced by this skill are in %s. Use absolute paths.\n", sk.Dir)
-		return text(b.String()), nil, nil
+		return text(content), nil, nil
 	})
 
 	type fileIn struct {
@@ -154,6 +147,23 @@ func addSkillTools(s *mcp.Server, sess *session) {
 		}
 		return text(string(data)), nil, nil
 	})
+}
+
+// skillText is the skill's instructions followed by a note on its extra
+// files and its folder. get_skill and the skill prompts return it.
+func skillText(sk *skill.Skill) (string, error) {
+	files, err := extraFiles(sk)
+	if err != nil {
+		return "", err
+	}
+	var b strings.Builder
+	b.WriteString(strings.TrimSpace(sk.Body))
+	b.WriteString("\n\n---\n")
+	if len(files) > 0 {
+		fmt.Fprintf(&b, "Extra files (load with get_skill_file): %s\n", strings.Join(files, ", "))
+	}
+	fmt.Fprintf(&b, "Scripts and files referenced by this skill are in %s. Use absolute paths.\n", sk.Dir)
+	return b.String(), nil
 }
 
 // maxText is the largest file get_skill_file returns as text.
