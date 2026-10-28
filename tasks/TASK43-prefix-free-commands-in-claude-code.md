@@ -1,4 +1,4 @@
-# TASK42 — Prefix-free commands in Claude Code
+# TASK43 — Prefix-free commands in Claude Code
 
 **Phase:** Phase 5 — v2
 

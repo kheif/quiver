@@ -128,3 +128,78 @@ func TestImportSkip(t *testing.T) {
 		t.Errorf("review imported: %v", err)
 	}
 }
+
+// A lone markdown file is imported as SKILL.md, without the other files of
+// its folder, into the project of the current folder.
+func TestImportOneFile(t *testing.T) {
+	f := listEnv(t)
+	downloads := t.TempDir()
+	file := filepath.Join(downloads, "greeter.md")
+	writeFiles(t, downloads, map[string]string{
+		"greeter.md": "---\nname: greeter\ndescription: Greet people.\n---\nSay hello.\n",
+		"other.txt":  "not part of the skill",
+	})
+	t.Chdir(f.app)
+	out, err := runIn(t, "\nn\n", "import", file, "--name", "demo")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	wantLines(t, out, "Imported demo into the library and assigned it to this project.", "Delete the original file greeter.md? [y/N] ")
+	data, _ := os.ReadFile(filepath.Join(f.home, "local", "demo", "SKILL.md"))
+	if want := "---\nname: demo\ndescription: Greet people.\n---\nSay hello.\n"; string(data) != want {
+		t.Errorf("SKILL.md = %q", data)
+	}
+	if _, err := os.Stat(filepath.Join(f.home, "local", "demo", "other.txt")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("other.txt copied: %v", err)
+	}
+	if got := loadRegistry(t).Projects["app-000001"].Skills; !slices.Contains(got, "demo") {
+		t.Errorf("app skills = %v", got)
+	}
+	if _, err := os.Stat(file); err != nil {
+		t.Errorf("original deleted: %v", err)
+	}
+}
+
+// A SKILL.md brings its folder; deleting the original deletes the folder.
+func TestImportOneSkillMD(t *testing.T) {
+	f := listEnv(t)
+	skillDir := filepath.Join(t.TempDir(), "deploy")
+	writeFiles(t, skillDir, map[string]string{
+		"SKILL.md":       "---\nname: deploy\ndescription: Deploy the app.\n---\n",
+		"scripts/run.sh": "make deploy\n",
+	})
+	t.Chdir(f.app)
+	out, err := runIn(t, "g\ny\n", "import", filepath.Join(skillDir, "SKILL.md"))
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	wantLines(t, out, "Imported deploy into the library and assigned it to every folder.", "Delete the original folder deploy? [y/N] Deleted.")
+	if _, err := os.Stat(filepath.Join(f.home, "local", "deploy", "scripts", "run.sh")); err != nil {
+		t.Errorf("scripts not copied: %v", err)
+	}
+	if _, err := os.Stat(skillDir); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("original kept: %v", err)
+	}
+	if got := commits(t, f.home); !slices.Contains(got, "import deploy from "+filepath.Base(filepath.Dir(skillDir))) {
+		t.Errorf("commits = %v", got)
+	}
+}
+
+func TestImportOneRejects(t *testing.T) {
+	f := listEnv(t)
+	dir := t.TempDir()
+	writeFiles(t, dir, map[string]string{"plain.md": "# No frontmatter\n", "notes.txt": "x"})
+	t.Chdir(f.app)
+	for _, c := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"import", filepath.Join(dir, "plain.md")}, "frontmatter with name and description"},
+		{[]string{"import", filepath.Join(dir, "notes.txt")}, "is not a SKILL.md, a markdown file or a folder"},
+		{[]string{"import", f.api, "--name", "x"}, "--name works only when importing one skill"},
+	} {
+		if _, err := runIn(t, "", c.args...); err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%v: %v", c.args, err)
+		}
+	}
+}

@@ -86,20 +86,26 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK31](TASK31-readme-and-help-text.md) | README and help text | TASK30 |
 | ✅ | [TASK32](TASK32-release.md) | Release | TASK31 |
 
+### Phase 4b — v1.1
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+| ✅ | [TASK33](TASK33-v1-1-import-one-skill-version-for-go-install.md) | v1.1: import one skill, version for go install | TASK32 |
+
 ### Phase 5 — v2
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK33](TASK33-update-skill-mcp-tool.md) | `update_skill` MCP tool | TASK24 |
-|  | [TASK34](TASK34-quiver-search-and-search-skills.md) | `quiver search` and `search_skills` | TASK12, TASK18 |
-|  | [TASK35](TASK35-quiver-fork.md) | `quiver fork` | TASK12, TASK14 |
-|  | [TASK36](TASK36-pinning.md) | Pinning | TASK15 |
-|  | [TASK37](TASK37-update-preview.md) | Update preview | TASK15 |
-|  | [TASK38](TASK38-library-sync-between-machines.md) | Library sync between machines | TASK30 |
-|  | [TASK39](TASK39-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK20 |
-|  | [TASK40](TASK40-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK34, TASK14 |
-|  | [TASK41](TASK41-background-update-checks.md) | Background update checks | TASK40, TASK15 |
-|  | [TASK42](TASK42-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |
+|  | [TASK34](TASK34-update-skill-mcp-tool.md) | `update_skill` MCP tool | TASK24 |
+|  | [TASK35](TASK35-quiver-search-and-search-skills.md) | `quiver search` and `search_skills` | TASK12, TASK18 |
+|  | [TASK36](TASK36-quiver-fork.md) | `quiver fork` | TASK12, TASK14 |
+|  | [TASK37](TASK37-pinning.md) | Pinning | TASK15 |
+|  | [TASK38](TASK38-update-preview.md) | Update preview | TASK15 |
+|  | [TASK39](TASK39-library-sync-between-machines.md) | Library sync between machines | TASK30 |
+|  | [TASK40](TASK40-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK20 |
+|  | [TASK41](TASK41-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK35, TASK14 |
+|  | [TASK42](TASK42-background-update-checks.md) | Background update checks | TASK41, TASK15 |
+|  | [TASK43](TASK43-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |
 
 ## Later (not yet planned in detail)
 

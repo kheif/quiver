@@ -21,7 +21,7 @@
 - Error hints: an invalid name suggests its slug (`My Notes!` gives `my-notes`); a taken name suggests the first free `<name>-N`. Path errors come from `library.CreateLocal`.
 - The server `instructions` now always end with a pointer to `create_skill`, inside the 3800-byte budget (`createHint`, `buildInstructions`). Without it the manual test failed: Claude Code defers MCP tools, the instructions were empty for an empty library, and Claude wrote the skill file itself.
 - Manual test, run headless: `claude -p` in a new folder with `--mcp-config` pointing to `bin/quiver` and a temporary `QUIVER_HOME`. Claude called `create_skill` with `scope: "project"`, `.quiver.json` was created, and `quiver status` listed the skill as `project`.
-- Backlog B07 (approval for global skills) is still open and must be decided before release (TASK33): a prompt injection can still create a global skill.
+- Backlog B07 (approval for global skills) is still open and must be decided before release (TASK34): a prompt injection can still create a global skill.
 
 **Done when:**
 - Harness tests cover both scopes, an unregistered project, a taken name and path traversal in `files`.

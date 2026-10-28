@@ -71,19 +71,25 @@ func FindSkills(root string, deep bool, skip string) ([]Found, error) {
 	sort.Strings(dirs)
 	out := make([]Found, 0, len(dirs))
 	for _, dir := range dirs {
-		f := Found{Dir: dir, Name: filepath.Base(dir)}
-		s, err := skill.Load(dir)
-		if err != nil {
-			f.Err = err
-		} else {
-			if s.Name != "" {
-				f.Name = s.Name
-			}
-			f.Description = s.Description
-		}
-		out = append(out, f)
+		out = append(out, ReadFound(dir, filepath.Base(dir)))
 	}
 	return out, nil
+}
+
+// ReadFound reads the skill folder dir. Its name is the one in the
+// frontmatter, or fallback when there is none.
+func ReadFound(dir, fallback string) Found {
+	f := Found{Dir: dir, Name: fallback}
+	s, err := skill.Load(dir)
+	if err != nil {
+		f.Err = err
+		return f
+	}
+	if s.Name != "" {
+		f.Name = s.Name
+	}
+	f.Description = s.Description
+	return f
 }
 
 func samePath(a, b string) bool {

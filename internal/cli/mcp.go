@@ -50,7 +50,7 @@ $QUIVER_PROJECT when that is set. It logs to ~/.quiver/logs.`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return server.Run(cmd.Context(), version)
+			return server.Run(cmd.Context(), currentVersion())
 		},
 	}
 	cmd.AddCommand(newMCPInstallCmd(), newMCPUninstallCmd())

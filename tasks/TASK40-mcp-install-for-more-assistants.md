@@ -1,4 +1,4 @@
-# TASK39 — `mcp install` for more assistants
+# TASK40 — `mcp install` for more assistants
 
 **Phase:** Phase 5 — v2
 

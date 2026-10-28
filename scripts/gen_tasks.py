@@ -713,6 +713,22 @@ A to D notes: `git.CommonDir` and `registry.SameRepository` compare worktrees; `
 """)
 
 
+task("TASKC1", "v1.1: import one skill, version for go install", "TASK31", """
+Stabilization before v2, from using v1.0.0 (2026-10-28). Released as v1.1.0: a new feature, so a minor version.
+
+1. `quiver import <skill>` imports one skill: its `SKILL.md`, its folder, or any markdown file with `name` and `description` frontmatter. No `--deep` needed. `--name` sets its name in the library and is written into the copy's frontmatter. A `SKILL.md` brings its folder (`scripts/`, `references/`); a lone markdown file is imported alone, without the other files of its folder. The skill is assigned to the project of the current folder, or to every folder.
+2. `quiver --version` of a `go install` build shows the module version (`1.1.0`), not `dev`. A plain `go build` shows Go's VCS version; release builds keep the ldflags version.
+
+**Not done (decided 2026-10-28):** prefix-free commands (TASKB1) stay in v2. The user asked whether the assistant reliably follows a pointer file to `get_skill`, and chose to keep the MCP prompts as they are for now.
+
+**Notes:**
+- `importOne` in `internal/cli/import.go` handles one skill before the folder search; `library.ReadFound` reads a skill folder for both paths. A lone markdown file is copied to a temp folder as `SKILL.md` first. Deleting the original deletes the skill folder, or only the lone file.
+- `import` now completes files as well as folders.
+- `currentVersion` in `internal/cli/root.go` reads `debug.ReadBuildInfo` when no ldflags version is set.
+
+**Done when:** tests cover a lone file with `--name`, a `SKILL.md` with its folder, and the errors; `go install github.com/kheif/quiver/cmd/quiver@v1.1.0` prints `quiver 1.1.0`.
+""")
+
 # ---------------------------------------------------------------- Phase 5
 phase("Phase 5 — v2")
 
@@ -896,15 +912,16 @@ ORDER = [
     ("Phase 2 — MCP Server (first usable version)", ["TASK15", "TASK16", "TASK17", "TASKA1", "TASK22", "TASK18"]),
     ("Phase 3 — Local Skills and Management", ["TASK11", "TASK09", "TASK19", "TASK20", "TASK21", "TASK12", "TASK13", "TASK14"]),
     ("Phase 4 — v1 Release", ["TASK29", "TASK30", "TASK31"]),
+    ("Phase 4b — v1.1", ["TASKC1"]),
     ("Phase 5 — v2", ["TASK32", "TASK33", "TASK34", "TASK35", "TASK36", "TASK37", "TASK38", "TASK39", "TASK40", "TASKB1"]),
 ]
 ALL = {t[0]: t for _, ts in PHASES for t in ts}
 flat = [tid for _, ids in ORDER for tid in ids]
 assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
-remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1)", lambda m: REMAP[m.group(0)], s)
+remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

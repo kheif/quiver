@@ -1,10 +1,10 @@
-# TASK40 — Interactive TUI (`quiver` with no arguments)
+# TASK41 — Interactive TUI (`quiver` with no arguments)
 
 **Phase:** Phase 5 — v2
 
 **Status:** Todo
 
-**Depends on:** TASK34, TASK14
+**Depends on:** TASK35, TASK14
 
 Running `quiver` with no arguments in a terminal opens an interactive screen. Build it with Bubble Tea (`github.com/charmbracelet/bubbletea`, `bubbles` and `lipgloss`).
 
@@ -27,7 +27,7 @@ Running `quiver` with no arguments in a terminal opens an interactive screen. Bu
 └──────────────────────────────────┴───────────────────────┴───┘
 ```
 
-1. **Search:** typing filters the whole library live, using the ranking from TASK34.
+1. **Search:** typing filters the whole library live, using the ranking from TASK35.
 2. **Markers:** `[G]` global, `[P]` this project, `[ ]` not assigned here.
 3. **Keys:**
    - `space`: toggle the skill for the current project

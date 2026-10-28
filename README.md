@@ -76,6 +76,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver edit <id>` | Open a local skill in your editor, then check and commit it. |
 | `quiver delete <id>` | Delete a local skill from the library. An assigned skill needs `--force`. |
 | `quiver import [<dir>]` | Copy the skills in a project's `.claude/skills` into the library (`--deep`: every `SKILL.md`). |
+| `quiver import <skill>` | Copy one skill into the library: its `SKILL.md`, its folder or a markdown file. `--name` renames it. |
 | `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. |
 | `quiver remove <id>...` | Unassign skills. They stay in the library. |
 | `quiver list` | List the library's skills and where each is assigned (`--source`, `--unassigned`, `--json`). |

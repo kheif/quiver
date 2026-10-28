@@ -1,4 +1,4 @@
-# TASK33 — `update_skill` MCP tool
+# TASK34 — `update_skill` MCP tool
 
 **Phase:** Phase 5 — v2
 

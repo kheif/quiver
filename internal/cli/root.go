@@ -4,6 +4,8 @@ package cli
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
+	"strings"
 
 	"github.com/kheif/quiver/internal/setup"
 	"github.com/spf13/cobra"
@@ -11,6 +13,18 @@ import (
 
 // version is set at build time with -ldflags "-X github.com/kheif/quiver/internal/cli.version=...".
 var version = "dev"
+
+// currentVersion is version, or for a build without ldflags, such as
+// go install ...@v1.1.0, the module version Go recorded in the binary.
+func currentVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		return strings.TrimPrefix(bi.Main.Version, "v")
+	}
+	return version
+}
 
 // verbose is the global --verbose flag.
 var verbose bool
@@ -32,7 +46,7 @@ Get started:
   quiver source add anthropics/skills --name anthropic
   quiver add anthropic/pdf --global
   quiver status`,
-		Version:       version,
+		Version:       currentVersion(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		// Every command needs the Quiver home, so create it on first use.

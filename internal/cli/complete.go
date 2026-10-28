@@ -132,12 +132,12 @@ func noArgs(*cobra.Command, []string, string) ([]cobra.Completion, cobra.ShellCo
 	return nil, noFiles
 }
 
-// dirArg completes one folder name.
-func dirArg(_ *cobra.Command, args []string, _ string) ([]cobra.Completion, cobra.ShellCompDirective) {
+// pathArg completes one file or folder name.
+func pathArg(_ *cobra.Command, args []string, _ string) ([]cobra.Completion, cobra.ShellCompDirective) {
 	if len(args) > 0 {
 		return nil, noFiles
 	}
-	return nil, cobra.ShellCompDirectiveFilterDirs
+	return nil, cobra.ShellCompDirectiveDefault
 }
 
 // projectFlag makes --project complete folders.
