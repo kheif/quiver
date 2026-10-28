@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 
+	"github.com/kheif/quiver/internal/fsutil"
 	"github.com/kheif/quiver/internal/project"
 )
 
@@ -102,4 +105,76 @@ func RegisterProject(dir string) (p *project.Project, created bool, copied *Poss
 		return nil
 	})
 	return p, created, copied, err
+}
+
+// ProjectLabel is how commands name a project: "<name> (<paths>)".
+func ProjectLabel(name string, paths []string) string {
+	return fmt.Sprintf("%s (%s)", name, strings.Join(paths, ", "))
+}
+
+// Lookup returns the ID of the project with ID or name ref. An ID wins
+// over a name; a name shared by several projects is an error.
+func (r *Registry) Lookup(ref string) (string, error) {
+	if _, ok := r.Projects[ref]; ok {
+		return ref, nil
+	}
+	var ids []string
+	for id, p := range r.Projects {
+		if p.Name == ref {
+			ids = append(ids, id)
+		}
+	}
+	switch len(ids) {
+	case 0:
+		return "", fmt.Errorf("unknown project %q; see quiver projects", ref)
+	case 1:
+		return ids[0], nil
+	}
+	sort.Strings(ids)
+	return "", fmt.Errorf("several projects are named %q (%s); use the ID", ref, strings.Join(ids, ", "))
+}
+
+// ErrNotCopied is returned by SplitProject when no other folder has the ID.
+var ErrNotCopied = errors.New("no other folder has this project's ID, so there is nothing to split")
+
+// SplitProject gives the project that dir is in a new ID, for a folder that
+// was copied with its .quiver.json. The new project starts with the old
+// one's skills and always-on marks; after that the two are independent.
+func SplitProject(dir string) (oldID string, p *project.Project, err error) {
+	err = fsutil.WithLock(func() error {
+		r, err := Load()
+		if err != nil {
+			return err
+		}
+		p, err = project.Find(dir)
+		if err != nil {
+			return err
+		}
+		oldID = p.ID
+		old, ok := r.Projects[oldID]
+		if !ok {
+			return fmt.Errorf("project %s is not in the registry; nothing to split", oldID)
+		}
+		if r.EnsureProject(oldID, p.Root) == nil {
+			return ErrNotCopied
+		}
+		newID := project.NewID(filepath.Base(p.Root))
+		r.Projects[newID] = &Project{
+			Name:     filepath.Base(p.Root),
+			Paths:    []string{p.Root},
+			Skills:   slices.Clone(old.Skills),
+			AlwaysOn: slices.Clone(old.AlwaysOn),
+		}
+		old.Paths = slices.DeleteFunc(old.Paths, func(path string) bool { return samePath(path, p.Root) })
+		if err := project.SetID(p.Root, newID); err != nil {
+			return err
+		}
+		if err := Write(r); err != nil {
+			// Put the old ID back, so the folder matches the registry.
+			return errors.Join(err, project.SetID(p.Root, oldID))
+		}
+		p.ID = newID
+		return nil
+	})
+	return oldID, p, err
 }

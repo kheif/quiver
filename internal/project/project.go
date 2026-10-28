@@ -74,7 +74,7 @@ func Register(dir string) (*Project, error) {
 			break
 		}
 	}
-	id := newID(filepath.Base(root))
+	id := NewID(filepath.Base(root))
 	if err := SetID(root, id); err != nil {
 		return nil, err
 	}
@@ -105,9 +105,9 @@ func SetID(root, id string) error {
 // idChars is Crockford base32: 32 chars, no i/l/o/u, so 0 and 1 are unambiguous.
 const idChars = "0123456789abcdefghjkmnpqrstvwxyz"
 
-// newID returns "<name>-<6 random chars>", with name reduced to lowercase
+// NewID returns "<name>-<6 random chars>", with name reduced to lowercase
 // letters, digits and dashes.
-func newID(folder string) string {
+func NewID(folder string) string {
 	var b strings.Builder
 	for _, r := range strings.ToLower(folder) {
 		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {

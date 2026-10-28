@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -118,5 +119,74 @@ func TestRenameAndForget(t *testing.T) {
 	}
 	if err := r.ForgetProject("app"); err == nil {
 		t.Error("forget twice: want error")
+	}
+}
+
+func TestLookup(t *testing.T) {
+	r := Default()
+	r.Projects["app-1"] = &Project{Name: "app"}
+	r.Projects["web-1"] = &Project{Name: "web"}
+	r.Projects["web-2"] = &Project{Name: "web"}
+	r.Projects["x-1"] = &Project{Name: "app-1"}
+	for ref, want := range map[string]string{"app-1": "app-1", "app": "app-1", "web-2": "web-2"} {
+		if got, err := r.Lookup(ref); err != nil || got != want {
+			t.Errorf("Lookup(%q) = %q, %v; want %q", ref, got, err, want)
+		}
+	}
+	if _, err := r.Lookup("web"); err == nil || !strings.Contains(err.Error(), "web-1, web-2") {
+		t.Errorf("shared name: %v", err)
+	}
+	if _, err := r.Lookup("nope"); err == nil {
+		t.Error("unknown: want error")
+	}
+}
+
+func TestSplitProject(t *testing.T) {
+	home := fakeHome(t)
+	setHome(t)
+	orig := folder(t, home, "app", "app-1")
+	cp := folder(t, home, "app-copy", "app-1")
+	err := Update(func(r *Registry) error {
+		r.EnsureProject("app-1", orig)
+		r.Projects["app-1"].Skills = []string{"pdf", "tdd"}
+		r.Projects["app-1"].AlwaysOn = []string{"pdf"}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldID, p, err := SplitProject(cp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if oldID != "app-1" || !strings.HasPrefix(p.ID, "app-copy-") || p.Root != cp {
+		t.Errorf("split = %s, %+v", oldID, p)
+	}
+	if found, err := project.Find(cp); err != nil || found.ID != p.ID {
+		t.Errorf(".quiver.json: %+v, %v", found, err)
+	}
+	r, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := &Project{Name: "app-copy", Paths: []string{cp}, Skills: []string{"pdf", "tdd"}, AlwaysOn: []string{"pdf"}}
+	if got := r.Projects[p.ID]; !reflect.DeepEqual(got, want) {
+		t.Errorf("new project = %+v", got)
+	}
+	if got := r.Projects["app-1"].Paths; !reflect.DeepEqual(got, []string{orig}) {
+		t.Errorf("old paths = %v", got)
+	}
+	// The original folder is now the only one with app-1.
+	if _, _, err := SplitProject(orig); !errors.Is(err, ErrNotCopied) {
+		t.Errorf("split the original: %v", err)
+	}
+}
+
+func TestSplitProjectUnknown(t *testing.T) {
+	home := fakeHome(t)
+	setHome(t)
+	dir := folder(t, home, "app", "app-1")
+	if _, _, err := SplitProject(dir); err == nil || !strings.Contains(err.Error(), "not in the registry") {
+		t.Errorf("got %v", err)
 	}
 }

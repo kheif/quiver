@@ -152,8 +152,8 @@ func TestSetIDKeepsUnknownKeys(t *testing.T) {
 
 func TestNewIDName(t *testing.T) {
 	for folder, prefix := range map[string]string{"My App": "my-app-", "...": "project-", "web_2": "web-2-"} {
-		if id := newID(folder); !strings.HasPrefix(id, prefix) || len(id) != len(prefix)+6 {
-			t.Errorf("newID(%q) = %q", folder, id)
+		if id := NewID(folder); !strings.HasPrefix(id, prefix) || len(id) != len(prefix)+6 {
+			t.Errorf("NewID(%q) = %q", folder, id)
 		}
 	}
 }

@@ -195,7 +195,7 @@ func (e *InUseError) Error() string {
 		fmt.Fprintf(&b, "\n  global: %s", strings.Join(e.Global, ", "))
 	}
 	for _, p := range e.Projects {
-		fmt.Fprintf(&b, "\n  project %s (%s): %s", p.Name, strings.Join(p.Paths, ", "), strings.Join(p.Skills, ", "))
+		fmt.Fprintf(&b, "\n  project %s: %s", registry.ProjectLabel(p.Name, p.Paths), strings.Join(p.Skills, ", "))
 	}
 	b.WriteString("\nrun again with --force to unassign them")
 	return b.String()
