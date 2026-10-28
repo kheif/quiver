@@ -64,12 +64,14 @@ for (const t of targets) {
   const pkg = { name, ...common, os: [t.os], cpu: [t.cpu], files: ["bin"] };
   pkg.description = `The ${t.os} ${t.cpu} binary of ${scope}/quiver. Install ${scope}/quiver instead.`;
   writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2) + "\n");
+  copyFileSync("LICENSE", join(dir, "LICENSE"));
   dirs.push({ name, dir });
 }
 
 const mainDir = join(out, "quiver");
 cpSync("npm/quiver", mainDir, { recursive: true });
 copyFileSync("README.md", join(mainDir, "README.md"));
+copyFileSync("LICENSE", join(mainDir, "LICENSE"));
 main.version = version;
 main.optionalDependencies = Object.fromEntries(dirs.map((d) => [d.name, version]));
 writeFileSync(join(mainDir, "package.json"), JSON.stringify(main, null, 2) + "\n");

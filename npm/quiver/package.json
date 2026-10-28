@@ -2,7 +2,14 @@
   "name": "@kheif/quiver",
   "version": "0.0.0",
   "description": "Central skill manager for AI assistants, delivered as an MCP server.",
-  "keywords": ["mcp", "agent-skills", "claude-code", "skills", "cli"],
+  "license": "Apache-2.0",
+  "keywords": [
+    "mcp",
+    "agent-skills",
+    "claude-code",
+    "skills",
+    "cli"
+  ],
   "homepage": "https://github.com/kheif/quiver#readme",
   "bugs": "https://github.com/kheif/quiver/issues",
   "repository": {
@@ -12,7 +19,9 @@
   "bin": {
     "quiver": "bin/quiver.js"
   },
-  "files": ["bin"],
+  "files": [
+    "bin"
+  ],
   "engines": {
     "node": ">=18"
   },

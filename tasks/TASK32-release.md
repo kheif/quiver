@@ -31,6 +31,8 @@ A to D notes: `git.CommonDir` and `registry.SameRepository` compare worktrees; `
 
 **Release setup notes (steps 1 to 6 and 8 done):** `.goreleaser.yaml` names archives `quiver_<os>_<arch>` without the version, so `install.sh` can use `releases/latest/download`. `install.sh` takes `QUIVER_DOWNLOAD_URL` for mirrors and tests. The npm launcher is `npm/quiver/bin/quiver.js`; `scripts/npm-publish.mjs` builds the seven packages from `dist/` and skips versions already published. The launcher sets `QUIVER_NPM=1`, and `mcp install` then registers the `quiver` on `PATH` (`command` in `internal/cli/mcp.go`). `.github/workflows/release.yml` publishes on a `v*` tag and installs both ways on clean machines; CI's `release-dry-run` job does the same without publishing on every push. A `TestMain` in `internal/cli` now points `HOME` and `QUIVER_HOME` at a temp folder, because some `mcp install` tests had used the real `~/.quiver`.
 
+**License:** Apache-2.0 (decided 2026-10-28, with the enterprise track in mind). `LICENSE` is in the repository, the archives and every npm package.
+
 **The user does by hand:** create the npm scope (the npm username or an organization), publish the first version of each package, and add the trusted publisher for `kheif/quiver` and the release workflow on npmjs.com.
 
 **Done when:** on a clean macOS and Linux machine, the curl install and `npm install -g @<scope>/quiver` both give a working `quiver`, on Windows the npm install does, and the README quickstart runs.

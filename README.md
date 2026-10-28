@@ -163,3 +163,7 @@ make lint    # golangci-lint
 ```
 
 See [PROJECT.md](PROJECT.md) for the design and [tasks/](tasks/README.md) for the plan.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE).
