@@ -99,6 +99,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 |  | [TASK39](TASK39-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK20 |
 |  | [TASK40](TASK40-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK34, TASK14 |
 |  | [TASK41](TASK41-background-update-checks.md) | Background update checks | TASK40, TASK15 |
+|  | [TASK42](TASK42-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |
 
 ## Later (not yet planned in detail)
 
