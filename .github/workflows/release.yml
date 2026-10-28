@@ -33,11 +33,10 @@ jobs:
           registry-url: https://registry.npmjs.org
       # Trusted publishing needs npm 11.5.1 or later.
       - run: npm install -g npm@^11.5.1
-      # With a trusted publisher configured on npmjs.com, npm publishes with
-      # OIDC; otherwise it falls back to the NPM_TOKEN secret.
+      # npm trusted publishing (OIDC): no token is stored. Versions that are
+      # already on npm are skipped, such as a first release published by
+      # hand (docs/releasing.md).
       - run: node scripts/npm-publish.mjs "$GITHUB_REF_NAME"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   verify-curl:
     needs: release
