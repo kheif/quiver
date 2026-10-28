@@ -177,6 +177,15 @@ task("TASK09", "`quiver new` and `quiver edit`", "TASK04, TASK07, TASK08", """
 2. After the editor closes, validates the skill and commits with the message `edit <name>`.
 3. For remote skills, refuses through `library.CheckEditable` and suggests `fork` (TASK34).
 
+**Notes:**
+- `library.CreateLocal` (`internal/library/create.go`) returns the validation warnings. It writes into a hidden `local/.new-<name>-*` folder, which the library skips, validates, then renames it into place, all under the Quiver lock. Nothing is left behind or assigned when it fails before the commit. With `scope: "project"` the project must already be in the registry; `new` registers the folder first, as `add` does.
+- Extra file paths must pass `filepath.IsLocal` and may not contain a backslash, a `.git` part, or be `SKILL.md`.
+- `skill.ValidateName` is the name rule for new skills; a name over 64 characters is an error here, not a warning.
+- `new` checks the name is free before it registers a project, so a typo does not create a `.quiver.json`. Without `--description` the skill is created and committed with the template (`add <name>`), then opened; a change is committed as `edit <name>`. Both `new` and `edit` warn while the description still starts with `TODO`.
+- `edit` opens a local skill from its folder, not through the library, so a skill that an earlier edit broke can still be fixed. An invalid edit stays on disk, uncommitted. The editor is `$VISUAL`, then `$EDITOR`, then `vi`, split on spaces so `code --wait` works.
+- The read-only error already suggests `quiver fork`, which comes with TASK34.
+- Tests replace `runEditor` in `internal/cli/new.go`.
+
 **Done when:** Create, assign and commit are tested for all three scopes. Duplicate names and path traversal are rejected.
 """)
 
@@ -792,7 +801,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

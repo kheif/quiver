@@ -140,12 +140,7 @@ func add(out io.Writer, t target, ids []string) error {
 		fmt.Fprintf(out, "%s globally: %s\n", verb, strings.Join(ids, ", "))
 	} else {
 		projectID = p.ID
-		if created {
-			fmt.Fprintf(out, "Created %s. Commit it, so the project keeps its ID.\n", filepath.Join(p.Root, project.FileName))
-		}
-		if copied != nil {
-			fmt.Fprintln(out, "warning:", copied)
-		}
+		reportProject(out, p, created, copied)
 		fmt.Fprintf(out, "%s to %s: %s\n", verb, reg.Projects[p.ID].Name, strings.Join(ids, ", "))
 	}
 	for _, c := range clashes(l, reg.Served(projectID), ids) {
@@ -261,6 +256,17 @@ func remove(out io.Writer, t target, ids []string) error {
 		fmt.Fprintf(out, "Removed from %s: %s\n", where, strings.Join(removed, ", "))
 	}
 	return printServed(out, reg, projectID, where)
+}
+
+// reportProject tells the user about a new .quiver.json and a project
+// that is in more than one folder.
+func reportProject(out io.Writer, p *project.Project, created bool, copied *registry.PossibleCopy) {
+	if created {
+		fmt.Fprintf(out, "Created %s. Commit it, so the project keeps its ID.\n", filepath.Join(p.Root, project.FileName))
+	}
+	if copied != nil {
+		fmt.Fprintln(out, "warning:", copied)
+	}
 }
 
 // clashes describes added skills that share their name with another served

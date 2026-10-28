@@ -17,6 +17,19 @@ const (
 	maxDescriptionLen = 1024
 )
 
+// ValidateName checks the name of a skill about to be created. It is
+// stricter than Validate: a name longer than the limit is an error here,
+// because a new skill has no reason to break it.
+func ValidateName(name string) error {
+	if !nameRE.MatchString(name) {
+		return fmt.Errorf("invalid name %q: use lowercase letters, digits and dashes, starting with a letter or digit", name)
+	}
+	if len(name) > maxNameLen {
+		return fmt.Errorf("name %q is longer than %d characters", name, maxNameLen)
+	}
+	return nil
+}
+
 // Validate checks a loaded skill. Problems that make the skill unusable are
 // returned as an error; soft issues are returned as warnings. Every message
 // starts with the path of SKILL.md.

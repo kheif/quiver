@@ -63,3 +63,16 @@ func TestValidateWarnings(t *testing.T) {
 		t.Errorf("got %v", warnings)
 	}
 }
+
+func TestValidateName(t *testing.T) {
+	for _, ok := range []string{"pdf", "db-migration", "3d"} {
+		if err := ValidateName(ok); err != nil {
+			t.Errorf("ValidateName(%q) = %v", ok, err)
+		}
+	}
+	for _, bad := range []string{"", "PDF", "-pdf", "a/b", "..", "my skill", strings.Repeat("a", maxNameLen+1)} {
+		if err := ValidateName(bad); err == nil {
+			t.Errorf("ValidateName(%q) passed", bad)
+		}
+	}
+}

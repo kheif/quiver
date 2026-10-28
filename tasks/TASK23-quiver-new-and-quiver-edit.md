@@ -2,7 +2,7 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK04, TASK07, TASK08
 
@@ -41,5 +41,14 @@
 1. Opens `local/<name>/SKILL.md` in `$EDITOR`.
 2. After the editor closes, validates the skill and commits with the message `edit <name>`.
 3. For remote skills, refuses through `library.CheckEditable` and suggests `fork` (TASK35).
+
+**Notes:**
+- `library.CreateLocal` (`internal/library/create.go`) returns the validation warnings. It writes into a hidden `local/.new-<name>-*` folder, which the library skips, validates, then renames it into place, all under the Quiver lock. Nothing is left behind or assigned when it fails before the commit. With `scope: "project"` the project must already be in the registry; `new` registers the folder first, as `add` does.
+- Extra file paths must pass `filepath.IsLocal` and may not contain a backslash, a `.git` part, or be `SKILL.md`.
+- `skill.ValidateName` is the name rule for new skills; a name over 64 characters is an error here, not a warning.
+- `new` checks the name is free before it registers a project, so a typo does not create a `.quiver.json`. Without `--description` the skill is created and committed with the template (`add <name>`), then opened; a change is committed as `edit <name>`. Both `new` and `edit` warn while the description still starts with `TODO`.
+- `edit` opens a local skill from its folder, not through the library, so a skill that an earlier edit broke can still be fixed. An invalid edit stays on disk, uncommitted. The editor is `$VISUAL`, then `$EDITOR`, then `vi`, split on spaces so `code --wait` works.
+- The read-only error already suggests `quiver fork`, which comes with TASK35.
+- Tests replace `runEditor` in `internal/cli/new.go`.
 
 **Done when:** Create, assign and commit are tested for all three scopes. Duplicate names and path traversal are rejected.
