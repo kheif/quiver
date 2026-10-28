@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/kheif/quiver/internal/library"
@@ -208,10 +209,10 @@ func editSkill(out io.Writer, id string) error {
 	return nil
 }
 
-// runEditor opens path in $VISUAL or $EDITOR (default vi) and waits until it
-// closes. Tests replace it.
+// runEditor opens path in $VISUAL or $EDITOR and waits until it closes.
+// Tests replace it.
 var runEditor = func(path string) error {
-	editor := "vi"
+	editor := defaultEditor()
 	for _, v := range []string{"VISUAL", "EDITOR"} {
 		if e := strings.TrimSpace(os.Getenv(v)); e != "" {
 			editor = e
@@ -223,4 +224,13 @@ var runEditor = func(path string) error {
 	c := exec.Command(args[0], append(args[1:], path)...)
 	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr
 	return c.Run()
+}
+
+// defaultEditor is the editor used when $VISUAL and $EDITOR are not set:
+// vi, which every Unix has, or notepad on Windows.
+func defaultEditor() string {
+	if runtime.GOOS == "windows" {
+		return "notepad"
+	}
+	return "vi"
 }

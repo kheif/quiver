@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -235,5 +236,30 @@ func TestEditRejects(t *testing.T) {
 	}
 	if *calls != 0 {
 		t.Errorf("editor ran %d times", *calls)
+	}
+}
+
+func TestDelete(t *testing.T) {
+	f := listEnv(t)
+	out, err := runIn(t, "n\n", "delete", "notes")
+	if err != nil || !strings.HasSuffix(out, "Skill not deleted.\n") {
+		t.Errorf("no: %q, %v", out, err)
+	}
+	if out, err := runIn(t, "y\n", "delete", "notes"); err != nil || !strings.HasSuffix(out, "Deleted skill notes.\n") {
+		t.Errorf("yes: %q, %v", out, err)
+	}
+	if _, err := os.Stat(filepath.Join(f.home, "local", "notes")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("notes left: %v", err)
+	}
+	// tdd is assigned to app and api.
+	if _, err := runIn(t, "", "delete", "tdd", "--yes"); err == nil || !strings.Contains(err.Error(), "--force") {
+		t.Errorf("assigned: %v", err)
+	}
+	out = f.run(t, "delete", "tdd", "--yes", "--force")
+	if want := "Unassigned from project api ($TMP/"; !strings.Contains(out, want) || !strings.HasSuffix(out, "Deleted skill tdd.\n") {
+		t.Errorf("force:\n%s", out)
+	}
+	if _, err := runIn(t, "", "delete", "acme/review", "--yes"); err == nil || !strings.Contains(err.Error(), "quiver source remove acme") {
+		t.Errorf("source skill: %v", err)
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -92,4 +93,27 @@ func Status(dir string) (string, error) {
 		return "", err
 	}
 	return out, nil
+}
+
+// CommonDir returns the absolute path of the git folder shared by every
+// worktree of the repository that dir is in. Two folders are worktrees of
+// the same repository when their CommonDir is the same.
+func CommonDir(dir string) (string, error) {
+	out, err := run(dir, "rev-parse", "--git-common-dir")
+	if err != nil {
+		return "", err
+	}
+	if !filepath.IsAbs(out) {
+		out = filepath.Join(dir, out)
+	}
+	if real, err := filepath.EvalSymlinks(out); err == nil {
+		out = real
+	}
+	return filepath.Clean(out), nil
+}
+
+// Tracked reports whether git tracks any file under path in dir.
+func Tracked(dir, path string) bool {
+	out, err := run(dir, "ls-files", "--", path)
+	return err == nil && out != ""
 }

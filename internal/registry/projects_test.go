@@ -3,6 +3,7 @@ package registry
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -188,5 +189,53 @@ func TestSplitProjectUnknown(t *testing.T) {
 	dir := folder(t, home, "app", "app-1")
 	if _, _, err := SplitProject(dir); err == nil || !strings.Contains(err.Error(), "not in the registry") {
 		t.Errorf("got %v", err)
+	}
+}
+
+// gitRun runs git in dir with a fixed identity.
+func gitRun(t *testing.T, dir string, args ...string) {
+	t.Helper()
+	cmd := exec.Command("git", append([]string{"-c", "user.name=Test", "-c", "user.email=test@example.com"}, args...)...)
+	cmd.Dir = dir
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git %v: %v\n%s", args, err, out)
+	}
+}
+
+// Worktrees of one repository share the committed .quiver.json: they are
+// one project, not copies.
+func TestEnsureProjectWorktrees(t *testing.T) {
+	home := fakeHome(t)
+	setHome(t)
+	main := folder(t, home, "app", "app-1")
+	gitRun(t, main, "init", "--quiet")
+	gitRun(t, main, "add", ".quiver.json")
+	gitRun(t, main, "commit", "--quiet", "-m", "init")
+	wt := filepath.Join(home, "app-feature")
+	gitRun(t, main, "worktree", "add", "--quiet", wt)
+	err := Update(func(r *Registry) error {
+		_ = r.EnsureProject("app-1", main)
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, _ := Load()
+	if w := r.EnsureProject("app-1", wt); w != nil {
+		t.Errorf("worktree reported as a copy: %v", w)
+	}
+	if got := r.Projects["app-1"].Paths; len(got) != 2 {
+		t.Errorf("paths = %v", got)
+	}
+	if err := Write(r); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := SplitProject(wt); !errors.Is(err, ErrWorktree) {
+		t.Errorf("split in a worktree: %v", err)
+	}
+	// A plain copy of the folder is still a copy.
+	cp := folder(t, home, "app-copy", "app-1")
+	if w := r.EnsureProject("app-1", cp); w == nil {
+		t.Error("copy not reported")
 	}
 }

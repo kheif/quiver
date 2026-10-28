@@ -43,7 +43,8 @@ Then start Claude Code in `~/code/app` and ask for the task, such as "write the 
 - **Library.** `~/.quiver/local/` holds your own skills, in a git repository Quiver commits to. `~/.quiver/sources/` holds cloned skill repositories. Set `QUIVER_HOME` to use another folder.
 - **Skill IDs.** A local skill's ID is its folder name, such as `release-notes`. A skill from a source is `<source>/<skill>`, such as `anthropic/pdf`.
 - **Assignments.** `registry.json` stores which skills are global and which projects get which skills. A folder that is not a project gets only the global skills.
-- **Projects.** A project is the folder with `.quiver.json`, found by walking up from the current folder. It is created the first time you assign a skill there. The ID survives moves and renames. If a folder is copied, both copies have the same ID; `quiver status` warns, and `quiver projects split` gives the copy its own.
+- **Assignments are yours.** They live in your `~/.quiver`, not in the project. A teammate who clones the project gets its `.quiver.json`, but not your skills or assignments. To share skills, put them in a git repository that everyone adds with `quiver source add`.
+- **Projects.** A project is the folder with `.quiver.json`, found by walking up from the current folder. It is created the first time you assign a skill there. The ID survives moves and renames. Git worktrees of one repository share the committed `.quiver.json`, so they are one project with the same skills. If a folder is copied, both copies have the same ID; `quiver status` warns, and `quiver projects split` gives the copy its own.
 - **Always-on skills.** A skill added with `--always` is loaded before the assistant's first reply, for style or rules that apply to every answer. See the limits below.
 
 ## Commands
@@ -55,6 +56,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver init` | Create the Quiver home and anything missing in it. |
 | `quiver new <name>` | Create a local skill and assign it to this project (`--global`: every folder, `--none`: nowhere). |
 | `quiver edit <id>` | Open a local skill in your editor, then check and commit it. |
+| `quiver delete <id>` | Delete a local skill from the library. An assigned skill needs `--force`. |
 | `quiver import [<dir>]` | Copy the skills in a project's `.claude/skills` into the library (`--deep`: every `SKILL.md`). |
 | `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. |
 | `quiver remove <id>...` | Unassign skills. They stay in the library. |
@@ -90,6 +92,8 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 
 The server serves the project of the folder it is started in, or of `$QUIVER_PROJECT` when that is set. It logs to `~/.quiver/logs/`.
 
+Claude Code starts the server in the project folder. Other assistants may start it somewhere else, such as your home folder; there it serves only the global skills. Set `QUIVER_PROJECT` in that assistant's MCP config to serve a project's skills.
+
 **Instructions.** When a session starts, the server tells the assistant which skills exist here: their IDs and descriptions, the always-on skills, and that new skills are saved with `create_skill`.
 
 **Tools:**
@@ -119,6 +123,18 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - `quiver update` prints the old and new commit of each source, and the skills that were added, changed or removed. To read the changes of a source you do not control: `git -C ~/.quiver/sources/<name> diff <old> <new>`.
 - Source skills are read-only in Quiver. To change one, copy it into your own skills.
 - `create_skill` lets the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`.
+
+## Uninstall
+
+The last command deletes your own skills too. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
+
+```sh
+quiver mcp uninstall      # remove the MCP server from Claude Code
+rm "$(command -v quiver)" # remove the binary
+rm -rf ~/.quiver          # delete the library
+```
+
+Projects keep their `.quiver.json`; delete it there if you no longer need it.
 
 ## Development
 

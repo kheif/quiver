@@ -46,7 +46,7 @@ Get started:
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print more details")
 	cmd.SetVersionTemplate("quiver {{.Version}}\n")
-	cmd.AddCommand(newInitCmd(), newSourceCmd(), newNewCmd(), newEditCmd(), newImportCmd(), newListCmd(), newAddCmd(), newRemoveCmd(), newStatusCmd(), newWhereCmd(), newProjectsCmd(), newUpdateCmd(), newDoctorCmd(), newMCPCmd())
+	cmd.AddCommand(newInitCmd(), newSourceCmd(), newNewCmd(), newEditCmd(), newDeleteCmd(), newImportCmd(), newListCmd(), newAddCmd(), newRemoveCmd(), newStatusCmd(), newWhereCmd(), newProjectsCmd(), newUpdateCmd(), newDoctorCmd(), newMCPCmd())
 	return cmd
 }
 

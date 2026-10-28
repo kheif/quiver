@@ -8,12 +8,14 @@
 
 Ship v1 through three channels: GitHub Releases, a curl install script and npm. No Homebrew tap (decided 2026-10-28).
 
-**Before the release** (fixes from the user-perspective review on 2026-10-28):
+**Before the release** (fixes from the user-perspective review on 2026-10-28; A to D done):
 
 A. **Git worktrees are not copies.** Folders with the same project ID that are worktrees of one git repository (same `git rev-parse --git-common-dir`) are one project: no `PossibleCopy` warning, and `projects split` refuses there, because it would change the committed `.quiver.json`.
 B. **`quiver delete <id>`** removes a local skill from the library and commits the removal in `local/`. It asks first (`--yes` skips). If the skill is assigned, it lists where and refuses unless `--force`, which unassigns it too. Source skills cannot be deleted; `quiver source remove` removes the whole source.
 C. **Windows editor:** without `$VISUAL` and `$EDITOR`, `quiver new` and `quiver edit` open `notepad` on Windows instead of `vi`.
 D. **README:** assignments are per user and machine (a teammate's clone gets `.quiver.json` but no skills; share skills through a source), how to uninstall, and that assistants other than Claude Code may not start the server in the project folder, so they get only global skills unless `QUIVER_PROJECT` is set.
+
+A to D notes: `git.CommonDir` and `registry.SameRepository` compare worktrees; `SplitProject` returns `ErrWorktree`. `library.DeleteLocal` moves the folder aside before the registry write, and commits only when git tracked the folder. The editor default is `defaultEditor` in `internal/cli/new.go`.
 
 **Release:**
 

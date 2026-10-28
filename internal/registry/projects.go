@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/kheif/quiver/internal/fsutil"
+	"github.com/kheif/quiver/internal/git"
 	"github.com/kheif/quiver/internal/project"
 )
 
@@ -26,7 +27,9 @@ func (w *PossibleCopy) Error() string {
 
 // EnsureProject adds the project, or records root as its current folder.
 // Old paths that no longer hold the same ID are dropped (the folder moved).
-// Old paths that still hold it are kept, and a PossibleCopy is returned.
+// Old paths that still hold it are kept. If one of them is not a git
+// worktree of the same repository as root, a PossibleCopy is returned:
+// worktrees share the committed .quiver.json, so they are one project.
 func (r *Registry) EnsureProject(id, root string) *PossibleCopy {
 	root = filepath.Clean(root)
 	p, ok := r.Projects[id]
@@ -35,19 +38,32 @@ func (r *Registry) EnsureProject(id, root string) *PossibleCopy {
 		return nil
 	}
 	paths := []string{root}
+	copied := false
 	for _, old := range p.Paths {
 		if samePath(old, root) {
 			continue
 		}
 		if found, err := project.Find(old); err == nil && found.ID == id && samePath(found.Root, old) {
 			paths = append(paths, old)
+			copied = copied || !SameRepository(old, root)
 		}
 	}
 	p.Paths = sortedSet(paths)
-	if len(p.Paths) > 1 {
+	if copied {
 		return &PossibleCopy{ID: id, Paths: p.Paths}
 	}
 	return nil
+}
+
+// SameRepository reports whether a and b are worktrees of one git
+// repository. Folders outside git are never the same repository.
+func SameRepository(a, b string) bool {
+	ca, err := git.CommonDir(a)
+	if err != nil {
+		return false
+	}
+	cb, err := git.CommonDir(b)
+	return err == nil && ca == cb
 }
 
 // RenameProject changes the project's display name.
@@ -137,6 +153,11 @@ func (r *Registry) Lookup(ref string) (string, error) {
 // ErrNotCopied is returned by SplitProject when no other folder has the ID.
 var ErrNotCopied = errors.New("no other folder has this project's ID, so there is nothing to split")
 
+// ErrWorktree is returned by SplitProject in a git worktree whose other
+// worktrees have the same ID. They share the committed .quiver.json, so a
+// split would change it for every branch.
+var ErrWorktree = errors.New("the other folders with this project's ID are worktrees of the same git repository; they are one project and share its skills, so there is nothing to split")
+
 // SplitProject gives the project that dir is in a new ID, for a folder that
 // was copied with its .quiver.json. The new project starts with the old
 // one's skills and always-on marks; after that the two are independent.
@@ -156,6 +177,11 @@ func SplitProject(dir string) (oldID string, p *project.Project, err error) {
 			return fmt.Errorf("project %s is not in the registry; nothing to split", oldID)
 		}
 		if r.EnsureProject(oldID, p.Root) == nil {
+			for _, other := range old.Paths {
+				if !samePath(other, p.Root) && SameRepository(other, p.Root) {
+					return ErrWorktree
+				}
+			}
 			return ErrNotCopied
 		}
 		newID := project.NewID(filepath.Base(p.Root))
