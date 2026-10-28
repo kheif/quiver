@@ -2,7 +2,6 @@ package cli
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/kheif/quiver/internal/library"
-	"github.com/kheif/quiver/internal/project"
 	"github.com/kheif/quiver/internal/registry"
 	"github.com/kheif/quiver/internal/skill"
 	"github.com/spf13/cobra"
@@ -70,25 +68,7 @@ func newSkill(out io.Writer, t target, none bool, description, name string) erro
 		if err != nil {
 			return err
 		}
-		var (
-			p       *project.Project
-			created bool
-			copied  *registry.PossibleCopy
-		)
-		// Register under the registry lock, as add does.
-		err = registry.Update(func(r *registry.Registry) error {
-			var err error
-			p, err = project.Find(dir)
-			if errors.Is(err, project.ErrNotRegistered) {
-				created = true
-				p, err = project.Register(dir)
-			}
-			if err != nil {
-				return err
-			}
-			copied = r.EnsureProject(p.ID, p.Root)
-			return nil
-		})
+		p, created, copied, err := registry.RegisterProject(dir)
 		if err != nil {
 			return err
 		}

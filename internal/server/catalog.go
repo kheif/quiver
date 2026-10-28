@@ -15,6 +15,11 @@ const maxDescription = 150
 
 const catalogHeader = "Skills (reusable instructions for specific tasks). Before starting a task, check whether one fits. If it does, call the get_skill tool of this server with its id and follow it.\n"
 
+// createHint points to create_skill. Claude Code defers MCP tools, so
+// without it the assistant does not know the tool exists, and saves a
+// skill some other way.
+const createHint = "To save a new skill, for example from this conversation, call the create_skill tool of this server; do not write skill files yourself. Unless the user already said, ask whether the skill is for this project only or for every folder.\n"
+
 // pointer tells the assistant to load the always-on skills before its first
 // reply. Only a pointer fits: Claude Code cuts the instructions at about 4096
 // characters, and a whole SKILL.md can be longer. It returns "" when no

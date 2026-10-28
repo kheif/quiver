@@ -415,6 +415,15 @@ task("TASK19", "`create_skill`", "TASK17, TASK09", """
 4. Errors that the assistant can fix (invalid name, name taken) return a clear message and a suggested alternative name.
 5. Mark the tool with the MCP annotations `readOnlyHint: false` and `destructiveHint: false`.
 
+**Notes:**
+- The tool is in `internal/server/create.go`. Its input schema restricts `scope` to `project` and `global`, and the handler checks it again.
+- The served project used to be fixed at startup. It now lives in a `session` with a mutex (`internal/server/server.go`): when `create_skill` registers the folder, every later request in the session serves that project.
+- `registry.RegisterProject` finds or registers the project and records it under one lock. `quiver new` uses it too.
+- Error hints: an invalid name suggests its slug (`My Notes!` gives `my-notes`); a taken name suggests the first free `<name>-N`. Path errors come from `library.CreateLocal`.
+- The server `instructions` now always end with a pointer to `create_skill`, inside the 3800-byte budget (`createHint`, `buildInstructions`). Without it the manual test failed: Claude Code defers MCP tools, the instructions were empty for an empty library, and Claude wrote the skill file itself.
+- Manual test, run headless: `claude -p` in a new folder with `--mcp-config` pointing to `bin/quiver` and a temporary `QUIVER_HOME`. Claude called `create_skill` with `scope: "project"`, `.quiver.json` was created, and `quiver status` listed the skill as `project`.
+- Backlog B07 (approval for global skills) is still open and must be decided before release (TASK32): a prompt injection can still create a global skill.
+
 **Done when:**
 - Harness tests cover both scopes, an unregistered project, a taken name and path traversal in `files`.
 - A manual test in Claude Code creates a project skill from a conversation, and `quiver status` shows it.
@@ -630,7 +639,8 @@ task("TASK31", "Release", "TASK30", """
 2. Publish GitHub Releases with checksums.
 3. Add a Homebrew tap: `brew install <owner>/tap/quiver`.
 4. After a Homebrew upgrade, `quiver mcp install` must still point to the right binary. Use the stable Homebrew path, not the versioned Cellar path.
-5. Tag `v1.0.0`.
+5. Decide backlog B07 (approval for global `create_skill`) before tagging. A global skill's description reaches the instructions in every folder. The smallest fix: leave unapproved global skills out of the catalog.
+6. Tag `v1.0.0`.
 
 **Done when:** `brew install` on a clean machine works, and the quickstart runs.
 """)
@@ -801,7 +811,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

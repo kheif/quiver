@@ -5,6 +5,7 @@ package server
 import (
 	"context"
 	"log/slog"
+	"sync"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -25,22 +26,48 @@ func New(opts Options) *mcp.Server {
 		Instructions: instructions(opts),
 	})
 	s.AddReceivingMiddleware(recoverPanics(opts.Log))
-	addSkillTools(s, opts.Where)
+	sess := &session{where: opts.Where}
+	addSkillTools(s, sess)
+	addCreateTool(s, sess)
 	return s
 }
 
+// session holds the project the tools serve. create_skill can register the
+// folder during the session, and requests may run at the same time, so it
+// is read and changed under a lock.
+type session struct {
+	mu    sync.Mutex
+	where Where
+}
+
+func (s *session) projectID() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.where.ProjectID()
+}
+
 // instructions returns the text the assistant adds to its system prompt:
-// the pointer to the always-on skills, then the catalog of skills served in
-// the project. It is built once, so skills assigned later reach it in the
-// next session.
+// the pointer to the always-on skills, the catalog of skills served in the
+// project, then the pointer to create_skill. It is built once, so skills
+// assigned later reach it in the next session.
 func instructions(opts Options) string {
 	_, skills, err := loadServed(opts.Where.ProjectID())
 	if err != nil {
 		opts.Log.Warn("no skill catalog in the instructions", "err", err)
-		return ""
+		return createHint
 	}
+	return buildInstructions(skills)
+}
+
+// buildInstructions joins the parts of the instructions within
+// maxInstructions.
+func buildInstructions(skills []servedSkill) string {
 	p := pointer(skills)
-	return p + catalog(skills, maxInstructions-len(p))
+	c := catalog(skills, maxInstructions-len(p)-len(createHint)-1)
+	if c != "" {
+		c += "\n"
+	}
+	return p + c + createHint
 }
 
 // Run serves MCP over stdin and stdout until the client disconnects.

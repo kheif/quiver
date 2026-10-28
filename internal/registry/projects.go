@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -80,4 +81,25 @@ func resolve(p string) string {
 		return real
 	}
 	return filepath.Clean(p)
+}
+
+// RegisterProject finds the project that dir is in, or registers dir as a
+// new project, and records it in the registry. Both happen under the
+// registry lock, so two processes cannot write different IDs into the same
+// new folder. created reports a new .quiver.json.
+func RegisterProject(dir string) (p *project.Project, created bool, copied *PossibleCopy, err error) {
+	err = Update(func(r *Registry) error {
+		var err error
+		p, err = project.Find(dir)
+		if errors.Is(err, project.ErrNotRegistered) {
+			created = true
+			p, err = project.Register(dir)
+		}
+		if err != nil {
+			return err
+		}
+		copied = r.EnsureProject(p.ID, p.Root)
+		return nil
+	})
+	return p, created, copied, err
 }

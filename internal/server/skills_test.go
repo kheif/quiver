@@ -69,7 +69,7 @@ func TestTools(t *testing.T) {
 		names = append(names, tool.Name)
 	}
 	slices.Sort(names)
-	if want := []string{"get_skill", "get_skill_file", "list_skills"}; !slices.Equal(names, want) {
+	if want := []string{"create_skill", "get_skill", "get_skill_file", "list_skills"}; !slices.Equal(names, want) {
 		t.Errorf("tools = %v, want %v", names, want)
 	}
 }

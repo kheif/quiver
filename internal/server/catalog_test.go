@@ -22,14 +22,14 @@ func skills(descs ...string) []servedSkill {
 func TestInstructions(t *testing.T) {
 	w, _ := skillsEnv(t)
 	got := connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
-	want := header + "- db-migration: Rules for database migrations.\n- pdf: Read, create and edit PDF files.\n"
+	want := header + "- db-migration: Rules for database migrations.\n- pdf: Read, create and edit PDF files.\n\n" + createHint
 	if got != want {
 		t.Errorf("got %q\nwant %q", got, want)
 	}
 
 	w.Project = nil
 	got = connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
-	if want := header + "- pdf: Read, create and edit PDF files.\n"; got != want {
+	if want := header + "- pdf: Read, create and edit PDF files.\n\n" + createHint; got != want {
 		t.Errorf("no project: got %q", got)
 	}
 }
@@ -47,7 +47,7 @@ func TestInstructionsAlwaysOn(t *testing.T) {
 		t.Fatal(err)
 	}
 	const rule = ". Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n"
-	catalog := header + "- db-migration: Rules for database migrations.\n- pdf: Read, create and edit PDF files.\n"
+	catalog := header + "- db-migration: Rules for database migrations.\n- pdf: Read, create and edit PDF files.\n\n" + createHint
 	got := connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
 	if want := "Always-on skills: db-migration, pdf" + rule + catalog; got != want {
 		t.Errorf("got %q\nwant %q", got, want)
@@ -55,7 +55,7 @@ func TestInstructionsAlwaysOn(t *testing.T) {
 
 	w.Project = nil
 	got = connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
-	if want := "Always-on skills: pdf" + rule + header + "- pdf: Read, create and edit PDF files.\n"; got != want {
+	if want := "Always-on skills: pdf" + rule + header + "- pdf: Read, create and edit PDF files.\n\n" + createHint; got != want {
 		t.Errorf("no project: got %q", got)
 	}
 }
@@ -69,14 +69,15 @@ func TestPointerKeepsBudget(t *testing.T) {
 	if !strings.HasPrefix(p, "Always-on skills: source/skill-000, source/skill-001, source/skill-002. ") {
 		t.Errorf("pointer %q", p)
 	}
-	if got := p + catalog(many, maxInstructions-len(p)); len(got) > maxInstructions {
-		t.Errorf("%d bytes", len(got))
+	got := buildInstructions(many)
+	if len(got) > maxInstructions || !strings.HasSuffix(got, "call list_skills\n\n"+createHint) {
+		t.Errorf("%d bytes, ends %q", len(got), got[max(0, len(got)-300):])
 	}
 }
 
 func TestInstructionsNoSkills(t *testing.T) {
 	t.Setenv("QUIVER_HOME", t.TempDir())
-	if got := connect(t, New(Options{Version: "dev", Log: discard})).InitializeResult().Instructions; got != "" {
+	if got := connect(t, New(Options{Version: "dev", Log: discard})).InitializeResult().Instructions; got != createHint {
 		t.Errorf("got %q", got)
 	}
 }

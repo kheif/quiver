@@ -63,7 +63,7 @@ func loadServed(projectID string) (*library.Library, []servedSkill, error) {
 }
 
 // addSkillTools registers the tools that read skills.
-func addSkillTools(s *mcp.Server, w Where) {
+func addSkillTools(s *mcp.Server, sess *session) {
 	type listOut struct {
 		Skills []SkillInfo `json:"skills"`
 	}
@@ -71,7 +71,7 @@ func addSkillTools(s *mcp.Server, w Where) {
 		Name:        "list_skills",
 		Description: "List the skills available in this project: the global skills and the project's own, including skills assigned during this session.",
 	}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, listOut, error) {
-		_, skills, err := loadServed(w.ProjectID())
+		_, skills, err := loadServed(sess.projectID())
 		if err != nil {
 			return nil, listOut{}, err
 		}
@@ -89,7 +89,7 @@ func addSkillTools(s *mcp.Server, w Where) {
 		Name:        "get_skill",
 		Description: "Load a skill: its instructions (SKILL.md), its extra files and its folder. Follow the instructions.",
 	}, func(_ context.Context, _ *mcp.CallToolRequest, in getIn) (*mcp.CallToolResult, any, error) {
-		l, skills, err := loadServed(w.ProjectID())
+		l, skills, err := loadServed(sess.projectID())
 		if err != nil {
 			return nil, nil, err
 		}

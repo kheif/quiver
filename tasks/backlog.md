@@ -37,7 +37,7 @@ Items are ordered by priority within each section.
 ### B07 — Approval for global `create_skill`
 - **Concern:** A prompt injection in a conversation can make the assistant write a persistent global skill.
 - **Proposal:** Save skills created with `scope: "global"` as pending. Activate them only after `quiver approve <id>` (or a TUI confirmation).
-- **Related:** create_skill task (Phase 3)
+- **Related:** create_skill task (Phase 3), TASK32 (decide before release)
 
 ## Practical
 
