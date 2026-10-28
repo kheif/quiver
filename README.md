@@ -59,6 +59,7 @@ Then start Claude Code in `~/code/app` and ask for the task, such as "write the 
 ## Concepts
 
 - **Library.** `~/.quiver/local/` holds your own skills, in a git repository Quiver commits to. `~/.quiver/sources/` holds cloned skill repositories. Set `QUIVER_HOME` to use another folder.
+- **Skill files.** A skill is a folder with a `SKILL.md`. Quiver also imports a skill written as one markdown file of any name, such as `review.md`, when its frontmatter has a `description`.
 - **Skill IDs.** A local skill's ID is its folder name, such as `release-notes`. A skill from a source is `<source>/<skill>`, such as `anthropic/pdf`.
 - **Assignments.** `registry.json` stores which skills are global and which projects get which skills. A folder that is not a project gets only the global skills.
 - **Assignments are yours.** They live in your `~/.quiver`, not in the project. A teammate who clones the project gets its `.quiver.json`, but not your skills or assignments. To share skills, put them in a git repository that everyone adds with `quiver source add`.
@@ -75,8 +76,9 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver new <name>` | Create a local skill and assign it to this project (`--global`: every folder, `--none`: nowhere). |
 | `quiver edit <id>` | Open a local skill in your editor, then check and commit it. |
 | `quiver delete <id>` | Delete a local skill from the library. An assigned skill needs `--force`. |
-| `quiver import [<dir>]` | Copy the skills in a project's `.claude/skills` into the library (`--deep`: every `SKILL.md`). |
-| `quiver import <skill>` | Copy one skill into the library: its `SKILL.md`, its folder or a markdown file. `--name` renames it. |
+| `quiver import` | Copy the skills in this project's `.claude/skills` into the library (`--deep`: every folder of the project). |
+| `quiver import <folder>` | Copy every skill in a folder and its subfolders. Files that are not valid skills are listed at the end. |
+| `quiver import <skill>` | Copy one skill: its `SKILL.md`, its folder or a markdown file with frontmatter. `--name` renames it. |
 | `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. |
 | `quiver remove <id>...` | Unassign skills. They stay in the library. |
 | `quiver list` | List the library's skills and where each is assigned (`--source`, `--unassigned`, `--json`). |

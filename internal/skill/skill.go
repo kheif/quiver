@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -35,7 +36,13 @@ func (s *Skill) Path() string {
 // Load reads dir/SKILL.md and parses its frontmatter.
 // It does not check the fields; use Validate for that.
 func Load(dir string) (*Skill, error) {
-	path := filepath.Join(dir, FileName)
+	return LoadFile(filepath.Join(dir, FileName))
+}
+
+// LoadFile is Load for a skill file with any name, such as greeter.md.
+// Dir is the folder the file is in.
+func LoadFile(path string) (*Skill, error) {
+	dir := filepath.Dir(path)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -86,4 +93,19 @@ func splitFrontmatter(data []byte) (fm, body []byte, err error) {
 		i = next
 	}
 	return nil, nil, errors.New("missing frontmatter: no closing ---")
+}
+
+// HasFrontmatter reports whether the file at path starts with a "---"
+// line, as a skill file does. Markdown files without it, such as READMEs,
+// are not skills at all.
+func HasFrontmatter(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer func() { _ = f.Close() }()
+	head := make([]byte, 8)
+	n, _ := io.ReadFull(f, head)
+	head = bytes.TrimPrefix(head[:n], []byte("\xef\xbb\xbf")) // UTF-8 BOM
+	return bytes.HasPrefix(head, []byte("---\n")) || bytes.HasPrefix(head, []byte("---\r\n"))
 }

@@ -90,7 +90,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-| ✅ | [TASK33](TASK33-v1-1-import-one-skill-version-for-go-install.md) | v1.1: import one skill, version for go install | TASK32 |
+| ✅ | [TASK33](TASK33-v1-1-import-one-skill-or-a-folder-version-for-go-install.md) | v1.1: import one skill or a folder, version for go install | TASK32 |
 
 ### Phase 5 — v2
 

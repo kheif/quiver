@@ -27,39 +27,45 @@ type importOptions struct {
 func newImportCmd() *cobra.Command {
 	var o importOptions
 	cmd := &cobra.Command{
-		Use:   "import [<dir> | <skill>]",
-		Short: "Copy skills from a project, or one skill, into the library",
-		Long: `Copy the skills in a project's .claude/skills into the library and assign
-them, to the project or to every folder. With --deep, every folder with a
-SKILL.md counts. The default is the project of the current folder.
+		Use:   "import [<folder> | <skill>]",
+		Short: "Copy skills into the library",
+		Long: `Copy skills into the library and assign them to the project of the current
+folder, or to every folder.
 
-To import one skill, give its SKILL.md, its folder, or any markdown file
-with name and description frontmatter. --name sets its name in the library.
-It is assigned to the project of the current folder.
+  quiver import             the .claude/skills of this project (--deep: every folder of it)
+  quiver import <folder>    every skill in the folder and its subfolders
+  quiver import <skill>     one skill: its SKILL.md, its folder or a markdown file
+
+A skill is a folder with a SKILL.md, or a markdown file of any name whose
+frontmatter has a description. Its name is the one in the frontmatter, or
+the folder or file name; --name sets another one when importing one skill.
+Markdown files without frontmatter, such as READMEs, are not skills. Skills
+without a description are skipped and listed at the end.
 
 For each skill it asks where to assign it, a new name if the name is taken,
-and whether to delete the original folder. --global makes every folder the
-default. With --yes it asks nothing: taken names are skipped and the
-originals are kept.`,
+and whether to delete the original. --global makes every folder the default.
+With --yes it asks nothing: taken names are skipped and the originals are
+kept.`,
 		Example: `  # Import the .claude/skills of the project in this folder
   quiver import
 
-  # Search every folder of another project, and ask nothing
-  quiver import ~/code/api --deep --yes
+  # Import every skill in a folder and its subfolders, and ask nothing
+  quiver import ~/Downloads/skill-pack --yes
 
   # Import one skill under another name
-  quiver import ~/Downloads/greeter/SKILL.md --name demo`,
+  quiver import ~/Downloads/greeter/SKILL.md --name demo
+  quiver import notes/review.md`,
 		ValidArgsFunction: pathArg,
 		Args:              cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			dir := ""
+			path := ""
 			if len(args) == 1 {
-				dir = args[0]
+				path = args[0]
 			}
-			return importSkills(cmd.InOrStdin(), cmd.OutOrStdout(), o, dir)
+			return importSkills(cmd.InOrStdin(), cmd.OutOrStdout(), o, path)
 		},
 	}
-	cmd.Flags().BoolVar(&o.deep, "deep", false, "also import every other folder with a SKILL.md")
+	cmd.Flags().BoolVar(&o.deep, "deep", false, "without a folder: search every folder of this project, not only .claude/skills")
 	cmd.Flags().BoolVarP(&o.yes, "yes", "y", false, "ask nothing; keep the originals")
 	cmd.Flags().BoolVar(&o.global, "global", false, "assign to every folder by default, instead of the project")
 	cmd.Flags().StringVar(&o.name, "name", "", "name in the library, when importing one skill")
@@ -71,95 +77,161 @@ type importer struct {
 	in         *bufio.Reader
 	out        io.Writer
 	o          importOptions
-	root       string           // folder searched, or the folder of one skill
+	root       string           // shown paths are relative to it
 	projectDir string           // the folder of the project to assign to
 	proj       *project.Project // registered on the first project import
-	from       string           // project name, for the commit message
+	from       string           // where the skills come from, for the commit message
 	local      string
-	original   string // one skill: the file or folder the user gave
 }
 
-func importSkills(in io.Reader, out io.Writer, o importOptions, dir string) error {
-	if dir != "" {
-		done, err := importOne(in, out, o, dir)
-		if done || err != nil {
-			return err
-		}
-	}
-	if o.name != "" {
-		return fmt.Errorf("--name works only when importing one skill: give its SKILL.md or its folder")
-	}
-	if dir == "" {
-		wd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		dir = wd
-		if p, err := project.Find(wd); err == nil {
-			dir = p.Root
-		}
-	}
-	root, err := filepath.Abs(dir)
+func importSkills(in io.Reader, out io.Writer, o importOptions, path string) error {
+	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	if info, err := os.Stat(root); err != nil {
-		return err
-	} else if !info.IsDir() {
-		return fmt.Errorf("%s is not a folder", root)
-	}
-	home, err := fsutil.QuiverHome()
-	if err != nil {
-		return err
-	}
-	found, err := library.FindSkills(root, o.deep, home)
-	if err != nil {
-		return err
-	}
-	if len(found) == 0 {
-		fmt.Fprintf(out, "No skills found in %s.\n", root)
-		if !o.deep {
-			fmt.Fprintln(out, "Only .claude/skills is searched; use --deep to search every folder.")
-		}
-		return nil
+	projectDir := wd
+	if p, err := project.Find(wd); err == nil {
+		projectDir = p.Root
 	}
 	local, err := library.LocalDir()
 	if err != nil {
 		return err
 	}
-	im := &importer{in: bufio.NewReader(in), out: out, o: o, root: root, projectDir: root, from: filepath.Base(root), local: local}
+	im := &importer{in: bufio.NewReader(in), out: out, o: o, projectDir: projectDir, local: local}
+
+	// Without a path: this project's skills.
+	root, deep := projectDir, o.deep
+	if path != "" {
+		if root, err = filepath.Abs(path); err != nil {
+			return err
+		}
+		info, err := os.Stat(root)
+		if err != nil {
+			return err
+		}
+		if one, err := oneSkill(root, info); err != nil || one != nil {
+			if err != nil {
+				return err
+			}
+			return im.importOne(*one)
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("%s is not a SKILL.md, a markdown file or a folder", root)
+		}
+		deep = true
+	}
+	if o.name != "" {
+		return fmt.Errorf("--name works only when importing one skill: give its SKILL.md, its folder or its markdown file")
+	}
+	home, err := fsutil.QuiverHome()
+	if err != nil {
+		return err
+	}
+	found, err := library.FindSkills(root, deep, home)
+	if err != nil {
+		return err
+	}
+	im.root, im.from = root, filepath.Base(root)
 	if p, err := project.Find(root); err == nil {
 		if r, err := registry.Load(); err == nil && r.Projects[p.ID] != nil {
 			im.from = r.Projects[p.ID].Name
 		}
 	}
-	fmt.Fprintf(out, "Found %s in %s:\n", plural(len(found), "skill"), root)
+	var skills, skipped []library.Found
 	for _, f := range found {
-		line := fmt.Sprintf("  %s  %s", f.Name, im.rel(f.Dir))
 		if f.Err != nil {
-			line += "  (skipped: " + f.Err.Error() + ")"
+			skipped = append(skipped, f)
+		} else {
+			skills = append(skills, f)
 		}
-		fmt.Fprintln(out, line)
 	}
-	var failed int
-	for _, f := range found {
-		if f.Err != nil {
-			continue
+	if len(skills) == 0 {
+		fmt.Fprintf(out, "No skills found in %s.\n", root)
+		if !deep {
+			fmt.Fprintln(out, "Only .claude/skills is searched; use --deep to search every folder.")
 		}
+	} else {
+		fmt.Fprintf(out, "Found %s in %s:\n", plural(len(skills), "skill"), root)
+		for _, f := range skills {
+			fmt.Fprintf(out, "  %s  %s\n", f.Name, im.rel(f.Path()))
+		}
+	}
+	var imported, failed int
+	for _, f := range skills {
 		fmt.Fprintln(out)
-		if err := im.one(f); err != nil {
+		ok, err := im.one(f)
+		switch {
+		case err != nil:
 			fmt.Fprintf(out, "error: %s: %v\n", f.Name, err)
 			failed++
+		case ok:
+			imported++
 		}
 	}
+	if len(skills) > 0 {
+		fmt.Fprintf(out, "\nImported %s.\n", plural(imported, "skill"))
+	}
+	im.printSkipped(skipped)
 	if failed > 0 {
-		return fmt.Errorf("%s not imported", plural(failed, "skill"))
+		return fmt.Errorf("%s failed", plural(failed, "skill"))
 	}
 	return nil
 }
 
-// one imports one found skill.
-func (im *importer) one(f library.Found) error {
+// oneSkill returns path as one skill when it is a SKILL.md, a markdown
+// file, or a folder with a SKILL.md; nil for a folder to search.
+func oneSkill(path string, info os.FileInfo) (*library.Found, error) {
+	var f library.Found
+	switch {
+	case info.IsDir():
+		if _, err := os.Stat(filepath.Join(path, skill.FileName)); err != nil {
+			return nil, nil
+		}
+		f = library.ReadFound(path, filepath.Base(path))
+	case filepath.Base(path) == skill.FileName:
+		dir := filepath.Dir(path)
+		f = library.ReadFound(dir, filepath.Base(dir))
+	case strings.EqualFold(filepath.Ext(path), ".md"):
+		f = library.ReadFoundFile(path)
+	default:
+		return nil, nil
+	}
+	if f.Err != nil {
+		return nil, fmt.Errorf("%w; a skill needs frontmatter with a description", f.Err)
+	}
+	return &f, nil
+}
+
+// importOne imports a skill the user named, under --name if given.
+func (im *importer) importOne(f library.Found) error {
+	if im.o.name != "" {
+		f.Name = im.o.name
+	}
+	im.root = filepath.Dir(f.Path())
+	im.from = filepath.Base(im.root)
+	_, err := im.one(f)
+	return err
+}
+
+// printSkipped lists what looked like a skill but is not usable.
+func (im *importer) printSkipped(skipped []library.Found) {
+	if len(skipped) == 0 {
+		return
+	}
+	fmt.Fprintf(im.out, "\nSkipped %d, not valid skills:\n", len(skipped))
+	for _, f := range skipped {
+		// The error starts with the absolute path; show it relative.
+		msg := f.Err.Error()
+		if rel := im.rel(f.Path()); rel != f.Path() {
+			msg = strings.ReplaceAll(msg, f.Path()+string(filepath.Separator), rel+string(filepath.Separator))
+			msg = strings.ReplaceAll(msg, f.Path(), rel)
+		}
+		fmt.Fprintf(im.out, "  %s\n", msg)
+	}
+}
+
+// one imports one found skill. ok is false when the user skipped it.
+func (im *importer) one(f library.Found) (ok bool, err error) {
 	fmt.Fprintf(im.out, "%s: %s\n", f.Name, cut(f.Description, 100))
 	scope := library.ScopeProject
 	if im.o.global {
@@ -178,28 +250,33 @@ func (im *importer) one(f library.Found) error {
 			scope = library.ScopeGlobal
 		default:
 			fmt.Fprintln(im.out, "Skipped.")
-			return nil
+			return false, nil
 		}
 	}
-	name, ok, err := im.name(f)
+	src, cleanup, err := f.Stage()
+	if err != nil {
+		return false, err
+	}
+	defer cleanup()
+	name, ok, err := im.name(f, src)
 	if err != nil || !ok {
-		return err
+		return false, err
 	}
 	projectID := ""
 	if scope == library.ScopeProject {
 		if im.proj == nil {
 			p, created, copied, err := registry.RegisterProject(im.projectDir)
 			if err != nil {
-				return err
+				return false, err
 			}
 			reportProject(im.out, p, created, copied)
 			im.proj = p
 		}
 		projectID = im.proj.ID
 	}
-	res, err := library.ImportLocal(f.Dir, name, scope, projectID, im.from)
+	res, err := library.ImportLocal(src, name, scope, projectID, im.from)
 	if err != nil {
-		return err
+		return false, err
 	}
 	where := "this project"
 	if scope == library.ScopeGlobal {
@@ -213,25 +290,22 @@ func (im *importer) one(f library.Found) error {
 	for _, w := range res.Warnings {
 		fmt.Fprintln(im.out, "warning:", w)
 	}
-	original, what := f.Dir, "folder"
-	if im.original != "" {
-		original = im.original
-		if info, err := os.Stat(original); err == nil && !info.IsDir() {
-			what = "file"
-		}
+	what := "folder"
+	if f.File != "" {
+		what = "file"
 	}
-	if !im.o.yes && confirm(im.in, im.out, "Delete the original "+what+" "+im.rel(original)+"?") {
-		if err := os.RemoveAll(original); err != nil {
-			return err
+	if !im.o.yes && confirm(im.in, im.out, "Delete the original "+what+" "+im.rel(f.Path())+"?") {
+		if err := os.RemoveAll(f.Path()); err != nil {
+			return true, err
 		}
 		fmt.Fprintln(im.out, "Deleted.")
 	}
-	return nil
+	return true, nil
 }
 
-// name returns the library name for f. A taken or invalid name is asked
-// for again; ok is false when the skill is skipped.
-func (im *importer) name(f library.Found) (name string, ok bool, err error) {
+// name returns the library name for f, whose files are in src. A taken or
+// invalid name is asked for again; ok is false when the skill is skipped.
+func (im *importer) name(f library.Found, src string) (name string, ok bool, err error) {
 	name = f.Name
 	for {
 		problem := ""
@@ -240,7 +314,7 @@ func (im *importer) name(f library.Found) (name string, ok bool, err error) {
 		} else if _, err := os.Lstat(filepath.Join(im.local, name)); err == nil {
 			// Same content under the same name is assigned, not copied.
 			if name == f.Name {
-				if same, err := library.SameAsLocal(f.Dir, name); err != nil {
+				if same, err := library.SameAsLocal(src, name); err != nil {
 					return "", false, err
 				} else if same {
 					return name, true, nil
@@ -273,11 +347,11 @@ func (im *importer) ask(question string) string {
 	return strings.ToLower(strings.TrimSpace(line))
 }
 
-func (im *importer) rel(dir string) string {
-	if rel, err := filepath.Rel(im.root, dir); err == nil {
+func (im *importer) rel(path string) string {
+	if rel, err := filepath.Rel(im.root, path); err == nil && !strings.HasPrefix(rel, "..") {
 		return rel
 	}
-	return dir
+	return path
 }
 
 // plural returns "1 skill" or "<n> skills".
@@ -286,78 +360,4 @@ func plural(n int, word string) string {
 		return "1 " + word
 	}
 	return fmt.Sprintf("%d %ss", n, word)
-}
-
-// importOne imports path when it is one skill: a SKILL.md, another markdown
-// file, or a folder with a SKILL.md. done is false for a folder to search.
-// The skill is assigned to the project of the current folder.
-func importOne(in io.Reader, out io.Writer, o importOptions, path string) (done bool, err error) {
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		return false, err
-	}
-	info, err := os.Stat(abs)
-	if err != nil {
-		return false, err
-	}
-	dir, fallback := abs, filepath.Base(abs)
-	switch {
-	case info.IsDir():
-		if _, err := os.Stat(filepath.Join(abs, skill.FileName)); err != nil {
-			return false, nil
-		}
-	case filepath.Base(abs) == skill.FileName:
-		dir = filepath.Dir(abs)
-		fallback = filepath.Base(dir)
-	case strings.EqualFold(filepath.Ext(abs), ".md"):
-		// A lone markdown file: import a copy of it as SKILL.md, without
-		// the other files of its folder.
-		tmp, err := os.MkdirTemp("", "quiver-import-")
-		if err != nil {
-			return false, err
-		}
-		defer func() { _ = os.RemoveAll(tmp) }()
-		data, err := os.ReadFile(abs)
-		if err != nil {
-			return false, err
-		}
-		if err := os.WriteFile(filepath.Join(tmp, skill.FileName), data, 0o644); err != nil {
-			return false, err
-		}
-		dir = tmp
-		fallback = strings.TrimSuffix(filepath.Base(abs), filepath.Ext(abs))
-	default:
-		return false, fmt.Errorf("%s is not a SKILL.md, a markdown file or a folder", abs)
-	}
-	f := library.ReadFound(dir, fallback)
-	if f.Err != nil {
-		return true, fmt.Errorf("%w; a skill needs frontmatter with name and description", f.Err)
-	}
-	if o.name != "" {
-		f.Name = o.name
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return true, err
-	}
-	projectDir := wd
-	if p, err := project.Find(wd); err == nil {
-		projectDir = p.Root
-	}
-	local, err := library.LocalDir()
-	if err != nil {
-		return true, err
-	}
-	// The original is the skill folder, or the lone markdown file.
-	original := dir
-	if dir != abs && filepath.Base(abs) != skill.FileName {
-		original = abs
-	}
-	parent := filepath.Dir(original)
-	im := &importer{
-		in: bufio.NewReader(in), out: out, o: o,
-		root: parent, projectDir: projectDir,
-		from: filepath.Base(parent), local: local, original: original,
-	}
-	return true, im.one(f)
 }

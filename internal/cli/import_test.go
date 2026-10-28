@@ -108,7 +108,7 @@ func TestImportNothing(t *testing.T) {
 	listEnv(t)
 	dir := t.TempDir()
 	out, err := runIn(t, "", "import", dir)
-	if err != nil || !strings.Contains(out, "No skills found in ") || !strings.Contains(out, "--deep") {
+	if err != nil || !strings.Contains(out, "No skills found in ") {
 		t.Errorf("got %q, %v", out, err)
 	}
 }
@@ -194,12 +194,64 @@ func TestImportOneRejects(t *testing.T) {
 		args []string
 		want string
 	}{
-		{[]string{"import", filepath.Join(dir, "plain.md")}, "frontmatter with name and description"},
+		{[]string{"import", filepath.Join(dir, "plain.md")}, "a skill needs frontmatter with a description"},
 		{[]string{"import", filepath.Join(dir, "notes.txt")}, "is not a SKILL.md, a markdown file or a folder"},
 		{[]string{"import", f.api, "--name", "x"}, "--name works only when importing one skill"},
 	} {
 		if _, err := runIn(t, "", c.args...); err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%v: %v", c.args, err)
 		}
+	}
+}
+
+// A folder is searched with its subfolders: skill folders, and markdown
+// files with frontmatter. The rest is skipped and listed at the end.
+func TestImportFolder(t *testing.T) {
+	f := listEnv(t)
+	pack := filepath.Join(t.TempDir(), "pack")
+	writeFiles(t, pack, map[string]string{
+		"deploy/SKILL.md":             "---\nname: deploy\ndescription: Deploy the app.\n---\n",
+		"deploy/references/notes.md":  "---\nname: inner\ndescription: Part of deploy.\n---\n",
+		"greeter.md":                  "---\nname: greet-file\ndescription: Greet people.\n---\nSay hi.\n",
+		"nested/deeper/lint/SKILL.md": "---\nname: lint\ndescription: Lint the code.\n---\n",
+		"README.md":                   "# A skill pack\n",
+		"broken/SKILL.md":             "---\nname: broken\n---\n",
+		"drafts/old.md":               "---\ntitle: Old notes\n---\n",
+	})
+	t.Chdir(f.app)
+	out, err := runIn(t, "", "import", pack, "--yes", "--global")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	wantLines(t, out,
+		"Found 3 skills in "+pack+":\n  deploy  deploy\n  greet-file  greeter.md\n  lint  "+filepath.Join("nested", "deeper", "lint")+"\n",
+		"Imported 3 skills.\n\nSkipped 2, not valid skills:\n  "+filepath.Join("broken", "SKILL.md")+": description is missing\n  "+filepath.Join("drafts", "old.md")+": description is missing\n",
+	)
+	if strings.Contains(out, "README") || strings.Contains(out, "inner") {
+		t.Errorf("README or a file of a skill was treated as a skill:\n%s", out)
+	}
+	r := loadRegistry(t)
+	for _, id := range []string{"deploy", "greet-file", "lint"} {
+		if !slices.Contains(r.Global, id) {
+			t.Errorf("%s not imported: %v", id, r.Global)
+		}
+	}
+	// The lone file came alone; the skill folder with its files.
+	if _, err := os.Stat(filepath.Join(f.home, "local", "deploy", "references", "notes.md")); err != nil {
+		t.Errorf("deploy files: %v", err)
+	}
+	if files, _ := os.ReadDir(filepath.Join(f.home, "local", "greet-file")); len(files) != 1 {
+		t.Errorf("greet-file has %d files", len(files))
+	}
+}
+
+// Without --name, a lone file takes the name in its frontmatter.
+func TestImportOneFileFrontmatterName(t *testing.T) {
+	f := listEnv(t)
+	file := filepath.Join(t.TempDir(), "greeter.md")
+	writeFiles(t, filepath.Dir(file), map[string]string{"greeter.md": "---\nname: hello\ndescription: Greet.\n---\n"})
+	t.Chdir(f.app)
+	if out, err := runIn(t, "\nn\n", "import", file); err != nil || !strings.Contains(out, "Imported hello into the library") {
+		t.Errorf("%v\n%s", err, out)
 	}
 }
