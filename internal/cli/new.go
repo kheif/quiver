@@ -32,7 +32,13 @@ func newNewCmd() *cobra.Command {
 every folder with --global, or nowhere with --none.
 
 Without --description the new SKILL.md opens in $VISUAL or $EDITOR.`,
-		Args: cobra.ExactArgs(1),
+		Example: `  # Write the skill in your editor; it is served in this project
+  quiver new release-notes
+
+  # Create it without an editor, for every folder
+  quiver new commit-style --global --description "Write commit messages in our style."`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return newSkill(cmd.OutOrStdout(), t, none, description, args[0])
 		},
@@ -136,7 +142,9 @@ func newEditCmd() *cobra.Command {
 the skill is checked and the change is committed in the Quiver home.
 
 Skills from sources are read-only: "quiver update" would overwrite edits.`,
-		Args: cobra.ExactArgs(1),
+		Example:           `  quiver edit release-notes`,
+		ValidArgsFunction: skillIDs(true, 1),
+		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return editSkill(cmd.OutOrStdout(), args[0])
 		},

@@ -10,10 +10,12 @@ import (
 
 func newInitCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "init",
-		Short: "Create the Quiver home (~/.quiver)",
-		Long:  "Create the Quiver home and anything missing in it. Existing files are never overwritten.",
-		Args:  cobra.NoArgs,
+		Use:               "init",
+		Short:             "Create the Quiver home (~/.quiver)",
+		Long:              "Create the Quiver home and anything missing in it. Existing files are never overwritten.",
+		Example:           `  quiver init`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		// Skip the root's auto-init, so this command reports what it creates.
 		PersistentPreRunE: func(*cobra.Command, []string) error { return nil },
 		RunE: func(cmd *cobra.Command, _ []string) error {

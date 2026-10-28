@@ -17,13 +17,30 @@ var verbose bool
 
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "quiver",
-		Short:         "Central skill manager for AI assistants",
+		Use:   "quiver",
+		Short: "Central skill manager for AI assistants",
+		Long: `Quiver keeps your AI assistant skills in one library (~/.quiver) and serves
+them over MCP: the global skills in every folder, and each project's own
+skills in that project. Skills are never copied into projects.
+
+Get started:
+  quiver mcp install        register the MCP server with Claude Code
+  quiver new <name>         write a skill for the project in this folder
+  quiver status             see what the assistant gets here`,
+		Example: `  quiver mcp install
+  quiver new release-notes
+  quiver source add anthropics/skills --name anthropic
+  quiver add anthropic/pdf --global
+  quiver status`,
 		Version:       version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		// Every command needs the Quiver home, so create it on first use.
-		PersistentPreRunE: func(*cobra.Command, []string) error {
+		// Shell completion only reads, so it never creates it.
+		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Name() == cobra.ShellCompRequestCmd || cmd.Name() == cobra.ShellCompNoDescRequestCmd {
+				return nil
+			}
 			return setup.EnsureInit()
 		},
 	}

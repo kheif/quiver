@@ -24,12 +24,23 @@ func newListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List library skills and where each one is assigned",
-		Args:  cobra.NoArgs,
+		Long: `List every skill in the library: your own (source "local") and those from
+sources. ASSIGNED says whether a skill is global and how many projects have
+it. Skills that cannot be loaded are listed as warnings at the end.
+
+To see what one folder gets, use quiver status; for one skill, quiver where.`,
+		Example: `  quiver list
+  quiver list --source local
+  quiver list --unassigned
+  quiver list --json`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return list(cmd.OutOrStdout(), o)
 		},
 	}
 	cmd.Flags().StringVar(&o.source, "source", "", `only skills from this source ("local" for your own skills)`)
+	_ = cmd.RegisterFlagCompletionFunc("source", completeSources(true, 0))
 	cmd.Flags().BoolVar(&o.unassigned, "unassigned", false, "only skills that are not assigned anywhere")
 	cmd.Flags().BoolVar(&o.json, "json", false, "print JSON")
 	return cmd

@@ -33,7 +33,10 @@ With --fix it applies the safe fixes: it creates missing parts of the Quiver
 home, commits uncommitted changes in local/, deletes folders left over from
 an interrupted source add or remove, and, after asking, unassigns skills
 that are not in the library.`,
-		Args: cobra.NoArgs,
+		Example: `  quiver doctor
+  quiver doctor --fix`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		// Check the home as it is; the root command would repair it first.
 		PersistentPreRunE: func(*cobra.Command, []string) error { return nil },
 		RunE: func(cmd *cobra.Command, _ []string) error {

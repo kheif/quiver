@@ -16,6 +16,15 @@ func newSourceCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "source",
 		Short: "Manage the git repositories that skills come from",
+		Long: `A source is a git repository with skills, such as a team's shared skills.
+Its skills get IDs like <source>/<skill>. They are read-only: quiver update
+pulls new versions.
+
+Add only sources you trust. Their skills give instructions to your
+assistant and can include scripts.`,
+		Example: `  quiver source add anthropics/skills --name anthropic
+  quiver source list
+  quiver source remove anthropic`,
 	}
 	cmd.AddCommand(newSourceAddCmd(), newSourceListCmd(), newSourceRemoveCmd())
 	return cmd
@@ -30,6 +39,12 @@ func newSourceAddCmd() *cobra.Command {
 
 <repo> is owner/repo (GitHub), host/owner/repo, a git URL or a local path.
 The source name defaults to the repository owner.`,
+		Example: `  # GitHub owner/repo
+  quiver source add anthropics/skills --name anthropic
+
+  # Any git URL, or a local folder
+  quiver source add git@github.com:acme/skills.git
+  quiver source add ~/code/team-skills`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, err := source.Parse(args[0])
@@ -78,7 +93,11 @@ func newSourceListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List sources with their skill count and current commit",
-		Args:  cobra.NoArgs,
+		Long: `List the sources: name, number of skills, the commit in use and when it was
+made, and the repository.`,
+		Example:           `  quiver source list`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			l, err := library.Load()
 			if err != nil {
@@ -113,7 +132,10 @@ func newSourceRemoveCmd() *cobra.Command {
 		Use:   "remove <name>",
 		Short: "Delete a source and its skills",
 		Long:  "Delete a source and its skills. It refuses while skills from the source are assigned, unless --force is given.",
-		Args:  cobra.ExactArgs(1),
+		Example: `  quiver source remove acme
+  quiver source remove acme --force`,
+		ValidArgsFunction: completeSources(false, 1),
+		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			u, err := library.RemoveSource(args[0], force)
 			if err != nil {

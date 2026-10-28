@@ -28,6 +28,7 @@ func (t *target) flags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&t.global, "global", false, "change the skills served in every folder")
 	cmd.Flags().StringVar(&t.project, "project", "", "project folder (default: the current folder)")
 	cmd.MarkFlagsMutuallyExclusive("global", "project")
+	projectFlag(cmd)
 }
 
 func (t *target) alwaysFlag(cmd *cobra.Command, usage string) {
@@ -62,7 +63,16 @@ the project keeps its ID.
 
 With --always the skills are also always-on: the assistant loads them before
 its first reply, from the next session on.`,
-		Args: cobra.MinimumNArgs(1),
+		Example: `  # Assign two skills to the project in this folder
+  quiver add pdf anthropic/docx
+
+  # Serve a skill in every folder, and load it before the first reply
+  quiver add caveman --global --always
+
+  # Assign to another project folder
+  quiver add tdd --project ~/code/api`,
+		ValidArgsFunction: skillIDs(false, 0),
+		Args:              cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return add(cmd.OutOrStdout(), t, args)
 		},
@@ -162,7 +172,13 @@ func newRemoveCmd() *cobra.Command {
 skills stay in the library.
 
 With --always only the always-on mark is removed; the skills stay assigned.`,
-		Args: cobra.MinimumNArgs(1),
+		Example: `  quiver remove pdf
+  quiver remove caveman --global
+
+  # Keep the skill assigned, but stop loading it before the first reply
+  quiver remove caveman --global --always`,
+		ValidArgsFunction: assignedIDs,
+		Args:              cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return remove(cmd.OutOrStdout(), t, args)
 		},

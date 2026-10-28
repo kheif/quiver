@@ -19,7 +19,10 @@ func newStatusCmd() *cobra.Command {
 
 Like the server, it uses $` + server.ProjectEnv + ` instead of the current
 folder when it is set.`,
-		Args: cobra.NoArgs,
+		Example: `  quiver status
+  QUIVER_PROJECT=~/code/api quiver status`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return status(cmd.OutOrStdout())
 		},

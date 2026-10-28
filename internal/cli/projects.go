@@ -19,7 +19,12 @@ func newWhereCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "where <id>",
 		Short: "Show where a skill is assigned",
-		Args:  cobra.ExactArgs(1),
+		Long: `Show where a skill is assigned: "global" if it is served in every folder,
+then each project that has it, with its folders.`,
+		Example: `  quiver where pdf
+  quiver where anthropic/docx`,
+		ValidArgsFunction: skillIDs(false, 1),
+		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return where(cmd.OutOrStdout(), args[0])
 		},
@@ -64,7 +69,11 @@ func newProjectsCmd() *cobra.Command {
 		Use:   "projects",
 		Short: "List registered projects",
 		Long:  "List registered projects: name, ID, number of skills and folders. Folders that no longer exist are marked (missing).",
-		Args:  cobra.NoArgs,
+		Example: `  quiver projects
+  quiver projects rename app-k3f9q2 web
+  quiver projects forget old-site`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return listProjects(cmd.OutOrStdout())
 		},
@@ -113,7 +122,12 @@ func newProjectsRenameCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "rename <id|name> <new-name>",
 		Short: "Change a project's name",
-		Args:  cobra.ExactArgs(2),
+		Long: `Change the name Quiver shows for a project. The name is only a label; the
+project keeps its ID and skills.`,
+		Example: `  quiver projects rename app-k3f9q2 web
+  quiver projects rename web web-frontend`,
+		ValidArgsFunction: projectRefs,
+		Args:              cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var id string
 			err := registry.Update(func(r *registry.Registry) error {
@@ -140,7 +154,10 @@ func newProjectsForgetCmd() *cobra.Command {
 		Long: `Remove a project and its skill assignments from the registry. The
 project's .quiver.json is left alone, so using the folder again registers
 it again with the same ID and no skills.`,
-		Args: cobra.ExactArgs(1),
+		Example: `  quiver projects forget old-site
+  quiver projects forget app-k3f9q2 --yes`,
+		ValidArgsFunction: projectRefs,
+		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return forget(cmd.InOrStdin(), cmd.OutOrStdout(), args[0], yes)
 		},
@@ -179,7 +196,11 @@ func newProjectsSplitCmd() *cobra.Command {
 		Long: `Run inside a project folder that was copied with its .quiver.json. The
 folder gets a new ID and starts with the skills of the original; after that,
 changing one copy's skills does not change the other's.`,
-		Args: cobra.NoArgs,
+		Example: `  cp -R ~/code/app ~/code/app-v2
+  cd ~/code/app-v2
+  quiver projects split`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
 			if err != nil {

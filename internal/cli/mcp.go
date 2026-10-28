@@ -20,7 +20,15 @@ func newMCPCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mcp",
 		Short: "Run the MCP server on stdio (assistants start this)",
-		Args:  cobra.NoArgs,
+		Long: `Run the MCP server on stdin and stdout. Assistants start this command; you
+do not need to run it yourself. Register it once with: quiver mcp install
+
+The server serves the skills of the project in its working directory, or in
+$QUIVER_PROJECT when that is set. It logs to ~/.quiver/logs.`,
+		Example: `  # What Claude Code runs after quiver mcp install
+  quiver mcp`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return server.Run(cmd.Context(), version)
 		},
@@ -39,7 +47,12 @@ func newMCPInstallCmd() *cobra.Command {
 Run it again after moving the quiver binary: a registration that points to
 another binary is replaced. With --print nothing is changed; the command and
 a JSON snippet for manual setup are printed.`,
-		Args: cobra.NoArgs,
+		Example: `  quiver mcp install
+
+  # Print the setup for Claude Code and for JSON-configured assistants
+  quiver mcp install --print`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return mcpInstall(cmd.OutOrStdout(), printOnly)
 		},
@@ -86,7 +99,11 @@ func newMCPUninstallCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "uninstall",
 		Short: "Remove the MCP server from Claude Code",
-		Args:  cobra.NoArgs,
+		Long: `Remove the MCP server from Claude Code's user configuration. The Quiver
+home and its skills are not touched.`,
+		Example:           `  quiver mcp uninstall`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return mcpUninstall(cmd.OutOrStdout())
 		},

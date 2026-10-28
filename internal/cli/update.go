@@ -19,6 +19,16 @@ func newUpdateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [<name>...]",
 		Short: "Pull the latest skills of the given sources, or of all sources",
+		Long: `Pull the latest skills of the given sources, or of every source. For each
+source it lists the skills that were added, changed or removed, and warns
+when an assigned skill is gone.
+
+A source whose history was rewritten (force-pushed) is not updated; run
+again with --reset to take the remote history.`,
+		Example: `  quiver update
+  quiver update anthropic
+  quiver update acme --reset`,
+		ValidArgsFunction: completeSources(false, 0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			names, err := updateNames(args)
 			if err != nil {

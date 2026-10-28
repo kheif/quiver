@@ -142,7 +142,7 @@ quiver update
 - **Updates:** Sources are git clones. `quiver update` pulls them, and every project immediately gets the new version.
 - **Sharing:** `~/.quiver/local/` is a git repository. Push it to GitHub and others can add it as a source. The same repository can also serve as a Claude Code marketplace.
 - **Customizing:** Remote skills are read-only. `quiver fork anthropic/pdf` copies one into `local/`, where you can edit it.
-- **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `quiver update` shows what changed before applying.
+- **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `quiver update` lists what changed in each source after pulling.
 
 ## Interactive Screen (TUI)
 

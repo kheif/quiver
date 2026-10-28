@@ -36,7 +36,13 @@ For each skill it asks where to assign it, a new name if the name is taken,
 and whether to delete the original folder. --global makes every folder the
 default. With --yes it asks nothing: taken names are skipped and the
 originals are kept.`,
-		Args: cobra.MaximumNArgs(1),
+		Example: `  # Import the .claude/skills of the project in this folder
+  quiver import
+
+  # Search every folder of another project, and ask nothing
+  quiver import ~/code/api --deep --yes`,
+		ValidArgsFunction: dirArg,
+		Args:              cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			dir := ""
 			if len(args) == 1 {

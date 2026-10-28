@@ -83,7 +83,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | Status | Task | Title | Depends on |
 |---|---|---|---|
 | ✅ | [TASK30](TASK30-end-to-end-test-suite.md) | End-to-end test suite | TASK20, TASK15, TASK29 |
-|  | [TASK31](TASK31-readme-and-help-text.md) | README and help text | TASK30 |
+| ✅ | [TASK31](TASK31-readme-and-help-text.md) | README and help text | TASK30 |
 |  | [TASK32](TASK32-release.md) | Release | TASK31 |
 
 ### Phase 5 — v2
