@@ -69,16 +69,8 @@ func CreateLocal(name, description, body string, files map[string]string, scope 
 		if err != nil {
 			return err
 		}
-		switch scope {
-		case ScopeNone:
-		case ScopeGlobal:
-			r.AssignGlobal(name)
-		case ScopeProject:
-			if err := r.Assign(projectID, name); err != nil {
-				return err
-			}
-		default:
-			return fmt.Errorf("unknown scope %q", scope)
+		if err := assign(r, scope, projectID, name); err != nil {
+			return err
 		}
 		// Write into a hidden folder first, which the library skips, so a
 		// half-written skill is never loaded.

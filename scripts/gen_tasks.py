@@ -280,6 +280,14 @@ Brings existing skills that are scattered across projects into the library.
    3. Commit in `local/` with the message `import <name> from <project>`.
 5. Ask whether to delete the original folder. Never delete it without a clear yes. With `--yes`, the originals are kept.
 
+**Implementation notes:**
+- `library.FindSkills` finds the folders, `library.ImportLocal` copies one skill under the lock: hidden temp folder, validate, rename, assign, commit. Links and `.git` folders are not copied (a warning names each skipped link). The source folder is never changed.
+- A new name is written into the `name:` line of the copied `SKILL.md`.
+- "Identical content" means the same files with the same bytes, `.git` ignored, under the same name.
+- A found skill that cannot be loaded is listed as skipped. A taken or invalid name is asked again until it is free; an empty answer skips the skill.
+- `--yes` asks nothing: scope is the project (or every folder with `--global`), taken names are skipped, originals are kept. Without `--yes`, `--global` only changes the default answer.
+- The project is registered only when the first skill is assigned to it.
+
 **Done when:** An end-to-end test imports two skills from a fixture project, with one name collision. Nothing is overwritten, and the originals stay unless deletion was confirmed.
 """)
 
@@ -853,7 +861,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

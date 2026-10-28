@@ -159,11 +159,7 @@ func forget(in io.Reader, out io.Writer, ref string, yes bool) error {
 		return err
 	}
 	p := r.Projects[id]
-	assignments := "1 skill assignment"
-	if n := len(p.Skills); n != 1 {
-		assignments = fmt.Sprintf("%d skill assignments", n)
-	}
-	question := fmt.Sprintf("Forget project %s [%s] and its %s?", registry.ProjectLabel(p.Name, p.Paths), id, assignments)
+	question := fmt.Sprintf("Forget project %s [%s] and its %s?", registry.ProjectLabel(p.Name, p.Paths), id, plural(len(p.Skills), "skill assignment"))
 	if !yes && !confirm(in, out, question) {
 		fmt.Fprintln(out, "Project not forgotten.")
 		return nil
