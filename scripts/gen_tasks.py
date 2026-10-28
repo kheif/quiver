@@ -456,6 +456,10 @@ task("TASK21", "Live updates", "TASK19, TASK20", """
 
 **Notes:**
 - `recoverPanics` (TASK15) does not cover the watcher goroutine. Recover inside it, so a bad event does not end the server.
+- The watcher is in `internal/server/watch.go`. fsnotify does not watch subfolders, so it watches the home folder (only `registry.json` and `config.json` count), `local/` and each skill folder in it, `sources/`, and each source's `.git` folder, which a pull or reset changes. New skill folders and new sources are added as they appear. Hidden names (`.lock`, `local/.new-*`) are ignored.
+- `prompts.sync` diffs the served skills against the registered prompts and adds, replaces or removes only what changed, so a description change also updates the prompt. The SDK batches the `list_changed` notifications.
+- `New` still returns a plain `*mcp.Server`; `newServer` also returns what `watch` needs. `Run` starts the watcher; tests start it with a 20 ms debounce.
+- The harness tests change the registry with `registry.Update` instead of running `quiver add`: the server package cannot import the CLI. A run of the real binary showed `skill list changed` in the log about a second after `quiver add`.
 
 **Done when:** A harness test runs `quiver add` from another goroutine and receives the notification. The new skill appears in `list_skills`.
 """)
@@ -843,7 +847,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

@@ -57,6 +57,7 @@ Items are ordered by priority within each section.
 ### B11 — File watching and platform support
 - **Concern:** `list_changed` needs file watching, but decisions.md lists no library for it. `flock` is Unix-only, and it is not decided whether Windows is a target.
 - **Proposal:** Add `fsnotify` to decisions.md. Decide on Windows support. If it is a target, choose a cross-platform lock.
+- **Partly resolved 2026-10-28:** `fsnotify` is in decisions.md (TASK26). Windows support and the lock are still open.
 - **Related:** decisions.md, TASK02
 
 ### B12 — Roadmap duplication

@@ -19,8 +19,14 @@ type Options struct {
 	Where Where
 }
 
-// New returns the MCP server with every tool registered.
+// New returns the MCP server with every tool and prompt registered.
 func New(opts Options) *mcp.Server {
+	s, _, _ := newServer(opts)
+	return s
+}
+
+// newServer is New, plus what watch needs to keep the server up to date.
+func newServer(opts Options) (*mcp.Server, *session, *prompts) {
 	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{
 		Logger:       opts.Log,
 		Instructions: instructions(opts),
@@ -29,8 +35,11 @@ func New(opts Options) *mcp.Server {
 	sess := &session{where: opts.Where}
 	addSkillTools(s, sess)
 	addCreateTool(s, sess)
-	addSkillPrompts(s, sess, opts.Log)
-	return s
+	p := &prompts{}
+	if _, err := p.sync(s, sess.projectID()); err != nil {
+		opts.Log.Warn("no skill prompts", "err", err)
+	}
+	return s, sess, p
 }
 
 // session holds the project the tools serve. create_skill can register the
@@ -91,7 +100,13 @@ func Run(ctx context.Context, version string) error {
 		}
 	}
 	log.Info("server started", "version", version, "dir", w.Dir, "from", w.From, "project", w.ProjectID())
-	err = New(Options{Version: version, Log: log, Where: w}).Run(ctx, &mcp.StdioTransport{})
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	s, sess, p := newServer(Options{Version: version, Log: log, Where: w})
+	if err := watch(ctx, s, sess, p, log); err != nil {
+		log.Warn("no live updates; new skills appear in the next session", "err", err)
+	}
+	err = s.Run(ctx, &mcp.StdioTransport{})
 	if err != nil {
 		log.Error("server stopped", "err", err)
 	} else {

@@ -9,6 +9,7 @@ These apply to every task. Change them here first if you change them at all.
 | MCP | Official Go SDK `github.com/modelcontextprotocol/go-sdk`, stdio transport | Maintained alongside the MCP spec. Stdio is what Claude Code, Cursor and Claude Desktop launch by default. |
 | TUI | Bubble Tea (`charmbracelet/bubbletea`, `bubbles`, `lipgloss`) | The most widely used Go TUI stack. Its models can be tested without a real terminal. |
 | Frontmatter parsing | `gopkg.in/yaml.v3` | `SKILL.md` frontmatter is YAML. |
+| File watching | `fsnotify/fsnotify` | Cross-platform and widely used. It does not watch subfolders, so the server adds each folder it needs (TASK26). |
 | Git | Run the system `git` binary through `os/exec` | Reuses the user's credentials (SSH keys, `gh` auth) with no extra setup. |
 | Storage | JSON files, written atomically (write to a temp file, then rename) | Simple and readable. A crash cannot leave a half-written file. |
 | Concurrency | A file lock on `~/.quiver/.lock` for every write | Several MCP server processes (one per assistant session) and the CLI can run at the same time. |

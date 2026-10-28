@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
+	"sync"
 
 	"github.com/kheif/quiver/internal/library"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -34,16 +34,44 @@ func joinArgs(a map[string]string) string {
 	return strings.Join(strings.Fields(strings.Join(words, " ")), " ")
 }
 
-// addSkillPrompts registers every served skill as a prompt named after its
-// ID, so the user can run it as a command: Claude Code lists it as
-// /quiver:<id>. The list is read once, at startup.
-func addSkillPrompts(s *mcp.Server, sess *session, log *slog.Logger) {
-	_, skills, err := loadServed(sess.projectID())
+// prompts keeps one prompt per served skill, named after the skill ID, so
+// the user can run a skill as a command: Claude Code lists it as
+// /quiver:<id>.
+type prompts struct {
+	mu sync.Mutex
+	// desc maps the ID of each registered prompt to its description.
+	desc map[string]string
+}
+
+// sync registers a prompt for each skill served in the project and removes
+// the prompts of skills no longer served. The SDK then sends
+// prompts/list_changed, once for a batch of changes. It reports whether the
+// list changed. On error the prompts stay as they were.
+func (p *prompts) sync(s *mcp.Server, projectID string) (bool, error) {
+	_, skills, err := loadServed(projectID)
 	if err != nil {
-		log.Warn("no skill prompts", "err", err)
-		return
+		return false, err
 	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	next := make(map[string]string, len(skills))
 	for _, sk := range skills {
+		next[sk.ID] = sk.Description
+	}
+	var gone []string
+	for id := range p.desc {
+		if _, ok := next[id]; !ok {
+			gone = append(gone, id)
+		}
+	}
+	if len(gone) > 0 {
+		s.RemovePrompts(gone...)
+	}
+	changed := len(gone) > 0
+	for _, sk := range skills {
+		if d, ok := p.desc[sk.ID]; ok && d == sk.Description {
+			continue
+		}
 		id := sk.ID
 		s.AddPrompt(&mcp.Prompt{
 			Name:        id,
@@ -52,7 +80,10 @@ func addSkillPrompts(s *mcp.Server, sess *session, log *slog.Logger) {
 		}, func(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
 			return skillPrompt(id, joinArgs(req.Params.Arguments))
 		})
+		changed = true
 	}
+	p.desc = next
+	return changed, nil
 }
 
 // skillPrompt returns the skill as one user message, with args appended as

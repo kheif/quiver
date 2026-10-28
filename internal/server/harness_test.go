@@ -16,6 +16,13 @@ var discard = slog.New(slog.NewTextHandler(io.Discard, nil))
 // to it, with no subprocess. Every server test uses it.
 func connect(t *testing.T, s *mcp.Server) *mcp.ClientSession {
 	t.Helper()
+	return connectWith(t, s, nil)
+}
+
+// connectWith is connect with client options, such as notification
+// handlers.
+func connectWith(t *testing.T, s *mcp.Server, opts *mcp.ClientOptions) *mcp.ClientSession {
+	t.Helper()
 	ctx := context.Background()
 	serverEnd, clientEnd := mcp.NewInMemoryTransports()
 	ss, err := s.Connect(ctx, serverEnd, nil)
@@ -23,7 +30,7 @@ func connect(t *testing.T, s *mcp.Server) *mcp.ClientSession {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = ss.Close() })
-	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "0"}, nil).Connect(ctx, clientEnd, nil)
+	cs, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "0"}, opts).Connect(ctx, clientEnd, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
