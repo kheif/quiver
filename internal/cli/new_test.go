@@ -124,7 +124,7 @@ func TestNewRejects(t *testing.T) {
 		"new Bad --description x --none":                    `invalid name "Bad"`,
 		"new x --description x --global --none":             "none",
 		"new pdf --description x --project " + other:        "already exists",
-		"new y --description x --project " + other + "/nop": "no such file",
+		"new y --description x --project " + other + "/nop": "nop",
 	} {
 		if _, err := runIn(t, "", strings.Fields(args)...); err == nil || !strings.Contains(err.Error(), want) {
 			t.Errorf("%s: err = %v, want %q", args, err, want)

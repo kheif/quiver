@@ -210,7 +210,7 @@ func TestSourceRemoveAssigned(t *testing.T) {
 	if err == nil {
 		t.Fatal("remove of an assigned source succeeded")
 	}
-	for _, want := range []string{"global: acme/pdf", "project web (/work/web): acme/review", "--force"} {
+	for _, want := range []string{"global: acme/pdf", "project web (" + filepath.Clean("/work/web") + "): acme/review", "--force"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("missing %q in %v", want, err)
 		}

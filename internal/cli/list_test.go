@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -112,10 +113,15 @@ func (f fixture) run(t *testing.T, args ...string) string {
 	if err != nil {
 		t.Fatalf("%v: %v\n%s", args, err, out)
 	}
+	if runtime.GOOS == "windows" {
+		// JSON escapes the \ of Windows paths.
+		out = strings.ReplaceAll(out, `\\`, `\`)
+	}
 	if real, err := filepath.EvalSymlinks(f.tmp); err == nil {
 		out = strings.ReplaceAll(out, real, "$TMP")
 	}
-	return strings.ReplaceAll(out, f.tmp, "$TMP")
+	// Golden files use / on every OS.
+	return filepath.ToSlash(strings.ReplaceAll(out, f.tmp, "$TMP"))
 }
 
 func TestListGolden(t *testing.T) {
