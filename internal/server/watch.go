@@ -41,7 +41,7 @@ func watch(ctx context.Context, s *mcp.Server, sess *session, p *prompts, log *s
 	dirs = append(dirs, subdirs(sources, ".git")...)
 	for _, d := range dirs {
 		if err := w.Add(d); err != nil {
-			w.Close()
+			_ = w.Close()
 			return fmt.Errorf("watch %s: %w", d, err)
 		}
 	}
@@ -62,7 +62,7 @@ func watch(ctx context.Context, s *mcp.Server, sess *session, p *prompts, log *s
 		}
 	}
 	go func() {
-		defer w.Close()
+		defer func() { _ = w.Close() }()
 		var tick <-chan time.Time
 		for {
 			select {

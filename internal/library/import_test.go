@@ -91,7 +91,7 @@ func TestImportLocal(t *testing.T) {
 		".git/HEAD":      "x",
 	})
 	if err := os.Symlink("/etc/hosts", filepath.Join(src, "hosts")); err != nil {
-		t.Fatal(err)
+		t.Skipf("cannot create a symbolic link: %v", err) // Windows without developer mode
 	}
 	res, err := ImportLocal(src, "pdf", ScopeProject, "app-000001", "app")
 	if err != nil {

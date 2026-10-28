@@ -117,9 +117,8 @@ func TestListSkills(t *testing.T) {
 }
 
 func TestListSkillsNoProject(t *testing.T) {
-	w, _ := skillsEnv(t)
-	w.Project = nil
-	got := listSkills(t, w)()
+	skillsEnv(t)
+	got := listSkills(t, Where{Dir: t.TempDir()})()
 	if len(got) != 1 || got[0].ID != "pdf" || got[0].Scope != "global" {
 		t.Errorf("got %+v", got)
 	}

@@ -27,7 +27,7 @@ func createEnv(t *testing.T) string {
 		t.Fatal(err)
 	}
 	err := registry.Update(func(r *registry.Registry) error {
-		r.EnsureProject("app-000001", filepath.Join(t.TempDir(), "app"))
+		_ = r.EnsureProject("app-000001", filepath.Join(t.TempDir(), "app"))
 		return nil
 	})
 	if err != nil {

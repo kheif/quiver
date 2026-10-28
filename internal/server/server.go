@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/kheif/quiver/internal/project"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -50,9 +51,17 @@ type session struct {
 	where Where
 }
 
+// projectID returns the served project's ID. While there is none, it looks
+// for one again: "quiver add" may have registered the folder since the
+// server started.
 func (s *session) projectID() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.where.Project == nil && s.where.Dir != "" {
+		if p, err := project.Find(s.where.Dir); err == nil {
+			s.where.Project = p
+		}
+	}
 	return s.where.ProjectID()
 }
 

@@ -213,7 +213,7 @@ func ImportLocal(src, name string, scope Scope, projectID, from string) (Importe
 		if err != nil {
 			return err
 		}
-		defer os.RemoveAll(tmp)
+		defer func() { _ = os.RemoveAll(tmp) }()
 		if res.Warnings, err = copySkill(src, tmp, name, s.Name); err != nil {
 			return err
 		}

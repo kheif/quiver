@@ -23,7 +23,7 @@
    ```
 3. Add a root `quiver` command with `--version` and a global `--verbose` flag.
 4. Add a `Makefile` with `build`, `test`, `lint` and `install` targets.
-5. CI is deferred until the project has a GitHub repository. Then add GitHub Actions that run `go test ./...` and `golangci-lint` on macOS, Linux and Windows.
+5. CI is deferred until the project has a GitHub repository. Then add GitHub Actions that run `go test ./...` and `golangci-lint` on macOS, Linux and Windows. Done in TASK30.
 
 **Done when:**
 - `make build` produces `./bin/quiver`.

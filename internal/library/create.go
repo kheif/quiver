@@ -78,7 +78,7 @@ func CreateLocal(name, description, body string, files map[string]string, scope 
 		if err != nil {
 			return err
 		}
-		defer os.RemoveAll(tmp)
+		defer func() { _ = os.RemoveAll(tmp) }()
 		if warnings, err = writeSkill(tmp, content, files); err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func checkFiles(files map[string]string) error {
 	for p := range files {
 		local := filepath.FromSlash(p)
 		if !filepath.IsLocal(local) || strings.Contains(p, `\`) {
-			return fmt.Errorf("invalid file path %q: use a relative path inside the skill folder, without ..", p)
+			return fmt.Errorf("invalid file path %q: use a relative path inside the skill folder, without \"..\"", p)
 		}
 		parts := strings.Split(filepath.ToSlash(filepath.Clean(local)), "/")
 		if slices.Contains(parts, ".git") {

@@ -147,7 +147,7 @@ func TestSplitProject(t *testing.T) {
 	orig := folder(t, home, "app", "app-1")
 	cp := folder(t, home, "app-copy", "app-1")
 	err := Update(func(r *Registry) error {
-		r.EnsureProject("app-1", orig)
+		_ = r.EnsureProject("app-1", orig)
 		r.Projects["app-1"].Skills = []string{"pdf", "tdd"}
 		r.Projects["app-1"].AlwaysOn = []string{"pdf"}
 		return nil

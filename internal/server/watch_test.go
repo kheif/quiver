@@ -214,3 +214,28 @@ func TestLiveIgnoresHidden(t *testing.T) {
 		t.Errorf("reloaded:\n%s", logs.String())
 	}
 }
+
+// A server started in a folder that is not a project serves the project
+// once "quiver add" registers the folder.
+func TestLiveFolderRegisteredAfterStart(t *testing.T) {
+	createEnv(t)
+	dir := filepath.Join(t.TempDir(), "web")
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cs, changed, _ := live(t, Where{Dir: dir})
+	// What "quiver add draft" does in that folder.
+	go func() {
+		p, _, _, err := registry.RegisterProject(dir)
+		if err == nil {
+			_ = registry.Update(func(r *registry.Registry) error { return r.Assign(p.ID, "draft") })
+		}
+	}()
+	waitChange(t, changed)
+	if _, ok := promptList(t, cs)["draft"]; !ok {
+		t.Errorf("prompts = %v", promptList(t, cs))
+	}
+	if got, _ := call(t, cs, "list_skills", nil); !strings.Contains(got, `"id":"draft"`) {
+		t.Errorf("list_skills: %s", got)
+	}
+}

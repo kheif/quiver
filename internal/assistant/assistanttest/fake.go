@@ -4,6 +4,7 @@ package assistanttest
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -50,6 +51,9 @@ type Fake struct{ dir string }
 // Install puts a fake claude command first on PATH, with no registration.
 func Install(t *testing.T) *Fake {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake claude command is a shell script")
+	}
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "claude"), []byte(script), 0o755); err != nil {
 		t.Fatal(err)

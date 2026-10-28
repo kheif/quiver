@@ -31,7 +31,7 @@ task("TASK01", "Repository setup", "—", """
    ```
 3. Add a root `quiver` command with `--version` and a global `--verbose` flag.
 4. Add a `Makefile` with `build`, `test`, `lint` and `install` targets.
-5. CI is deferred until the project has a GitHub repository. Then add GitHub Actions that run `go test ./...` and `golangci-lint` on macOS, Linux and Windows.
+5. CI is deferred until the project has a GitHub repository. Then add GitHub Actions that run `go test ./...` and `golangci-lint` on macOS, Linux and Windows. Done in TASK29.
 
 **Done when:**
 - `make build` produces `./bin/quiver`.
@@ -655,6 +655,11 @@ task("TASK29", "End-to-end test suite", "TASK22, TASK28", """
    - `doctor --fix`
 3. Run it on all three OSes in CI.
 
+**Implementation notes:**
+- The suite is in `e2e/`. `TestMain` builds the binary; each test gets its own `HOME`, `QUIVER_HOME` and git identity, and a `PATH` with only git's folder, so the real `claude` is never run. MCP steps use the SDK's `CommandTransport` on `quiver mcp`. It runs with `go test ./...`.
+- It found a bug: a server started in a folder that was not registered yet never served the project that `quiver add` then registered there. `session.projectID` now looks for `.quiver.json` again while the session has no project.
+- CI (`.github/workflows/ci.yml`, the deferred step of TASK01) runs `go test ./...` on Linux, macOS and Windows, and `golangci-lint` on Linux. On Windows the tests that need the fake `claude` shell script, or a symbolic link, are skipped.
+
 **Done when:** All flows pass in CI.
 """)
 
@@ -868,7 +873,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

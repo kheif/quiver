@@ -118,7 +118,7 @@ func installUser(bin string) (Result, error) {
 	if err != nil {
 		return Unchanged, err
 	}
-	defer os.Remove(empty)
+	defer func() { _ = os.Remove(empty) }()
 	reg, err := Get(empty)
 	if err != nil {
 		return Unchanged, err
