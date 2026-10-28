@@ -305,6 +305,13 @@ Check these, and report each one as `ok`, `warn` or `error`:
 
 `--fix` applies the safe fixes: committing `local/` (after showing the changes) and unassigning missing IDs (after confirmation).
 
+**Implementation notes:**
+- `doctor` overrides the root `PersistentPreRunE`, so it checks the home as it is instead of repairing it first. A missing part of the home is an error; `--fix` runs `setup.Init`, which never overwrites.
+- Checks that need an invalid `config.json` or `registry.json` are shown as skipped. Exit code 1 when errors remain; warnings alone exit 0.
+- Assigned skills of a configured source that is not downloaded are listed but not unassigned by `--fix`: adding the source again is the fix.
+- Name clashes in the global set are reported once as "every folder", not again per project.
+- The MCP check warns when Claude Code runs another quiver binary than this one, and when the `claude` command is missing.
+
 **Done when:** Each check has a fixture that triggers it, and `--fix` resolves the fixable ones.
 """)
 
@@ -861,7 +868,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

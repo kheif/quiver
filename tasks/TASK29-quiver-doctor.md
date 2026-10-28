@@ -2,7 +2,7 @@
 
 **Phase:** Phase 3 — Local Skills and Management
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK22, TASK27
 
@@ -18,5 +18,12 @@ Check these, and report each one as `ok`, `warn` or `error`:
 8. The MCP server is registered with Claude Code (`claude mcp get quiver`).
 
 `--fix` applies the safe fixes: committing `local/` (after showing the changes) and unassigning missing IDs (after confirmation).
+
+**Implementation notes:**
+- `doctor` overrides the root `PersistentPreRunE`, so it checks the home as it is instead of repairing it first. A missing part of the home is an error; `--fix` runs `setup.Init`, which never overwrites.
+- Checks that need an invalid `config.json` or `registry.json` are shown as skipped. Exit code 1 when errors remain; warnings alone exit 0.
+- Assigned skills of a configured source that is not downloaded are listed but not unassigned by `--fix`: adding the source again is the fix.
+- Name clashes in the global set are reported once as "every folder", not again per project.
+- The MCP check warns when Claude Code runs another quiver binary than this one, and when the `claude` command is missing.
 
 **Done when:** Each check has a fixture that triggers it, and `--fix` resolves the fixable ones.

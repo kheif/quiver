@@ -76,7 +76,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK26](TASK26-live-updates.md) | Live updates | TASK24, TASK25 |
 | ✅ | [TASK27](TASK27-quiver-where-and-quiver-projects.md) | `quiver where` and `quiver projects` | TASK07 |
 | ✅ | [TASK28](TASK28-quiver-import.md) | `quiver import` | TASK23, TASK14 |
-|  | [TASK29](TASK29-quiver-doctor.md) | `quiver doctor` | TASK22, TASK27 |
+| ✅ | [TASK29](TASK29-quiver-doctor.md) | `quiver doctor` | TASK22, TASK27 |
 
 ### Phase 4 — v1 Release
 

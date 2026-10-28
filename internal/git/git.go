@@ -83,3 +83,13 @@ func Commit(dir, msg string, paths ...string) error {
 	_, err := run(dir, args...)
 	return err
 }
+
+// Status returns the uncommitted changes in dir, one "XY path" line each
+// (git status --short), or "" when there are none.
+func Status(dir string) (string, error) {
+	out, err := run(dir, "status", "--short", "--untracked-files=all")
+	if err != nil {
+		return "", err
+	}
+	return out, nil
+}
