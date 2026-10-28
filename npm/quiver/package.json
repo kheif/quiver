@@ -1,0 +1,20 @@
+{
+  "name": "@kheif/quiver",
+  "version": "0.0.0",
+  "description": "Central skill manager for AI assistants, delivered as an MCP server.",
+  "keywords": ["mcp", "agent-skills", "claude-code", "skills", "cli"],
+  "homepage": "https://github.com/kheif/quiver#readme",
+  "bugs": "https://github.com/kheif/quiver/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kheif/quiver.git"
+  },
+  "bin": {
+    "quiver": "bin/quiver.js"
+  },
+  "files": ["bin"],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {}
+}

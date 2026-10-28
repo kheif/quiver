@@ -12,11 +12,29 @@ Skills use the standard Agent Skills format: a folder with a `SKILL.md` (YAML fr
 
 Quiver is a single binary. It needs `git` on your `PATH`.
 
+**macOS and Linux:**
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | sh
+```
+
+The script downloads the latest release for your system, checks its checksum and installs `quiver` into `~/.local/bin`. Set `QUIVER_VERSION=v1.0.0` for a given release, or `QUIVER_INSTALL_DIR` for another folder. Run it again to update.
+
+**npm (macOS, Linux and Windows):**
+
+```sh
+npm install -g @kheif/quiver
+```
+
+npm installs the binary for your platform; no install script runs. If you switch Node versions with nvm, fnm or volta, run `quiver mcp install` again afterwards, because the path of `quiver` changes with the Node version.
+
+**Go:**
+
 ```sh
 go install github.com/kheif/quiver/cmd/quiver@latest
 ```
 
-Or build from a clone with `make build`, which writes `bin/quiver`.
+The archives for every platform are also on the [releases page](https://github.com/kheif/quiver/releases). To build from a clone: `make build`, which writes `bin/quiver`.
 
 ## Quickstart
 
@@ -130,7 +148,7 @@ The last command deletes your own skills too. To keep them, first push `~/.quive
 
 ```sh
 quiver mcp uninstall      # remove the MCP server from Claude Code
-rm "$(command -v quiver)" # remove the binary
+rm "$(command -v quiver)" # remove the binary; with npm: npm uninstall -g @kheif/quiver
 rm -rf ~/.quiver          # delete the library
 ```
 

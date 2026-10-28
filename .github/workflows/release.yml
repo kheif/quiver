@@ -1,0 +1,73 @@
+name: Release
+
+# Pushing a tag such as v1.0.0 publishes the GitHub release and the npm
+# packages, then installs both on clean machines to check them.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # create the GitHub release
+  id-token: write # npm trusted publishing and provenance
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # GoReleaser builds the changelog from the history
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go test ./...
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          version: v2.18.3
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@^11.5.1
+      # With a trusted publisher configured on npmjs.com, npm publishes with
+      # OIDC; otherwise it falls back to the NPM_TOKEN secret.
+      - run: node scripts/npm-publish.mjs "$GITHUB_REF_NAME"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  verify-curl:
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: curl -fsSL "https://raw.githubusercontent.com/kheif/quiver/$GITHUB_REF_NAME/install.sh" | QUIVER_VERSION="$GITHUB_REF_NAME" sh
+      - run: ~/.local/bin/quiver --version | grep -F "${GITHUB_REF_NAME#v}"
+
+  verify-npm:
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # A new version can take a minute to show up on the registry.
+      - run: |
+          for i in 1 2 3 4 5 6; do
+            npm install -g "@kheif/quiver@${GITHUB_REF_NAME#v}" && break
+            sleep 20
+          done
+      - run: quiver --version | grep -F "${GITHUB_REF_NAME#v}"

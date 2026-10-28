@@ -438,7 +438,7 @@ func (d *doc) checkMCP() {
 		d.report("error", "not registered with Claude Code; run: quiver mcp install")
 		return
 	}
-	bin, err := executable()
+	bin, _, err := command()
 	if err == nil && reg.Command != bin {
 		d.report("warn", "Claude Code runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; run: quiver mcp install", reg.Command, reg.Args, bin))
 		return

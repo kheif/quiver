@@ -1,0 +1,40 @@
+# Builds the release archives. The release workflow runs it for a v* tag;
+# locally: goreleaser release --snapshot --clean
+version: 2
+
+project_name: quiver
+
+builds:
+  - main: ./cmd/quiver
+    binary: quiver
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X github.com/kheif/quiver/internal/cli.version={{ .Version }}
+
+archives:
+  # No version in the name, so install.sh can use the
+  # releases/latest/download/<name> link.
+  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files: [README.md]
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+
+release:
+  # A tag such as v1.1.0-rc.1 is a prerelease, which releases/latest skips.
+  prerelease: auto
+  github:
+    owner: kheif
+    name: quiver

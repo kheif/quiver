@@ -5,16 +5,36 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/kheif/quiver/internal/assistant"
 	"github.com/kheif/quiver/internal/server"
 	"github.com/spf13/cobra"
 )
 
-// executable returns the path assistants start Quiver with. Symlinks are
-// kept: Homebrew's stable path links to a versioned folder that an upgrade
-// deletes.
+// executable returns the path of this binary. Symlinks are kept: a stable
+// link may point to a versioned folder that an upgrade deletes.
 var executable = os.Executable
+
+// npmEnv is set by the npm package's launcher (npm/quiver/bin/quiver.js).
+const npmEnv = "QUIVER_NPM"
+
+// command returns the path assistants should start Quiver with. Installed
+// with npm, the binary sits inside node_modules, in a folder that changes
+// with the package version, so the quiver command on PATH is used instead.
+// viaNpm reports that case.
+func command() (path string, viaNpm bool, err error) {
+	if os.Getenv(npmEnv) == "1" {
+		if p, err := exec.LookPath("quiver"); err == nil {
+			if abs, err := filepath.Abs(p); err == nil {
+				return abs, true, nil
+			}
+		}
+	}
+	bin, err := executable()
+	return bin, false, err
+}
 
 func newMCPCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -62,7 +82,7 @@ a JSON snippet for manual setup are printed.`,
 }
 
 func mcpInstall(out io.Writer, printOnly bool) error {
-	bin, err := executable()
+	bin, viaNpm, err := command()
 	if err != nil {
 		return err
 	}
@@ -91,6 +111,9 @@ func mcpInstall(out io.Writer, printOnly bool) error {
 	}
 	if res != assistant.Unchanged {
 		fmt.Fprintln(out, "Start a new Claude Code session to use it.")
+	}
+	if viaNpm {
+		fmt.Fprintln(out, "Installed with npm: the path depends on your Node version. After switching Node versions (nvm, fnm, volta), run quiver mcp install again.")
 	}
 	return nil
 }

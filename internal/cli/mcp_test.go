@@ -174,3 +174,26 @@ func TestMCPInstallNoClaude(t *testing.T) {
 		t.Errorf("uninstall: %v\n%s", err, out)
 	}
 }
+
+// Run through the npm launcher, mcp install registers the quiver command
+// on PATH, not the binary inside node_modules.
+func TestMCPInstallNpm(t *testing.T) {
+	f := assistanttest.Install(t)
+	fakeExecutable(t, "/usr/lib/node_modules/@kheif/quiver-linux-x64/bin/quiver")
+	bin := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bin, "quiver"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv(npmEnv, "1")
+	out, err := runIn(t, "", "mcp", "install")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(bin, "quiver") + "|mcp"; f.User() != want {
+		t.Errorf("user %q, want %q", f.User(), want)
+	}
+	if !strings.Contains(out, "After switching Node versions") {
+		t.Errorf("no npm note:\n%s", out)
+	}
+}
