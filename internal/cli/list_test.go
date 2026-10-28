@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -120,9 +121,13 @@ func (f fixture) run(t *testing.T, args ...string) string {
 	if real, err := filepath.EvalSymlinks(f.tmp); err == nil {
 		out = strings.ReplaceAll(out, real, "$TMP")
 	}
+	out = strings.ReplaceAll(out, f.tmp, "$TMP")
 	// Golden files use / on every OS.
-	return filepath.ToSlash(strings.ReplaceAll(out, f.tmp, "$TMP"))
+	return tmpPath.ReplaceAllStringFunc(out, filepath.ToSlash)
 }
+
+// tmpPath matches a temp path after $TMP was put in.
+var tmpPath = regexp.MustCompile(`\$TMP[^\s"():,]*`)
 
 func TestListGolden(t *testing.T) {
 	f := listEnv(t)
