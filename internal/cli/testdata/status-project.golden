@@ -1,0 +1,8 @@
+Project: app
+ID:      app-000001
+Root:    $TMP/005/app
+
+Served in app:
+  acme/review  global
+  pdf          global  always-on
+  tdd          project

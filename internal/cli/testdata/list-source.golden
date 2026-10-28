@@ -1,0 +1,5 @@
+ID           ASSIGNED           DESCRIPTION
+acme/deploy                     Test skill.
+acme/review  global, 1 project  Test skill.
+
+warning: skipped broken: $TMP/001/q/local/broken/SKILL.md: missing frontmatter: file must start with ---

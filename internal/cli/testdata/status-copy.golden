@@ -1,0 +1,9 @@
+Project: app
+ID:      app-000001
+Root:    $TMP/007/app-copy
+warning: project app-000001 is in more than one folder ($TMP/005/app, $TMP/007/app-copy); if one is a copy, run `quiver projects split` inside it
+
+Served in app:
+  acme/review  global
+  pdf          global  always-on
+  tdd          project

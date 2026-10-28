@@ -1,0 +1,8 @@
+Project: api
+ID:      api-000002
+Root:    $TMP/006/api
+
+Served in api:
+  acme/review  global
+  pdf          global  always-on
+  tdd          project

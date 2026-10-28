@@ -1,0 +1,8 @@
+ID           ASSIGNED           DESCRIPTION
+acme/deploy                     Test skill.
+acme/review  global, 1 project  Test skill.
+notes                           Keep notes.
+pdf          global             Fill in and read PDF forms.
+tdd          2 projects         Write the test first. Then …
+
+[2mwarning: skipped broken: $TMP/001/q/local/broken/SKILL.md: missing frontmatter: file must start with ---[0m
