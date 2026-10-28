@@ -24,8 +24,8 @@ var (
 )
 
 // Parse reads input as owner/repo (GitHub), host/owner/repo, a git URL, an
-// scp-style address such as git@github.com:a/b.git, or a local path that
-// starts with /, ./, ../ or ~/.
+// scp-style address such as git@github.com:a/b.git, or a local path: an
+// absolute one (C:\ on Windows), or one that starts with ./, ../ or ~/.
 func Parse(input string) (Parsed, error) {
 	in := strings.TrimSpace(input)
 	if err := checkSafe(in); err != nil {
@@ -70,7 +70,14 @@ func checkSafe(in string) error {
 }
 
 func isLocalPath(in string) bool {
-	for _, prefix := range []string{"/", "./", "../", "~/"} {
+	if filepath.IsAbs(in) {
+		return true
+	}
+	prefixes := []string{"/", "./", "../", "~/"}
+	if filepath.Separator == '\\' {
+		prefixes = append(prefixes, `.\`, `..\`, `~\`)
+	}
+	for _, prefix := range prefixes {
 		if strings.HasPrefix(in, prefix) {
 			return true
 		}
@@ -82,7 +89,7 @@ func isLocalPath(in string) bool {
 // folder. The default name is the folder name.
 func parseLocal(in string) (Parsed, error) {
 	path := in
-	if path == "~" || strings.HasPrefix(path, "~/") {
+	if path == "~" || strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "~"+string(filepath.Separator)) {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return Parsed{}, err

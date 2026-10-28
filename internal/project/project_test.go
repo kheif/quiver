@@ -14,6 +14,7 @@ func setup(t *testing.T) string {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // os.UserHomeDir on Windows
 	dir := filepath.Join(home, "code", "app")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)

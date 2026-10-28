@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -20,8 +21,8 @@ func TestWriteReadJSON(t *testing.T) {
 	if err := ReadJSON(path, &got); err != nil || got.N != 1 {
 		t.Fatalf("got %+v, %v", got, err)
 	}
-	info, _ := os.Stat(path)
-	if info.Mode().Perm() != 0o644 {
+	// Windows has no Unix permissions.
+	if info, _ := os.Stat(path); runtime.GOOS != "windows" && info.Mode().Perm() != 0o644 {
 		t.Errorf("mode %v", info.Mode().Perm())
 	}
 }

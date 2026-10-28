@@ -3,6 +3,7 @@ package source
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -37,13 +38,22 @@ func TestParseLocalPath(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // os.UserHomeDir on Windows
 	chdir(t, home)
+	// On Windows /srv is on the current drive.
+	abs := func(p string) string { a, _ := filepath.Abs(p); return a }
 	cases := []struct{ in, url, name string }{
-		{"/srv/repos/Team_Skills.git", "/srv/repos/Team_Skills.git", "team-skills"},
-		{"/srv/repos/skills/", "/srv/repos/skills", "skills"},
+		{"/srv/repos/Team_Skills.git", abs("/srv/repos/Team_Skills.git"), "team-skills"},
+		{"/srv/repos/skills/", abs("/srv/repos/skills"), "skills"},
 		{"./work/skills", filepath.Join(home, "work", "skills"), "skills"},
 		{"../up", filepath.Join(filepath.Dir(home), "up"), "up"},
 		{"~/code/my-skills", filepath.Join(home, "code", "my-skills"), "my-skills"},
+	}
+	if runtime.GOOS == "windows" {
+		cases = append(cases,
+			struct{ in, url, name string }{`C:\repos\Team_Skills.git`, `C:\repos\Team_Skills.git`, "team-skills"},
+			struct{ in, url, name string }{`.\work\skills`, filepath.Join(home, "work", "skills"), "skills"},
+		)
 	}
 	for _, c := range cases {
 		got, err := Parse(c.in)

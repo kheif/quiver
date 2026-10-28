@@ -104,7 +104,7 @@ func TestResetAfterRewrite(t *testing.T) {
 	old, _ := Head(dir)
 
 	write(t, work, "pdf/SKILL.md", "rewritten")
-	if _, err := run(work, "commit", "--quiet", "--amend", "-am", "v1b"); err != nil {
+	if _, err := run(work, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--quiet", "--amend", "-am", "v1b"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := run(work, "push", "--quiet", "--force", "origin", "HEAD"); err != nil {

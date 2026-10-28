@@ -11,6 +11,7 @@ import (
 
 	"github.com/kheif/quiver/internal/assistant/assistanttest"
 	"github.com/kheif/quiver/internal/project"
+	"github.com/kheif/quiver/internal/setup"
 )
 
 // TestMCPStdoutHasOnlyMessages runs "quiver mcp" in a child process (this
@@ -157,6 +158,11 @@ func TestMCPInstallPrint(t *testing.T) {
 }
 
 func TestMCPInstallNoClaude(t *testing.T) {
+	sourceEnv(t)
+	// Create the home while git is still on PATH.
+	if _, err := setup.Init(); err != nil {
+		t.Fatal(err)
+	}
 	t.Setenv("PATH", t.TempDir())
 	fakeExecutable(t, "/opt/bin/quiver")
 	out, err := runIn(t, "", "mcp", "install")
