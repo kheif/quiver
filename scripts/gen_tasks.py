@@ -697,7 +697,7 @@ A to D notes: `git.CommonDir` and `registry.SameRepository` compare worktrees; `
 4. **npm auth:** publish from GitHub Actions with npm trusted publishing (OIDC, `id-token: write`), so no npm token is stored. Trusted publishing only works for packages that already exist, so the user publishes a first version of each package by hand, then adds the trusted publisher on npmjs.com.
 5. **Stable path for `mcp install`:** an npm install lives under the Node version (nvm, fnm, volta), so the binary path changes when the user switches Node. When `quiver mcp install` runs from inside `node_modules`, register the path of the `quiver` command on `PATH` instead, and print a note that a Node switch needs `quiver mcp install` again. The curl install path (`~/.local/bin/quiver`) is stable.
 6. Update the README's Install section: curl first, then npm, then `go install`.
-7. Decide backlog B07 (approval for global `create_skill`) before tagging. A global skill's description reaches the instructions in every folder. The smallest fix: leave unapproved global skills out of the catalog.
+7. Decided 2026-10-28: B07 stays in the backlog for v1. Decide backlog B07 (approval for global `create_skill`) before tagging. A global skill's description reaches the instructions in every folder. The smallest fix: leave unapproved global skills out of the catalog.
 8. Update the GitHub Actions to versions that run on Node 24 (CI warns about Node 20).
 9. Tag `v1.0.0`. Pushing the tag publishes everything, so only after the user confirms.
 
