@@ -217,11 +217,21 @@ quiver doctor                       # Check the library and fix problems
 
 **Later**
 - Graphical app
-- Team libraries with shared assignments
+- Search and a marketplace: people can find and add skills others published
+- Team libraries with shared assignments (see Direction)
+
+## Direction
+
+Quiver grows in two tracks.
+
+- **Individual.** One person's skills, kept in the local library, or pushed to their own GitHub repository to keep them remote and in sync between machines. v1 is this track.
+- **Enterprise.** A company keeps its skills and their structure in a central place, such as a GitHub repository or S3, under its own standards. Each developer's Quiver MCP pulls them from there. Later, a company can run its own Quiver server: developers' MCP connects to it, and it serves each developer only the skills they are allowed to use.
+
+Decisions in the individual track should not block the enterprise one. Sources are git repositories today; other storage (such as S3) is a new source type. A company server needs MCP over HTTP instead of stdio, and identity and permissions on top.
 
 ## Out of Scope
 
 - Copying or linking skills into projects. The MCP server is the only delivery path, and `.quiver.json` is the only file in a project.
 - Running scripts. The assistant runs a skill's scripts itself, using the paths that `get_skill` returns.
 - Defining a new skill format.
-- Hosting a central marketplace. Sources are plain git repositories.
+- Hosting a central marketplace in v1 and v2. Sources are plain git repositories. Search and a marketplace may come later (see Roadmap).

@@ -680,6 +680,15 @@ task("TASK30", "README and help text", "TASK29", """
 task("TASK31", "Release", "TASK30", """
 Ship v1 through three channels: GitHub Releases, a curl install script and npm. No Homebrew tap (decided 2026-10-28).
 
+**Before the release** (fixes from the user-perspective review on 2026-10-28):
+
+A. **Git worktrees are not copies.** Folders with the same project ID that are worktrees of one git repository (same `git rev-parse --git-common-dir`) are one project: no `PossibleCopy` warning, and `projects split` refuses there, because it would change the committed `.quiver.json`.
+B. **`quiver delete <id>`** removes a local skill from the library and commits the removal in `local/`. It asks first (`--yes` skips). If the skill is assigned, it lists where and refuses unless `--force`, which unassigns it too. Source skills cannot be deleted; `quiver source remove` removes the whole source.
+C. **Windows editor:** without `$VISUAL` and `$EDITOR`, `quiver new` and `quiver edit` open `notepad` on Windows instead of `vi`.
+D. **README:** assignments are per user and machine (a teammate's clone gets `.quiver.json` but no skills; share skills through a source), how to uninstall, and that assistants other than Claude Code may not start the server in the project folder, so they get only global skills unless `QUIVER_PROJECT` is set.
+
+**Release:**
+
 1. Set up GoReleaser (the free version) for darwin/linux/windows on amd64 and arm64. A tag `v*` runs it in GitHub Actions and publishes a GitHub Release with the archives and a checksums file.
 2. **curl:** add `install.sh` to the repository. It detects the OS and CPU, downloads the archive of the latest (or a given) release, checks it against the checksums file, and installs `quiver` into `~/.local/bin` (overridable). It prints how to add that folder to `PATH` when it is missing. Usage: `curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | sh`. Windows users install with npm or from the release archive.
 3. **npm:** GoReleaser's npm publishing is Pro only, so publish with a script in the release workflow. Use the esbuild layout: one package per platform (such as `@<scope>/quiver-darwin-arm64`, with `os` and `cpu` set) holding the binary, and a main package `@<scope>/quiver` that lists them as `optionalDependencies` and has a small `bin` script that runs the right one. No postinstall download: pnpm 10 skips install scripts by default, and installs keep working offline from a cache. `quiver` itself is taken on npm, so the package is scoped.
@@ -887,7 +896,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "~"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])
