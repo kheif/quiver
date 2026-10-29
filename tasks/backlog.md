@@ -48,7 +48,7 @@ Items are ordered by priority within each section.
 - **Concern:** If a private repo asks for credentials, a background `git ls-remote` or `git pull` hangs.
 - **Proposal:** Always run git with `GIT_TERMINAL_PROMPT=0` and a timeout.
 - **Related:** TASK09, background update checks (Phase 5)
-- **Planned 2026-10-29:** `GIT_TERMINAL_PROMPT=0` is set; timeouts are TASK34.
+- **Resolved 2026-10-29:** `GIT_TERMINAL_PROMPT=0` and timeouts on every git command (TASK34).
 
 ### B09 — `mcp install` writes an absolute path
 - **Concern:** GUI apps such as Claude Desktop do not see the shell's `PATH`, so a bare `quiver` command may not start.

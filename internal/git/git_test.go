@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -101,5 +102,30 @@ func TestMissingGit(t *testing.T) {
 	t.Setenv("PATH", t.TempDir())
 	if _, err := Head(t.TempDir()); !errors.Is(err, ErrNotInstalled) {
 		t.Errorf("got %v", err)
+	}
+}
+
+// A git that never answers is stopped after the timeout.
+func TestTimeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake git is a shell script")
+	}
+	bin := t.TempDir()
+	write(t, bin, "git", "#!/bin/sh\nexec /bin/sleep 30\n")
+	if err := os.Chmod(filepath.Join(bin, "git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
+	old := networkTimeout
+	networkTimeout = 200 * time.Millisecond
+	t.Cleanup(func() { networkTimeout = old })
+
+	start := time.Now()
+	err := Clone("https://example.com/x.git", t.TempDir())
+	if err == nil || !strings.Contains(err.Error(), "no answer within 200ms") {
+		t.Errorf("err = %v", err)
+	}
+	if d := time.Since(start); d > 5*time.Second {
+		t.Errorf("took %v", d)
 	}
 }

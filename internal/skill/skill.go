@@ -50,18 +50,29 @@ func LoadFile(path string) (*Skill, error) {
 		}
 		return nil, err
 	}
-	fm, body, err := splitFrontmatter(data)
+	s, err := parse(data)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
+	s.Dir = dir
+	return s, nil
+}
+
+// parse reads a skill file's content. Skills come from the internet, so
+// no content may make it panic (see FuzzParse).
+func parse(data []byte) (*Skill, error) {
+	fm, body, err := splitFrontmatter(data)
+	if err != nil {
+		return nil, err
+	}
 	meta := map[string]any{}
 	if err := yaml.Unmarshal(fm, &meta); err != nil {
-		return nil, fmt.Errorf("%s: invalid frontmatter: %w", path, err)
+		return nil, fmt.Errorf("invalid frontmatter: %w", err)
 	}
 	if meta == nil {
 		meta = map[string]any{}
 	}
-	s := &Skill{Dir: dir, Body: string(body), Frontmatter: meta}
+	s := &Skill{Body: string(body), Frontmatter: meta}
 	s.Name, _ = meta["name"].(string)
 	s.Description, _ = meta["description"].(string)
 	return s, nil

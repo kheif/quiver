@@ -4,6 +4,7 @@ package git
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -16,19 +17,44 @@ import (
 // ErrNotInstalled is returned when no git binary is on PATH.
 var ErrNotInstalled = errors.New("git is not installed or not on PATH: install git and try again")
 
-// run runs git with args in dir and returns trimmed stdout. Prompts are
-// disabled, so missing credentials fail instead of hanging. Errors include
-// the command and git's stderr.
+// How long a git command may run. A stalled network would otherwise make
+// clone, fetch and pull wait forever. Variables, so tests can shorten them.
+var (
+	localTimeout   = time.Minute
+	networkTimeout = 5 * time.Minute
+)
+
+// run runs a local git command with args in dir and returns trimmed stdout.
 func run(dir string, args ...string) (string, error) {
-	cmd := exec.Command("git", args...)
+	return runTimeout(localTimeout, dir, args...)
+}
+
+// runNetwork is run for commands that talk to a remote.
+func runNetwork(dir string, args ...string) (string, error) {
+	return runTimeout(networkTimeout, dir, args...)
+}
+
+// runTimeout runs git and stops it after timeout. Prompts are disabled, so
+// missing credentials fail instead of hanging. Errors include the command
+// and git's stderr.
+func runTimeout(timeout time.Duration, dir string, args ...string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
+	// Helpers such as git-remote-https can keep the output open after git
+	// is killed; stop waiting for them.
+	cmd.WaitDelay = 5 * time.Second
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
 			return "", ErrNotInstalled
+		}
+		if ctx.Err() != nil {
+			return "", fmt.Errorf("git %s: no answer within %v; check the network and try again", strings.Join(args, " "), timeout)
 		}
 		msg := strings.TrimSpace(stderr.String())
 		return "", fmt.Errorf("git %s: %w: %s", strings.Join(args, " "), err, msg)

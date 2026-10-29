@@ -1,0 +1,27 @@
+# Dependency updates once a month, all updates of an ecosystem in one PR.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      go:
+        patterns: ["*"]
+
+  # Keeps the commit SHAs that the workflows pin current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /npm/quiver
+    schedule:
+      interval: monthly
+    groups:
+      npm:
+        patterns: ["*"]

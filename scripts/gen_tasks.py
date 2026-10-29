@@ -750,6 +750,13 @@ From the v1 review (2026-10-29). Small fixes that make Quiver safer to run and t
 7. **Open-source files.** `SECURITY.md` (how to report a vulnerability privately), `.github/ISSUE_TEMPLATE/` (bug report with `quiver --version` and `quiver doctor` output, feature request), `CONTRIBUTING.md` (build, test, the task files).
 
 **Done when:** a test makes a fake git hang and gets a timeout error; CI runs race, fuzz and govulncheck; Dependabot opens grouped PRs; no workflow uses a tag.
+
+**Notes:**
+- `internal/git` runs local commands with a 1 minute limit and clone, fetch and pull with 5 minutes (`runNetwork`); `WaitDelay` stops waiting for helpers such as `git-remote-https` that keep the output open.
+- Releases up to v1.1.0 were built with Go 1.25.0, because `setup-go` read the `go` line of `go.mod`, which is only the minimum. govulncheck found over 30 fixed standard library vulnerabilities in that binary. The workflows now use `go-version: stable` with `check-latest`, and the release job runs govulncheck before publishing.
+- The race detector runs on Linux and macOS; the Windows runner has no cgo.
+- `skill.parse` is the parser without file access; `FuzzParse` found nothing in 10 million runs.
+- Private vulnerability reporting must be turned on in the repository settings for SECURITY.md's link to work.
 """)
 
 task("TASKD2", "Duplicate skills: import removes originals, doctor and status find copies", "TASKC1", """
@@ -1047,7 +1054,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

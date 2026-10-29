@@ -145,6 +145,8 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - Source skills are read-only in Quiver. To change one, copy it into your own skills.
 - `create_skill` lets the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`.
 
+To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).
+
 ## Uninstall
 
 The last command deletes your own skills too. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
@@ -165,7 +167,7 @@ make test    # go test ./..., including the end-to-end suite in e2e/
 make lint    # golangci-lint
 ```
 
-See [PROJECT.md](PROJECT.md) for the design and [tasks/](tasks/README.md) for the plan.
+See [CONTRIBUTING.md](CONTRIBUTING.md), [PROJECT.md](PROJECT.md) for the design and [tasks/](tasks/README.md) for the plan.
 
 ## License
 
