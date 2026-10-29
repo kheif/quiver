@@ -92,20 +92,35 @@ and every new assistant session follows caveman from the first message. Use Quiv
 |---|---|---|---|
 | ✅ | [TASK33](TASK33-v1-1-import-one-skill-or-a-folder-version-for-go-install.md) | v1.1: import one skill or a folder, version for go install | TASK32 |
 
+### Phase 4c — v1.2
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+|  | [TASK34](TASK34-hardening-git-timeouts-race-and-fuzz-tests-dependency-checks.md) | Hardening: git timeouts, race and fuzz tests, dependency checks | TASK33 |
+|  | [TASK35](TASK35-duplicate-skills-import-removes-originals-doctor-and-status-find-copies.md) | Duplicate skills: import removes originals, doctor and status find copies | TASK33 |
+|  | [TASK36](TASK36-quiver-show-quiver-search-every-skill-in-the-catalog.md) | `quiver show`, `quiver search`, every skill in the catalog | TASK33 |
+|  | [TASK37](TASK37-quiver-mcp-install-for-cursor-and-claude-desktop.md) | `quiver mcp install` for Cursor and Claude Desktop | TASK33 |
+|  | [TASK38](TASK38-first-run-and-rough-edges.md) | First run and rough edges | TASK35 |
+|  | [TASK39](TASK39-notice-of-a-new-quiver-version.md) | Notice of a new Quiver version | TASK33 |
+|  | [TASK40](TASK40-install-ps1-for-windows.md) | `install.ps1` for Windows | TASK33 |
+|  | [TASK41](TASK41-release-v1-2-0.md) | Release v1.2.0 | TASK34, TASK35, TASK36, TASK37, TASK38, TASK39, TASK40 |
+
 ### Phase 5 — v2
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK34](TASK34-update-skill-mcp-tool.md) | `update_skill` MCP tool | TASK24 |
-|  | [TASK35](TASK35-quiver-search-and-search-skills.md) | `quiver search` and `search_skills` | TASK12, TASK18 |
-|  | [TASK36](TASK36-quiver-fork.md) | `quiver fork` | TASK12, TASK14 |
-|  | [TASK37](TASK37-pinning.md) | Pinning | TASK15 |
-|  | [TASK38](TASK38-update-preview.md) | Update preview | TASK15 |
-|  | [TASK39](TASK39-library-sync-between-machines.md) | Library sync between machines | TASK30 |
-|  | [TASK40](TASK40-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK20 |
-|  | [TASK41](TASK41-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK35, TASK14 |
-|  | [TASK42](TASK42-background-update-checks.md) | Background update checks | TASK41, TASK15 |
-|  | [TASK43](TASK43-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |
+|  | [TASK42](TASK42-split-machine-local-state-out-of-the-registry.md) | Split machine-local state out of the registry | TASK41 |
+|  | [TASK43](TASK43-stable-skill-ids.md) | Stable skill IDs | TASK42 |
+|  | [TASK44](TASK44-update-skill-mcp-tool.md) | `update_skill` MCP tool | TASK24 |
+|  | [TASK45](TASK45-search-skills-mcp-tool.md) | `search_skills` MCP tool | TASK36, TASK18 |
+|  | [TASK46](TASK46-quiver-fork.md) | `quiver fork` | TASK12, TASK14 |
+|  | [TASK47](TASK47-pinning.md) | Pinning | TASK15 |
+|  | [TASK48](TASK48-update-preview.md) | Update preview | TASK15 |
+|  | [TASK49](TASK49-library-sync-between-machines.md) | Library sync between machines | TASK30 |
+|  | [TASK50](TASK50-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK37 |
+|  | [TASK51](TASK51-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK45, TASK14 |
+|  | [TASK52](TASK52-background-update-checks.md) | Background update checks | TASK51, TASK15 |
+|  | [TASK53](TASK53-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |
 
 ## Later (not yet planned in detail)
 

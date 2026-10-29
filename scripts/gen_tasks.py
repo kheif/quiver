@@ -443,7 +443,7 @@ task("TASK19", "`create_skill`", "TASK17, TASK09", """
 - Error hints: an invalid name suggests its slug (`My Notes!` gives `my-notes`); a taken name suggests the first free `<name>-N`. Path errors come from `library.CreateLocal`.
 - The server `instructions` now always end with a pointer to `create_skill`, inside the 3800-byte budget (`createHint`, `buildInstructions`). Without it the manual test failed: Claude Code defers MCP tools, the instructions were empty for an empty library, and Claude wrote the skill file itself.
 - Manual test, run headless: `claude -p` in a new folder with `--mcp-config` pointing to `bin/quiver` and a temporary `QUIVER_HOME`. Claude called `create_skill` with `scope: "project"`, `.quiver.json` was created, and `quiver status` listed the skill as `project`.
-- Backlog B07 (approval for global skills) is still open and must be decided before release (TASK32): a prompt injection can still create a global skill.
+- Backlog B07 (approval for global skills) is not planned: a skill created with `scope: "global"` is active at once.
 
 **Done when:**
 - Harness tests cover both scopes, an unregistered project, a taken name and path traversal in `files`.
@@ -707,7 +707,7 @@ A to D notes: `git.CommonDir` and `registry.SameRepository` compare worktrees; `
 
 **Released 2026-10-28:** v1.0.0 is on GitHub Releases and npm. The npm packages were published by hand with 2FA (npm requires 2FA on the account to publish). The Release workflow passed: the install checks with curl on Linux and macOS and with npm on Linux, macOS and Windows. Trusted publishing is not set up yet; do it right before v1.0.1 (docs/releasing.md).
 
-**The user does by hand:** create the npm scope (the npm username or an organization), publish the first version of each package, and add the trusted publisher for `kheif/quiver` and the release workflow on npmjs.com.
+**The maintainer does by hand:** create the npm scope (the npm username or an organization), publish the first version of each package, and add the trusted publisher for `kheif/quiver` and the release workflow on npmjs.com.
 
 **Done when:** on a clean macOS and Linux machine, the curl install and `npm install -g @<scope>/quiver` both give a working `quiver`, on Windows the npm install does, and the README quickstart runs.
 """)
@@ -721,7 +721,7 @@ Stabilization before v2, from using v1.0.0 (2026-10-28). Released as v1.1.0: a n
 1c. Imported skills are assigned to the project of the current folder (or to every folder), also when a folder elsewhere is imported. `quiver import` without a path keeps searching this project's `.claude/skills`, or every folder of it with `--deep`.
 2. `quiver --version` of a `go install` build shows the module version (`1.1.0`), not `dev`. A plain `go build` shows Go's VCS version; release builds keep the ldflags version.
 
-**Not done (decided 2026-10-28):** prefix-free commands (TASKB1) stay in v2. The user asked whether the assistant reliably follows a pointer file to `get_skill`, and chose to keep the MCP prompts as they are for now.
+**Not done (decided 2026-10-28):** prefix-free commands (TASKB1) stay in v2. It is not measured yet whether the assistant reliably follows a pointer file to `get_skill`, so the MCP prompts stay as they are for now.
 
 **Notes:**
 - `importOne` in `internal/cli/import.go` handles one skill before the folder search; `library.ReadFound` reads a skill folder for both paths. A lone markdown file is copied to a temp folder as `SKILL.md` first. Deleting the original deletes the skill folder, or only the lone file.
@@ -735,8 +735,126 @@ Stabilization before v2, from using v1.0.0 (2026-10-28). Released as v1.1.0: a n
 **Done when:** tests cover a lone file with `--name` and with its frontmatter name, a `SKILL.md` with its folder, a folder with nested skills, lone files, a README and invalid skills, and the errors; `go install github.com/kheif/quiver/cmd/quiver@v1.1.0` prints `quiver 1.1.0`.
 """)
 
+# ---------------------------------------------------------------- Phase 4c
+phase("Phase 4c — v1.2")
+
+task("TASKD1", "Hardening: git timeouts, race and fuzz tests, dependency checks", "TASKC1", """
+From the v1 review (2026-10-29). Small fixes that make Quiver safer to run and to release.
+
+1. **Git timeouts (backlog B08).** `internal/git` already sets `GIT_TERMINAL_PROMPT=0`, but a stalled network makes `git clone` or `git pull` wait forever, and `quiver update` hangs. Run git with `exec.CommandContext`: 5 minutes for clone, fetch and pull, 30 seconds for local commands. On a timeout, say which source and that the network did not answer.
+2. **Race detector.** CI runs `go test -race ./...` (the server watches files while it answers requests).
+3. **Fuzz test.** `FuzzParse` for the frontmatter parser in `internal/skill`: skills come from the internet, so no input may make it panic. A short `-fuzztime` run in CI.
+4. **govulncheck.** A CI job runs `govulncheck ./...` and fails on a reachable known vulnerability.
+5. **Dependabot.** `.github/dependabot.yml` for `gomod`, `github-actions` and `npm` (`npm/quiver`), monthly, with all updates of an ecosystem grouped into one PR.
+6. **Pin actions to commits.** Every `uses:` in `.github/workflows/` names a full commit SHA with the version as a comment (`actions/checkout@<sha> # v7`). A tag can be moved to other code; a SHA cannot, and the release job can publish to npm. Dependabot keeps the SHAs current.
+7. **Open-source files.** `SECURITY.md` (how to report a vulnerability privately), `.github/ISSUE_TEMPLATE/` (bug report with `quiver --version` and `quiver doctor` output, feature request), `CONTRIBUTING.md` (build, test, the task files).
+
+**Done when:** a test makes a fake git hang and gets a timeout error; CI runs race, fuzz and govulncheck; Dependabot opens grouped PRs; no workflow uses a tag.
+""")
+
+task("TASKD2", "Duplicate skills: import removes originals, doctor and status find copies", "TASKC1", """
+A skill that is both in Quiver and in a native skill folder is loaded twice (backlog B13). Not everyone runs `quiver doctor`, so import should not leave copies behind.
+
+1. **Import removes originals.** After a skill is imported, its original is deleted by default; the copy is safe in the library's git.
+   - Exception: an original tracked by the git of a project (a committed `.claude/skills/x`) is shared with teammates who may not use Quiver. For it the question defaults to no and says why, and `--yes` keeps it.
+   - `--keep` keeps every original. `--yes` deletes the untracked ones.
+   - Use `git.Tracked` to tell the cases apart.
+2. **doctor.** A new check finds skills that Quiver serves here and that also exist natively: in `~/.claude/skills`, in this project's `.claude/skills`, and in enabled Claude Code plugins. Match by name, and by same content. `--fix` offers to delete untracked copies; tracked ones are reported only.
+3. **status.** `quiver status` prints a warning line for each native copy of a served skill, with the hint `quiver doctor --fix`.
+
+**Done when:** tests cover import of tracked and untracked originals with and without `--yes` and `--keep`, the doctor check and fix, and the status warning; the README and import help describe the new default.
+""")
+
+task("TASKD3", "`quiver show`, `quiver search`, every skill in the catalog", "TASKC1", """
+1. **`quiver show <id>`** prints a skill: ID, where it comes from (local, or source and commit), where it is assigned, always-on, its files, then the `SKILL.md` text. `--json`. Completion of IDs.
+2. **`quiver search <text>`** searches the whole library, also unassigned skills: case-insensitive match on ID, name and description. Rank: exact name, name prefix, name contains, description contains. Show whether each match is assigned here. `--json`. Put the search in `internal/library`, so `search_skills` (Phase 5) and the TUI use the same function.
+3. **Every skill in the catalog, with its description.** Claude Code cuts the server's `instructions` at about 4096 characters (`maxInstructions` is 3800), and hook output at about 10,000. Today `catalog` in `internal/server/catalog.go` then drops descriptions from the end (about 20 skills keep one) and leaves skills out after about 150. A tool result has no such limit, and the always-on pointer showed that the assistant calls a tool before its first reply when told to (10 of 10, and after `/compact`). Decided 2026-10-29:
+   - When the catalog fits, it stays in `instructions` as today.
+   - When it does not fit, `instructions` hold no list, only a pointer like the always-on one: before your first reply, call `list_skills` of this server; it lists the skills of this folder, and when one fits a task, load it with `get_skill`. The always-on pointer stays first.
+   - `list_skills` returns every served skill with its full description (project skills first, then global), and marks always-on ones.
+   - Remove the shortening and dropping in `catalog`; keep the `maxDescription` cut only as a guard against huge descriptions.
+   - Measure it like the always-on spike (docs/spike-b01-results.md): with a catalog over the budget, a fitting prompt in a new session calls `list_skills` and then loads the skill, in at least 9 of 10 runs, also after `/compact`. Record the result there.
+   - Too many skills for one tool result (hundreds) is for later: group them by area, and list an area on request.
+
+**Done when:** tests cover show for a local and a remote skill, search ranking, the catalog in `instructions` when it fits and the `list_skills` pointer when it does not, and `list_skills` with 200 skills.
+""")
+
+task("TASKD4", "`quiver mcp install` for Cursor and Claude Desktop", "TASKC1", """
+Today `mcp install` registers Quiver only with Claude Code (`internal/assistant/claude.go`). Pulls the first part of the v2 task "`mcp install` for more assistants" into v1.2.
+
+1. **Spike first, per assistant.** The catalog and always-on skills reach the assistant through the MCP `instructions`. Check that Cursor and Claude Desktop pass `instructions` to the model, as in docs/spike-b01-results.md: does a fitting prompt load the skill, does an always-on skill apply from the first reply? Record the results in `docs/`. If an assistant ignores `instructions`, decide with the user before adding it.
+2. **Shared JSON installer.** Most assistants keep MCP servers in a JSON file under `mcpServers`. One function adds, updates and removes the `quiver` entry, keeps every other key and the file's indentation, backs up the original, and writes atomically. A broken JSON file is an error, never overwritten.
+   - Cursor: `~/.cursor/mcp.json`.
+   - Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\\Claude\\claude_desktop_config.json` on Windows.
+3. **CLI.** `quiver mcp install [--for claude-code|cursor|claude-desktop]`. Without `--for`, install for every assistant that is installed, and list what was done. `mcp uninstall` the same. `quiver mcp config` prints the JSON snippet for any other assistant.
+4. The command is the absolute path of the binary (backlog B09), or the npm shim as today. Claude Desktop does not run in a project folder, so it gets only global skills: say so after installing.
+5. `doctor` checks each installed assistant's entry.
+
+**Done when:** tests cover install, update, uninstall, other keys kept and a broken file for each JSON assistant; the spike results are written down; the README lists the assistants.
+""")
+
+task("TASKD5", "First run and rough edges", "TASKD2", """
+From the v1 review: Quiver has many concepts (library, source, global, project, always-on), and a few prompts are hard to read.
+
+1. **First run.** `quiver init` in a terminal becomes a short guided setup: create the library, register the MCP server (`mcp install`), and offer to import existing skills from `~/.claude/skills` and from the `.claude/skills` of the current project. Every step can be skipped. `--yes` and a non-terminal run keep today's plain init.
+2. **`quiver` with no arguments,** until the TUI exists, prints three lines: the project here, how many skills it is served, and a next step (`quiver init`, `quiver add`, …), then the command list.
+3. **Clearer import question.** `[P/g/s]` becomes words: `Assign to (p)roject, (g)lobal, or (s)kip? [p]`.
+4. **Confirm a new project.** When `add`, `import` or `new` would create a `.quiver.json`, show the folder first (`Register /x/y as a project? [Y/n]`), so a command run in the wrong folder does not create a project there. `--yes` skips the question.
+5. **`--json`** for `status`, `projects` and `where`, like `list`.
+6. **New-session note.** After `add` and `remove`, say that open assistant sessions see the change through `list_skills`, and the catalog in the next session.
+
+**Done when:** tests cover the guided init with each step taken and skipped, the bare `quiver` output, the confirmation, and the JSON output.
+""")
+
+task("TASKD6", "Notice of a new Quiver version", "TASKC1", """
+1. At most once a day, a command asks GitHub for the latest release (`api.github.com/repos/kheif/quiver/releases/latest`) with a short timeout, in the background, and stores the answer in `~/.quiver/state/version-check.json`.
+2. When a newer version is known, commands end with one line on stderr: `Quiver 1.3.0 is out (you have 1.2.0): npm install -g @kheif/quiver` (or the curl line, or `go install`, depending on how it was installed; `QUIVER_NPM` tells npm).
+3. Never in `quiver mcp` (stdout is the protocol), with `--json`, outside a terminal, for `dev` builds, or with `QUIVER_NO_UPDATE_CHECK=1`. A failed check is silent.
+4. `quiver doctor` shows the latest version as an info line.
+
+**Done when:** tests with a fake release endpoint cover newer, same, failed and disabled, and that the check runs at most once a day.
+""")
+
+task("TASKD7", "`install.ps1` for Windows", "TASKC1", """
+1. `install.ps1`, used as `irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex`: the same steps as `install.sh` for the Windows zip (`quiver_windows_<arch>.zip`), with `QUIVER_VERSION`, `QUIVER_INSTALL_DIR` (default `%LOCALAPPDATA%\\Programs\\quiver`) and `QUIVER_DOWNLOAD_URL`.
+2. Check the SHA-256 against `checksums.txt`, and add the folder to the user's `PATH` (user scope, no admin).
+3. CI's `release-dry-run` and the release workflow's install checks run it on Windows.
+4. README: the Windows install line; `install.sh`'s Windows error mentions it.
+
+**Done when:** a clean Windows runner installs with the script and `quiver --version` works in a new shell.
+""")
+
+task("TASKD8", "Release v1.2.0", "TASKD1, TASKD2, TASKD3, TASKD4, TASKD5, TASKD6, TASKD7", """
+1. README and help text cover every change of this phase; PROJECT.md's roadmap moves the pulled-in items from v2 to v1.2.
+2. Mark the done items in `tasks/backlog.md` (B08, B09, B13).
+3. Tag `v1.2.0` only after the maintainer confirms. The release workflow publishes to GitHub and npm and installs on clean machines.
+
+**Done when:** the release workflow is green.
+""")
+
 # ---------------------------------------------------------------- Phase 5
 phase("Phase 5 — v2")
+
+task("TASKE1", "Split machine-local state out of the registry", "TASKD8", """
+Backlog B04. `registry.json` holds each project's absolute `paths`. Synced between machines (Phase 5's library sync), the paths are wrong on the other machine and both machines rewrite the file, so every sync conflicts.
+
+1. Keep only portable data in `registry.json`: global and always-on skills, and per project its ID, name, skills and always-on skills.
+2. Move `paths` and other machine-local data into `~/.quiver/state/` (ignored by git). The version check of TASKD6 is already there.
+3. Migrate: registry version 2. Reading version 1 moves the paths into the state on the first write; an older quiver reading version 2 already stops with "update quiver".
+4. Update data-model.md.
+
+**Done when:** tests cover the migration, and two copies of `~/.quiver` with different project paths share one `registry.json` without changes to it.
+""")
+
+task("TASKE2", "Stable skill IDs", "TASKE1", """
+Backlog B05. A remote skill's ID is `<source>/<name>`, and `<source>/<plugin>/<name>` only when names collide. If an update adds a skill with the same name, the existing ID changes and its assignments point at nothing.
+
+1. Store each remote skill's ID when it is first discovered (in the source's entry in `config.json` or in the state), and keep it across updates. Only new skills get the qualified form on a clash.
+2. A skill that disappears from its source keeps its ID; `quiver update` and `doctor` report it as removed upstream, as today.
+3. Update data-model.md.
+
+**Done when:** a test updates a source so that a second `pdf` appears, and the existing `src/pdf` assignment still works.
+""")
 
 task("TASK32", "`update_skill` MCP tool", "TASK19", """
 1. Input: `id`, and any of `description`, `body`, `files` (path to content; empty content deletes the file).
@@ -747,13 +865,12 @@ task("TASK32", "`update_skill` MCP tool", "TASK19", """
 **Done when:** Harness tests cover a body change, a file add and delete, a remote skill and path traversal.
 """)
 
-task("TASK33", "`quiver search` and `search_skills`", "TASK26, TASK17", """
-1. Do a case-insensitive match on ID, name and description across the whole library.
-2. Rank results: exact name match, then name prefix, then description match.
-3. CLI: `quiver search <text>`, with `--json`.
-4. MCP: `search_skills` (`query`) returns the matches and whether each one is assigned here. The description tells the assistant it may suggest an unassigned skill to the user but should not assume it applies.
+task("TASK33", "`search_skills` MCP tool", "TASKD3, TASK17", """
+`quiver search` and the search in `internal/library` are done in TASKD3.
 
-**Done when:** Ranking tests pass, and the MCP tool marks assigned and unassigned skills correctly.
+1. MCP: `search_skills` (`query`) returns the matches of the library search and whether each one is assigned here. The description tells the assistant it may suggest an unassigned skill to the user but should not assume it applies.
+
+**Done when:** the MCP tool marks assigned and unassigned skills correctly.
 """)
 
 task("TASK34", "`quiver fork`", "TASK26, TASK10", """
@@ -792,10 +909,12 @@ task("TASK37", "Library sync between machines", "TASK29", """
 **Done when:** A test with two `QUIVER_HOME` folders and one bare remote syncs a new skill and an assignment from machine A to machine B.
 """)
 
-task("TASK38", "`mcp install` for more assistants", "TASK22", """
-1. Find out how Cursor, Claude Desktop, Codex and Gemini CLI register stdio MCP servers (config file path and format, or a CLI command).
-2. Add each one to `mcp install --target <name>`. Without `--target`, detect the installed assistants and ask which ones to set up.
-3. Edit JSON config files safely: keep unknown keys, write atomically, and back up the original first.
+task("TASK38", "`mcp install` for more assistants", "TASKD4", """
+TASKD4 added Cursor and Claude Desktop, the shared JSON installer and `--for`.
+
+1. Find out how Codex, Gemini CLI, VS Code and others register stdio MCP servers (config file path and format, or a CLI command). Codex uses TOML.
+2. Run the TASKD4 spike for each: does it pass the MCP `instructions` to the model?
+3. Add each one that does to `mcp install --for <name>`.
 4. Confirm that each assistant passes the project folder (roots or working directory) correctly. Record any assistant that needs `QUIVER_PROJECT`.
 
 **Done when:** Install and uninstall work for each supported assistant, and each one sees the correct project's skills.
@@ -919,13 +1038,14 @@ ORDER = [
     ("Phase 3 — Local Skills and Management", ["TASK11", "TASK09", "TASK19", "TASK20", "TASK21", "TASK12", "TASK13", "TASK14"]),
     ("Phase 4 — v1 Release", ["TASK29", "TASK30", "TASK31"]),
     ("Phase 4b — v1.1", ["TASKC1"]),
-    ("Phase 5 — v2", ["TASK32", "TASK33", "TASK34", "TASK35", "TASK36", "TASK37", "TASK38", "TASK39", "TASK40", "TASKB1"]),
+    ("Phase 4c — v1.2", ["TASKD1", "TASKD2", "TASKD3", "TASKD4", "TASKD5", "TASKD6", "TASKD7", "TASKD8"]),
+    ("Phase 5 — v2", ["TASKE1", "TASKE2", "TASK32", "TASK33", "TASK34", "TASK35", "TASK36", "TASK37", "TASK38", "TASK39", "TASK40", "TASKB1"]),
 ]
 ALL = {t[0]: t for _, ts in PHASES for t in ts}
 flat = [tid for _, ids in ORDER for tid in ids]
 assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
-remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1)", lambda m: REMAP[m.group(0)], s)
+remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
 STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task

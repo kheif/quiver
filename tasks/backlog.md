@@ -21,11 +21,13 @@ Items are ordered by priority within each section.
 - **Concern:** `~/.quiver/` is meant to be versioned with git, but `registry.json` holds absolute `paths`. Syncing between machines will conflict constantly.
 - **Proposal:** Move `paths`, last update checks and other machine-local data into a gitignored `~/.quiver/state.json`. Keep only portable data in `registry.json`.
 - **Related:** TASK07, data-model.md, Multiple Machines in PROJECT.md
+- **Planned 2026-10-29:** TASK42.
 
 ### B05 — Stable skill IDs
 - **Concern:** `<source>/<plugin>/<name>` is used only when names collide. If an update introduces a new collision, an existing ID changes and its assignments break silently.
 - **Proposal:** Fix the ID when a skill is first discovered and keep it. Alternatively, always use plugin-qualified IDs for marketplace repos.
 - **Related:** TASK11, data-model.md
+- **Planned 2026-10-29:** TASK43.
 
 ## Security
 
@@ -38,6 +40,7 @@ Items are ordered by priority within each section.
 - **Concern:** A prompt injection in a conversation can make the assistant write a persistent global skill.
 - **Proposal:** Save skills created with `scope: "global"` as pending. Activate them only after `quiver approve <id>` (or a TUI confirmation).
 - **Related:** create_skill task (Phase 3), TASK32 (decide before release)
+- **Decided 2026-10-29: not planned.** Global skills created with `create_skill` are active at once. They are committed in `local/`, so they can be reviewed and reverted there.
 
 ## Practical
 
@@ -45,11 +48,13 @@ Items are ordered by priority within each section.
 - **Concern:** If a private repo asks for credentials, a background `git ls-remote` or `git pull` hangs.
 - **Proposal:** Always run git with `GIT_TERMINAL_PROMPT=0` and a timeout.
 - **Related:** TASK09, background update checks (Phase 5)
+- **Planned 2026-10-29:** `GIT_TERMINAL_PROMPT=0` is set; timeouts are TASK34.
 
 ### B09 — `mcp install` writes an absolute path
 - **Concern:** GUI apps such as Claude Desktop do not see the shell's `PATH`, so a bare `quiver` command may not start.
 - **Proposal:** Write the absolute path of the binary into the MCP config.
 - **Related:** TASK20
+- **Planned 2026-10-29:** kept for the new assistants in TASK37.
 
 ### B10 — Cap the `list_skills` description
 - **Resolved 2026-10-15:** The catalog moved into `instructions`, with a 3800-character budget and a `list_skills` hint (TASK18).
@@ -71,6 +76,7 @@ Items are ordered by priority within each section.
 - **Concern:** A skill can be served by Quiver and also be installed natively (`~/.claude/skills`, plugins), so it loads twice. Example: the caveman plugin.
 - **Proposal:** `quiver doctor` detects these duplicates and suggests disabling the native copy.
 - **Related:** doctor task (Phase 3)
+- **Planned 2026-10-29:** TASK35 (import removes originals, `doctor` and `status` find copies).
 
 ### B14 — Name collision
 - **Concern:** "Quiver" is already used by other products, for example a notes app.
@@ -87,3 +93,13 @@ Items are ordered by priority within each section.
 - **Concern:** The Agent Skills format does not allow a trailing dash (`x-`) or two dashes in a row (`a--b`). `skill.Validate` accepts both, because TASK05 uses `^[a-z0-9][a-z0-9-]*$`.
 - **Proposal:** Report these names as warnings, not errors, so existing remote skills keep loading.
 - **Related:** TASK05, TASK25
+
+### B17 — Show new skills in an open Claude Code session
+- **Concern:** The catalog reaches the assistant only when a session starts. A skill added during a session is found only through `list_skills`, so the assistant usually does not know about it.
+- **Proposal:** `mcp install` adds a Claude Code `UserPromptSubmit` hook that runs `quiver`. When the served skills changed since the session started, it adds a short note for the assistant ("new skill: deploy: …"). The same hook can show the user a new Quiver version (TASK39).
+- **Status:** not planned for v1.2.
+
+### B18 — Measure skill loading against the real assistant
+- **Concern:** That the assistant loads a fitting skill and follows always-on skills was measured by hand (docs/spike-b01-results.md). A new model can change this.
+- **Proposal:** A workflow started by hand (`workflow_dispatch`) runs `claude -p` with a few prompts against a test library and counts `get_skill` calls. It needs an API key secret and costs a few cents per run, so it runs now and then, such as before a release. Copilot on GitHub would only test Copilot, not Claude.
+- **Status:** not planned yet.

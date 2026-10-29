@@ -35,6 +35,6 @@ A to D notes: `git.CommonDir` and `registry.SameRepository` compare worktrees; `
 
 **Released 2026-10-28:** v1.0.0 is on GitHub Releases and npm. The npm packages were published by hand with 2FA (npm requires 2FA on the account to publish). The Release workflow passed: the install checks with curl on Linux and macOS and with npm on Linux, macOS and Windows. Trusted publishing is not set up yet; do it right before v1.0.1 (docs/releasing.md).
 
-**The user does by hand:** create the npm scope (the npm username or an organization), publish the first version of each package, and add the trusted publisher for `kheif/quiver` and the release workflow on npmjs.com.
+**The maintainer does by hand:** create the npm scope (the npm username or an organization), publish the first version of each package, and add the trusted publisher for `kheif/quiver` and the release workflow on npmjs.com.
 
 **Done when:** on a clean macOS and Linux machine, the curl install and `npm install -g @<scope>/quiver` both give a working `quiver`, on Windows the npm install does, and the README quickstart runs.

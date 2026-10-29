@@ -206,8 +206,16 @@ quiver doctor                       # Check the library and fix problems
 - Remote sources: `source add/list/remove`, `update`
 - `mcp install` for Claude Code
 
+**v1.2**
+- `show`, `search`, every skill in the catalog: through `list_skills` when it does not fit in `instructions`
+- `mcp install` for Cursor and Claude Desktop
+- Import removes originals; `doctor` and `status` find native copies of served skills
+- Guided first run, notice of a new Quiver version, `install.ps1` for Windows
+- Git timeouts, dependency and vulnerability checks
+
 **v2**
-- `update_skill`, `search_skills`, `search`, `fork`
+- Machine-local state out of `registry.json`, stable skill IDs
+- `update_skill`, `search_skills`, `fork`
 - Pinning remote skills to a commit
 - Update preview with diffs
 - Library sync between machines

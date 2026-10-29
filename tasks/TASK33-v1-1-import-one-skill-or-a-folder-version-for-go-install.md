@@ -13,7 +13,7 @@ Stabilization before v2, from using v1.0.0 (2026-10-28). Released as v1.1.0: a n
 1c. Imported skills are assigned to the project of the current folder (or to every folder), also when a folder elsewhere is imported. `quiver import` without a path keeps searching this project's `.claude/skills`, or every folder of it with `--deep`.
 2. `quiver --version` of a `go install` build shows the module version (`1.1.0`), not `dev`. A plain `go build` shows Go's VCS version; release builds keep the ldflags version.
 
-**Not done (decided 2026-10-28):** prefix-free commands (TASK43) stay in v2. The user asked whether the assistant reliably follows a pointer file to `get_skill`, and chose to keep the MCP prompts as they are for now.
+**Not done (decided 2026-10-28):** prefix-free commands (TASK53) stay in v2. It is not measured yet whether the assistant reliably follows a pointer file to `get_skill`, so the MCP prompts stay as they are for now.
 
 **Notes:**
 - `importOne` in `internal/cli/import.go` handles one skill before the folder search; `library.ReadFound` reads a skill folder for both paths. A lone markdown file is copied to a temp folder as `SKILL.md` first. Deleting the original deletes the skill folder, or only the lone file.
