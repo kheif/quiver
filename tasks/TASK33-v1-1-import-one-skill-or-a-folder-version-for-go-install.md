@@ -22,4 +22,6 @@ Stabilization before v2, from using v1.0.0 (2026-10-28). Released as v1.1.0: a n
 
 - `library.FindSkills` returns `Found` with `File` set for a lone markdown file; `Found.Stage` copies it into a temp folder as `SKILL.md` for `ImportLocal`. `skill.LoadFile` and `skill.HasFrontmatter` read such files. `Found.Err` is set for an unreadable skill or one without a description; a missing or invalid name is not an error, because the import asks for one.
 
+**Released 2026-10-29 as v1.1.0:** the first release published to npm by CI with trusted publishing (with provenance). npm took about 6 minutes to show every package, longer than the install check waited, so it now waits up to 15 minutes.
+
 **Done when:** tests cover a lone file with `--name` and with its frontmatter name, a `SKILL.md` with its folder, a folder with nested skills, lone files, a README and invalid skills, and the errors; `go install github.com/kheif/quiver/cmd/quiver@v1.1.0` prints `quiver 1.1.0`.

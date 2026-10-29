@@ -42,7 +42,9 @@ npm trusted publishing is set up per package, on the package's page, so the pack
    git push origin v1.0.0
    ```
 
-## Trusted publishing (before the next release)
+## Trusted publishing
+
+Set up on 2026-10-29 for all seven packages; v1.1.0 was the first release published by CI. Repeat this only for a new package.
 
 On npmjs.com, for each of the seven packages (`@kheif/quiver`, `@kheif/quiver-darwin-arm64`, `-darwin-x64`, `-linux-arm64`, `-linux-x64`, `-win32-arm64`, `-win32-x64`): **Settings → Trusted publishing → GitHub Actions**, with:
 
@@ -52,3 +54,5 @@ On npmjs.com, for each of the seven packages (`@kheif/quiver`, `@kheif/quiver-da
 - Allowed actions: also allow `npm publish`
 
 A new trusted publisher expires if it is not used for a publish within 2 days, so set it up right before you push the next tag.
+
+A new version can take several minutes to show up on npm; the workflow's npm install check waits up to 15 minutes.

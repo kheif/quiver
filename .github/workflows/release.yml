@@ -63,10 +63,12 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      # A new version can take a minute to show up on the registry.
+      # A new version can take several minutes to show up on the registry.
       - run: |
-          for i in 1 2 3 4 5 6; do
-            npm install -g "@kheif/quiver@${GITHUB_REF_NAME#v}" && break
-            sleep 20
+          for i in $(seq 1 30); do
+            npm install -g "@kheif/quiver@${GITHUB_REF_NAME#v}" && exit 0
+            sleep 30
           done
+          echo "@kheif/quiver@${GITHUB_REF_NAME#v} did not show up on npm within 15 minutes"
+          exit 1
       - run: quiver --version | grep -F "${GITHUB_REF_NAME#v}"
