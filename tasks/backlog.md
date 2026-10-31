@@ -37,6 +37,7 @@ Items are ordered by priority within each section.
 - **Concern:** After `quiver update`, a remote always-on skill's new text goes straight into every session's system prompt. This is a supply-chain risk. PROJECT.md also says `quiver update` shows what changed, but the roadmap puts the diff preview in v2.
 - **Proposal:** Move the diff preview into v1, at least for always-on skills. Fix the contradiction in PROJECT.md.
 - **Related:** TASK15, PROJECT.md (Security, Roadmap)
+- **Resolved 2026-10-31:** `quiver update` fetches first, shows the changed files of every assigned skill (always-on marked), flags scripts as "needs review" and asks before it applies the changes; `quiver pin` keeps a skill at a reviewed commit (TASK47, TASK48).
 
 ### B07 — Approval for global `create_skill`
 - **Concern:** A prompt injection in a conversation can make the assistant write a persistent global skill.

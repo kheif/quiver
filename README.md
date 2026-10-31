@@ -102,7 +102,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. |
 | `quiver source list` | List sources with their skill count and commit. |
 | `quiver source remove <name>` | Delete a source. Refuses while its skills are assigned, unless `--force`. |
-| `quiver update [<name>...]` | Pull the latest skills of all or some sources, and list what changed. Pinned skills stay at their commit. |
+| `quiver update [<name>...]` | Download the latest skills of all or some sources and show what would change: the changed files of each assigned skill, with scripts marked "needs review". Asks before it applies changes to assigned skills (`--yes` does not ask, `--diff` shows the whole change). Pinned skills stay at their commit. |
 | `quiver pin <source/skill> [<commit>]` | Keep a source skill at its current commit, or the one given, so `quiver update` leaves it alone. `quiver unpin` goes back to the source's current version. |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
@@ -172,7 +172,7 @@ Claude Code starts the server in the project folder. Other assistants may start 
 Skills give instructions to your assistant, and a skill can include scripts the assistant may run. A skill from a source is code you run on your own machine.
 
 - Add only sources you trust, and read their skills before you assign them.
-- `quiver update` prints the old and new commit of each source, and the skills that were added, changed or removed. To read the changes of a source you do not control: `git -C ~/.quiver/sources/<name> diff <old> <new>`. To review changes to a skill before it reaches your sessions, pin it with `quiver pin` and move the pin when you have read them.
+- `quiver update` downloads new commits before it applies them, lists the changed files of every assigned skill, marks scripts and executable files "needs review", and asks before it applies the changes. Read them with `quiver update --diff`; answering no leaves the source as it was. To review changes to a skill before it reaches your sessions, pin it with `quiver pin` and move the pin when you have read them.
 - Source skills are read-only in Quiver. To change one, fork it into your own skills with `quiver fork`.
 - `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`. Every change is a commit in `~/.quiver/local`, so `git -C ~/.quiver/local log -p` shows it and `git revert` undoes it.
 

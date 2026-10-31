@@ -54,7 +54,7 @@ func TestCloneIsShallow(t *testing.T) {
 	}
 }
 
-func TestFetchThenPull(t *testing.T) {
+func TestFetchThenFastForward(t *testing.T) {
 	work, url := newRemote(t)
 	dir := filepath.Join(t.TempDir(), "clone")
 	if err := Clone(url, dir); err != nil {
@@ -79,7 +79,7 @@ func TestFetchThenPull(t *testing.T) {
 		t.Errorf("FETCH_HEAD %s, want %s", remote, want)
 	}
 
-	if err := Pull(dir); err != nil {
+	if err := FastForward(dir, "@{u}"); err != nil {
 		t.Fatal(err)
 	}
 	if h, _ := Head(dir); h != want {
@@ -112,13 +112,16 @@ func TestResetAfterRewrite(t *testing.T) {
 	}
 	want, _ := Head(work)
 
-	if err := Pull(dir); err == nil {
-		t.Fatal("pull of a rewritten history succeeded")
+	if err := Fetch(dir); err != nil {
+		t.Fatal(err)
+	}
+	if err := FastForward(dir, "@{u}"); err == nil {
+		t.Fatal("fast-forward to a rewritten history succeeded")
 	}
 	if ok, err := IsAncestor(dir, "HEAD", "@{u}"); ok || err != nil {
 		t.Fatalf("IsAncestor = %v, %v; want false", ok, err)
 	}
-	if err := ResetToUpstream(dir); err != nil {
+	if err := ResetTo(dir, "@{u}"); err != nil {
 		t.Fatal(err)
 	}
 	if h, _ := Head(dir); h != want {

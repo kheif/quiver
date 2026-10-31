@@ -140,10 +140,10 @@ quiver update
 ```
 
 - **Discovery:** If a repository has `.claude-plugin/marketplace.json`, Quiver reads the plugins' skills from it. Otherwise it collects every folder with a `SKILL.md`.
-- **Updates:** Sources are git clones. `quiver update` pulls them, and every project immediately gets the new version.
+- **Updates:** Sources are git clones. `quiver update` downloads them, shows what changes in each assigned skill and asks before it applies the changes; then every project gets the new version.
 - **Sharing:** `~/.quiver/local/` is a git repository. Push it to GitHub and others can add it as a source. The same repository can also serve as a Claude Code marketplace.
 - **Customizing:** Remote skills are read-only. `quiver fork anthropic/pdf` copies one into `local/`, where you can edit it.
-- **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `quiver update` lists what changed in each source after pulling.
+- **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `quiver update` lists the changed files of assigned skills before it applies them, marks scripts "needs review", and asks first.
 
 ## Interactive Screen (TUI)
 
@@ -183,7 +183,7 @@ quiver projects                     # List projects; rename, forget or split the
 quiver source add <repo> [--name <n>]
 quiver source list
 quiver source remove <name>
-quiver update [<source>...] [--reset]  # Pull sources; --reset takes a force-pushed history
+quiver update [<source>...] [--diff] [--yes] [--reset]  # Preview, confirm, then pull; --reset takes a force-pushed history
 quiver pin <source/skill> [<commit>]  # Keep a source skill at one commit; quiver unpin undoes it
 
 # Maintenance

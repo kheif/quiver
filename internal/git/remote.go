@@ -19,16 +19,9 @@ func Fetch(dir string) error {
 	return err
 }
 
-// Pull fast-forwards dir to origin. It fails instead of merging when the
-// history has diverged.
-func Pull(dir string) error {
-	_, err := runNetwork(dir, "pull", "--quiet", "--ff-only")
-	return err
-}
-
 // IsAncestor reports whether commit a is an ancestor of commit b. After a
-// failed Pull, IsAncestor(dir, "HEAD", "@{u}") is false when the remote
-// history was rewritten.
+// Fetch, IsAncestor(dir, "HEAD", "@{u}") is false when the remote history
+// was rewritten.
 func IsAncestor(dir, a, b string) (bool, error) {
 	_, err := run(dir, "merge-base", "--is-ancestor", a, b)
 	var exit *exec.ExitError
@@ -36,17 +29,6 @@ func IsAncestor(dir, a, b string) (bool, error) {
 		return false, nil
 	}
 	return err == nil, err
-}
-
-// ResetToUpstream fetches the remote and moves the branch and files to it,
-// dropping local commits and changes. Old commits stay in the object store
-// until git prunes them, so they can still be diffed.
-func ResetToUpstream(dir string) error {
-	if _, err := runNetwork(dir, "fetch", "--quiet", "--depth", "1"); err != nil {
-		return err
-	}
-	_, err := run(dir, "reset", "--quiet", "--hard", "@{u}")
-	return err
 }
 
 // ResolveCommit returns the full hash of the commit rev names in dir.
@@ -82,5 +64,20 @@ func RemoveWorktree(dir, path string) error {
 		return err
 	}
 	_, err := run(dir, "worktree", "prune")
+	return err
+}
+
+// FastForward moves the branch and files of dir to commit, which must be a
+// descendant of HEAD.
+func FastForward(dir, commit string) error {
+	_, err := run(dir, "merge", "--quiet", "--ff-only", commit)
+	return err
+}
+
+// ResetTo moves the branch and files of dir to commit, dropping local
+// commits and changes. Old commits stay in the object store until git
+// prunes them, so they can still be diffed.
+func ResetTo(dir, commit string) error {
+	_, err := run(dir, "reset", "--quiet", "--hard", commit)
 	return err
 }

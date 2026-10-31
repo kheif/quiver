@@ -90,7 +90,11 @@ func TestSourceUpdate(t *testing.T) {
 	e.write(work, map[string]string{"skills/x/SKILL.md": skillMD("x", "Skill x.", "Version two.")})
 	e.git(work, "commit", "--quiet", "-am", "v2")
 	e.git(work, "push", "--quiet", "origin", "main")
-	e.quiver(app, "update")
+	// x is assigned, so update asks first; without an answer nothing changes.
+	out, _ := e.run(app, "", "update")
+	mustContain(t, "update preview", out, "changed  anthropic/x (assigned: project app)", "anthropic: not updated")
+	mustContain(t, "get_skill unchanged", e.call(cs, "get_skill", map[string]any{"id": "anthropic/x"}), "Version one.")
+	e.quiver(app, "update", "--yes")
 	got := e.call(cs, "get_skill", map[string]any{"id": "anthropic/x"})
 	mustContain(t, "get_skill v2", got, "Version two.")
 	mustNotContain(t, "get_skill v2", got, "Version one.")
