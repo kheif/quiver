@@ -170,7 +170,7 @@ quiver new <name>                   # Create a local skill
 quiver edit <name>                  # Open a local skill in $EDITOR
 quiver show <skill>                 # Where a skill comes from, where it is assigned, its SKILL.md
 quiver search <text>
-quiver fork <source/skill>
+quiver fork <source/skill> [--as <name>]  # Copy a source skill into local/ to change it
 
 # Assignments (current project unless --project is given)
 quiver add <skill>... [--global] [--always]    # Assign to this project or globally; --always loads it every session

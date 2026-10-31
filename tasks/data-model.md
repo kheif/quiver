@@ -93,6 +93,10 @@ The project's identity. The project does not need git; if it uses git, commit th
 - A skill at a repo's root is named after the source: `<source>/<source>`.
 - A remote skill keeps its ID: the source's `ids` in `config.json` remember which folder got which ID. When an update adds a skill whose ID is already given, only the new skill gets `<source>/<plugin>/<name>` or its folder path. The ID of a skill removed upstream stays taken, and `quiver update` and `doctor` report the skill as removed upstream.
 
+## Forked skills
+
+`quiver fork <source/skill>` copies a source skill into `local/` and adds `forkedFrom: <id>@<commit>` to its frontmatter, such as `forkedFrom: anthropic/pdf@3f2a…`. Wherever the original ID is assigned or marked always-on, the copy's ID replaces it.
+
 ## Skills served in a project
 
 The global skills plus the project's own skills, without duplicates. If two served skills share the same `name`, the project skill wins, and `doctor` reports the clash.

@@ -87,6 +87,21 @@ func (r *Registry) UnmarkAlwaysOnGlobal(ids ...string) (notMarked []string) {
 	return notMarked
 }
 
+// Replace puts newID in the place of oldID wherever oldID is assigned or
+// marked always-on: globally and in every project.
+func (r *Registry) Replace(oldID, newID string) {
+	swap := func(ids []string) []string {
+		if len(missing(ids, oldID)) > 0 {
+			return ids
+		}
+		return sortedSet(append(without(ids, oldID), newID))
+	}
+	r.Global, r.AlwaysOn = swap(r.Global), swap(r.AlwaysOn)
+	for _, p := range r.Projects {
+		p.Skills, p.AlwaysOn = swap(p.Skills), swap(p.AlwaysOn)
+	}
+}
+
 // AlwaysOnServed returns the always-on skills served in the project: the
 // global ones plus the project's own, sorted and without duplicates.
 func (r *Registry) AlwaysOnServed(projectID string) []string {

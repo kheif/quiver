@@ -116,3 +116,24 @@ func TestAlwaysOn(t *testing.T) {
 		t.Errorf("got %v, %+v", notMarked, r)
 	}
 }
+
+func TestReplace(t *testing.T) {
+	r := Default()
+	r.Global, r.AlwaysOn = []string{"acme/pdf", "z"}, []string{"acme/pdf"}
+	r.Projects["a"] = &Project{Name: "a", Skills: []string{"acme/pdf", "b"}, AlwaysOn: []string{"acme/pdf"}}
+	r.Projects["b"] = &Project{Name: "b", Skills: []string{"b"}}
+	r.Projects["c"] = &Project{Name: "c", Skills: []string{"acme/pdf", "pdf"}}
+	r.Replace("acme/pdf", "pdf")
+	if !reflect.DeepEqual(r.Global, []string{"pdf", "z"}) || !reflect.DeepEqual(r.AlwaysOn, []string{"pdf"}) {
+		t.Errorf("global %v, always-on %v", r.Global, r.AlwaysOn)
+	}
+	for id, want := range map[string][2][]string{
+		"a": {{"b", "pdf"}, {"pdf"}},
+		"b": {{"b"}, nil},
+		"c": {{"pdf"}, nil},
+	} {
+		if p := r.Projects[id]; !reflect.DeepEqual(p.Skills, want[0]) || !reflect.DeepEqual(p.AlwaysOn, want[1]) {
+			t.Errorf("%s: skills %v, always-on %v", id, p.Skills, p.AlwaysOn)
+		}
+	}
+}

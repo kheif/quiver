@@ -32,6 +32,19 @@ func Rewrite(data []byte, description, body *string) ([]byte, error) {
 	return []byte(out), nil
 }
 
+// SetField returns the content of a SKILL.md with the frontmatter field
+// key set to value. The body and the other fields are kept.
+func SetField(data []byte, key, value string) ([]byte, error) {
+	fm, body, err := splitFrontmatter(data)
+	if err != nil {
+		return nil, err
+	}
+	if fm, err = setField(fm, key, value); err != nil {
+		return nil, err
+	}
+	return append([]byte("---\n"+string(fm)+"---\n"), body...), nil
+}
+
 // setField sets a string field in YAML frontmatter, keeping the order and
 // the other fields.
 func setField(fm []byte, key, value string) ([]byte, error) {

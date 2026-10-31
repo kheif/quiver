@@ -31,3 +31,10 @@ func TestRewrite(t *testing.T) {
 		t.Error("list frontmatter: no error")
 	}
 }
+
+func TestSetField(t *testing.T) {
+	got, err := SetField([]byte("---\nname: pdf\ndescription: Read PDFs.\n---\nBody.\n"), "forkedFrom", "acme/pdf@abc123")
+	if want := "---\nname: pdf\ndescription: Read PDFs.\nforkedFrom: acme/pdf@abc123\n---\nBody.\n"; err != nil || string(got) != want {
+		t.Errorf("got %v\n%s", err, got)
+	}
+}

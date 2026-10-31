@@ -55,6 +55,24 @@ func skillIDs(localOnly bool, max int) completeFunc {
 	}
 }
 
+// sourceSkillIDs completes the IDs of skills from sources, for fork.
+func sourceSkillIDs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+	if len(args) >= 1 {
+		return nil, noFiles
+	}
+	l, err := library.Load()
+	if err != nil {
+		return nil, noFiles
+	}
+	var ids []string
+	for _, s := range l.All() {
+		if s.Source != library.LocalSource {
+			ids = append(ids, s.ID+"\t"+cut(s.Description, 60))
+		}
+	}
+	return suggest(ids, args, toComplete), noFiles
+}
+
 // assignedIDs completes the skills that remove can take away: the global
 // ones with --global, otherwise those of the project in --project or the
 // current folder.

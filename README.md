@@ -88,6 +88,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver new <name>` | Create a local skill and assign it to this project (`--global`: every folder, `--none`: nowhere). |
 | `quiver edit <id>` | Open a local skill in your editor, then check and commit it. |
 | `quiver delete <id>` | Delete a local skill from the library. An assigned skill needs `--force`. |
+| `quiver fork <source/skill>` | Copy a source skill into your own skills to change it; `--as` names the copy. The copy takes the original's place wherever it is assigned, and `quiver update` no longer changes it. |
 | `quiver import` | Move the skills in this project's `.claude/skills` into the library (`--deep`: every folder of the project). Originals committed in git are kept; `--keep` keeps all. |
 | `quiver import <folder>` | Move every skill in a folder and its subfolders into the library. Files that are not valid skills are listed at the end. |
 | `quiver import <skill>` | Move one skill: its `SKILL.md`, its folder or a markdown file with frontmatter. `--name` renames it. |
@@ -171,7 +172,7 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 
 - Add only sources you trust, and read their skills before you assign them.
 - `quiver update` prints the old and new commit of each source, and the skills that were added, changed or removed. To read the changes of a source you do not control: `git -C ~/.quiver/sources/<name> diff <old> <new>`.
-- Source skills are read-only in Quiver. To change one, copy it into your own skills.
+- Source skills are read-only in Quiver. To change one, fork it into your own skills with `quiver fork`.
 - `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`. Every change is a commit in `~/.quiver/local`, so `git -C ~/.quiver/local log -p` shows it and `git revert` undoes it.
 
 To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).
