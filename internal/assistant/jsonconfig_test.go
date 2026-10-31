@@ -3,6 +3,7 @@ package assistant
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -110,7 +111,8 @@ func TestJSONInstallKeepsOtherKeys(t *testing.T) {
 	if got := read(t, a.Path+".quiver-backup"); got != existing {
 		t.Errorf("backup:\n%s", got)
 	}
-	if info, err := os.Stat(a.Path); err != nil || info.Mode().Perm() != 0o600 {
+	// Windows has no Unix file modes.
+	if info, err := os.Stat(a.Path); runtime.GOOS != "windows" && (err != nil || info.Mode().Perm() != 0o600) {
 		t.Errorf("mode: %v %v", info.Mode(), err)
 	}
 
