@@ -32,7 +32,10 @@ func newNewCmd() *cobra.Command {
 		Long: `Create a local skill in the Quiver home and assign it to this project, to
 every folder with --global, or nowhere with --none.
 
-Without --description the new SKILL.md opens in $VISUAL or $EDITOR.`,
+Without --description the new SKILL.md opens in $VISUAL or $EDITOR.
+
+A folder without .quiver.json is registered first; in a terminal it asks
+before, unless --yes is given.`,
 		Example: `  # Write the skill in your editor; it is served in this project
   quiver new release-notes
 
@@ -41,10 +44,11 @@ Without --description the new SKILL.md opens in $VISUAL or $EDITOR.`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return newSkill(cmd.OutOrStdout(), t, none, description, args[0])
+			return newSkill(cmd.InOrStdin(), cmd.OutOrStdout(), t, none, description, args[0])
 		},
 	}
 	t.flags(cmd)
+	t.yesFlag(cmd)
 	cmd.Flags().BoolVar(&none, "none", false, "create the skill without assigning it")
 	cmd.Flags().StringVar(&description, "description", "", "one sentence on when the assistant should use the skill; skips the editor")
 	cmd.MarkFlagsMutuallyExclusive("global", "none")
@@ -52,7 +56,7 @@ Without --description the new SKILL.md opens in $VISUAL or $EDITOR.`,
 	return cmd
 }
 
-func newSkill(out io.Writer, t target, none bool, description, name string) error {
+func newSkill(in io.Reader, out io.Writer, t target, none bool, description, name string) error {
 	if err := skill.ValidateName(name); err != nil {
 		return err
 	}
@@ -73,6 +77,9 @@ func newSkill(out io.Writer, t target, none bool, description, name string) erro
 	default:
 		dir, err := t.dir()
 		if err != nil {
+			return err
+		}
+		if ok, err := confirmProject(in, out, dir, !t.yes && interactive(in)); err != nil || !ok {
 			return err
 		}
 		p, created, copied, err := registry.RegisterProject(dir)

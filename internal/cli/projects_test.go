@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -123,5 +125,60 @@ func TestProjectsSplit(t *testing.T) {
 	t.Chdir(f.app)
 	if _, err := runIn(t, "", "projects", "split"); err == nil || !strings.Contains(err.Error(), "nothing to split") {
 		t.Errorf("split the original: %v", err)
+	}
+}
+
+func TestProjectsJSON(t *testing.T) {
+	f := listEnv(t)
+	if err := os.RemoveAll(f.api); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "projects", "--json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got struct{ Projects []projectJSON }
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatal(err)
+	}
+	want := []projectJSON{
+		{ID: "api-000002", Name: "api", Skills: []string{"tdd"}, Paths: []string{f.api}, Missing: []string{f.api}},
+		{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Paths: []string{f.app}, Missing: []string{}},
+	}
+	if !reflect.DeepEqual(got.Projects, want) {
+		t.Errorf("got  %+v\nwant %+v", got.Projects, want)
+	}
+
+	sourceEnv(t)
+	if out, err := runIn(t, "", "projects", "--json"); err != nil || out != "{\n  \"projects\": []\n}\n" {
+		t.Errorf("empty: %v %q", err, out)
+	}
+}
+
+func TestWhereJSON(t *testing.T) {
+	f := listEnv(t)
+	for _, c := range []struct {
+		id   string
+		want whereJSON
+	}{
+		{"acme/review", whereJSON{ID: "acme/review", InLibrary: true, Global: true, Projects: []projectJSON{
+			{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Paths: []string{f.app}, Missing: []string{}},
+		}}},
+		{"notes", whereJSON{ID: "notes", InLibrary: true, Projects: []projectJSON{}}},
+	} {
+		out, err := runIn(t, "", "where", c.id, "--json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got whereJSON
+		if err := json.Unmarshal([]byte(out), &got); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(got, c.want) {
+			t.Errorf("where %s:\ngot  %+v\nwant %+v", c.id, got, c.want)
+		}
+	}
+	if _, err := runIn(t, "", "where", "nope", "--json"); err == nil {
+		t.Error("unknown skill: no error")
 	}
 }

@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -69,4 +71,42 @@ func TestStatusNativeCopies(t *testing.T) {
 		"warning: acme/review is also installed in Claude Code, so it may be loaded twice: plugin acme@market (same name)\n",
 		"warning: tdd is also installed in Claude Code",
 		"Run quiver doctor --fix to delete the copies.\n")
+}
+
+func TestStatusJSON(t *testing.T) {
+	f := listEnv(t)
+	t.Setenv(server.ProjectEnv, "")
+	t.Chdir(f.app)
+	var got statusJSON
+	if err := json.Unmarshal([]byte(f.run(t, "status", "--json")), &got); err != nil {
+		t.Fatal(err)
+	}
+	want := statusJSON{
+		Folder:  f.app,
+		Project: &statusProject{ID: "app-000001", Name: "app", Root: f.app},
+		Skills: []servedSkill{
+			{ID: "acme/review", Scope: "global", InLibrary: true},
+			{ID: "pdf", Scope: "global", AlwaysOn: true, InLibrary: true},
+			{ID: "tdd", Scope: "project", InLibrary: true},
+		},
+		Warnings: []string{},
+	}
+	// f.run writes temp paths as <tmp>.
+	want.Folder, want.Project.Root = got.Folder, got.Project.Root
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got  %+v\nwant %+v", got, want)
+	}
+
+	// Outside a project, project is null and a missing skill is shown.
+	if err := os.RemoveAll(filepath.Join(f.home, "local", "pdf")); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(t.TempDir())
+	out := f.run(t, "status", "--json")
+	if !strings.Contains(out, `"project": null`) || !strings.Contains(out, `"id": "pdf",
+      "scope": "global",
+      "always_on": true,
+      "in_library": false`) {
+		t.Errorf("outside a project:\n%s", out)
+	}
 }

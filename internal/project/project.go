@@ -59,26 +59,34 @@ func Register(dir string) (*Project, error) {
 	if err == nil || !errors.Is(err, ErrNotRegistered) {
 		return p, err
 	}
-	dir, err = filepath.Abs(dir)
+	root, err := NewRoot(dir)
 	if err != nil {
 		return nil, err
-	}
-	home, _ := os.UserHomeDir()
-	if home != "" && dir == filepath.Clean(home) {
-		return nil, errors.New("cannot register the home directory as a project")
-	}
-	root := dir
-	for d := range parents(dir, home) {
-		if _, err := os.Stat(filepath.Join(d, ".git")); err == nil {
-			root = d
-			break
-		}
 	}
 	id := NewID(filepath.Base(root))
 	if err := SetID(root, id); err != nil {
 		return nil, err
 	}
 	return &Project{ID: id, Root: root}, nil
+}
+
+// NewRoot returns the folder Register makes the root of a new project for
+// dir: the nearest folder with .git, or dir itself.
+func NewRoot(dir string) (string, error) {
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+	home, _ := os.UserHomeDir()
+	if home != "" && dir == filepath.Clean(home) {
+		return "", errors.New("cannot register the home directory as a project")
+	}
+	for d := range parents(dir, home) {
+		if _, err := os.Stat(filepath.Join(d, ".git")); err == nil {
+			return d, nil
+		}
+	}
+	return dir, nil
 }
 
 // SetID writes id to root/.quiver.json. Other keys in an existing file are

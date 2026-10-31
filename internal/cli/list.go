@@ -115,9 +115,7 @@ func list(out io.Writer, o listOptions) error {
 		if warnings == nil {
 			warnings = []string{}
 		}
-		e := json.NewEncoder(out)
-		e.SetIndent("", "  ")
-		return e.Encode(struct {
+		return printJSON(out, struct {
 			Skills   []listedSkill `json:"skills"`
 			Warnings []string      `json:"warnings"`
 		}{skills, warnings})
@@ -138,6 +136,13 @@ func list(out io.Writer, o listOptions) error {
 		fmt.Fprintln(out, dim(out, "warning: "+w))
 	}
 	return nil
+}
+
+// printJSON prints v as indented JSON.
+func printJSON(out io.Writer, v any) error {
+	e := json.NewEncoder(out)
+	e.SetIndent("", "  ")
+	return e.Encode(v)
 }
 
 // printSkills prints the table. Descriptions are cut to fit width; 0 means

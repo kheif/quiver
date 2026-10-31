@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -333,6 +334,107 @@ func TestRemoveAlways(t *testing.T) {
 	for _, want := range []string{"note: pdf was not always-on globally", "No longer always-on in every folder: caveman"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+// fakeTerminal makes commands treat their input as a person at a terminal.
+func fakeTerminal(t *testing.T) {
+	t.Helper()
+	old := interactive
+	interactive = func(io.Reader) bool { return true }
+	t.Cleanup(func() { interactive = old })
+}
+
+func TestAddConfirmsNewProject(t *testing.T) {
+	dir := assignEnv(t, "pdf")
+	fakeTerminal(t)
+	question := "Register " + dir + " as a project? [Y/n] "
+	out, err := runIn(t, "n\n", "add", "pdf", "--project", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != question+"Not registered.\n" {
+		t.Errorf("no: %q", out)
+	}
+	if _, err := os.Stat(filepath.Join(dir, project.FileName)); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf(".quiver.json written: %v", err)
+	}
+	if out, err = runIn(t, "y\n", "add", "pdf", "--project", dir); err != nil || !strings.HasPrefix(out, question+"Created ") {
+		t.Errorf("yes: %v\n%s", err, out)
+	}
+	// A registered project and --yes are not asked about.
+	if out, _ = runIn(t, "", "add", "pdf", "--project", dir); strings.Contains(out, "Register") {
+		t.Errorf("asked again:\n%s", out)
+	}
+	other := filepath.Join(t.TempDir(), "other")
+	if err := os.Mkdir(other, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if out, err = runIn(t, "", "add", "pdf", "--project", other, "--yes"); err != nil || strings.Contains(out, "Register") || !strings.Contains(out, "Created ") {
+		t.Errorf("--yes: %v\n%s", err, out)
+	}
+}
+
+func TestNewConfirmsNewProject(t *testing.T) {
+	dir := assignEnv(t)
+	fakeTerminal(t)
+	out, err := runIn(t, "n\n", "new", "notes", "--description", "Keep notes.", "--project", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasSuffix(out, "Not registered.\n") {
+		t.Errorf("output:\n%s", out)
+	}
+	local, _ := library.LocalDir()
+	if _, err := os.Stat(filepath.Join(local, "notes")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("skill created: %v", err)
+	}
+	if out, err = runIn(t, "", "new", "notes", "--description", "Keep notes.", "--project", dir, "-y"); err != nil || !strings.Contains(out, "Assigned to app: notes") {
+		t.Errorf("--yes: %v\n%s", err, out)
+	}
+}
+
+func TestImportConfirmsNewProject(t *testing.T) {
+	dir := assignEnv(t)
+	for _, name := range []string{"one", "two"} {
+		writeFiles(t, filepath.Join(dir, ".claude", "skills", name), map[string]string{
+			"SKILL.md": "---\nname: " + name + "\ndescription: Test skill.\n---\n",
+		})
+	}
+	t.Chdir(dir)
+	fakeTerminal(t)
+	// one: project, do not register. two: project again, not asked again.
+	out, err := runIn(t, "p\nn\n\n", "import")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	skipped := "Skipped: the folder is not a project. Assign it to every folder with g."
+	if strings.Count(out, "Assign to (p)roject, (g)lobal, or (s)kip? [p] Register "+dir+" as a project? [Y/n] Not registered.\n"+skipped) != 1 || strings.Count(out, skipped) != 2 {
+		t.Errorf("output:\n%s", out)
+	}
+	if _, err := os.Stat(filepath.Join(dir, project.FileName)); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf(".quiver.json written: %v", err)
+	}
+}
+
+func TestSessionNote(t *testing.T) {
+	assignEnv(t, "pdf")
+	note := "Open assistant sessions see the change through list_skills"
+	for _, c := range []struct {
+		args []string
+		want bool
+	}{
+		{[]string{"add", "pdf", "--global"}, true},
+		{[]string{"remove", "pdf", "--global"}, true},
+		{[]string{"remove", "pdf", "--global"}, false}, // nothing removed
+	} {
+		out, err := runIn(t, "", c.args...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(out, note) != c.want {
+			t.Errorf("%v: note %v:\n%s", c.args, !c.want, out)
 		}
 	}
 }

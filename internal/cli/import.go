@@ -24,6 +24,9 @@ type importOptions struct {
 	keep   bool
 	global bool
 	name   string // only for one skill
+	// terminal is set when a person answers at a terminal; registering a
+	// project is then confirmed first.
+	terminal bool
 }
 
 func newImportCmd() *cobra.Command {
@@ -72,6 +75,7 @@ because teammates who do not use Quiver may need it; --yes keeps it too.
 			if len(args) == 1 {
 				path = args[0]
 			}
+			o.terminal = interactive(cmd.InOrStdin())
 			return importSkills(cmd.InOrStdin(), cmd.OutOrStdout(), o, path)
 		},
 	}
@@ -91,6 +95,8 @@ type importer struct {
 	root       string           // shown paths are relative to it
 	projectDir string           // the folder of the project to assign to
 	proj       *project.Project // registered on the first project import
+	ask        bool             // a person answers at a terminal; ask before registering a project
+	declined   bool             // the person did not want the project registered
 	from       string           // where the skills come from, for the commit message
 	local      string
 }
@@ -108,7 +114,7 @@ func importSkills(in io.Reader, out io.Writer, o importOptions, path string) err
 	if err != nil {
 		return err
 	}
-	im := &importer{in: bufio.NewReader(in), out: out, o: o, projectDir: projectDir, local: local}
+	im := &importer{in: bufio.NewReader(in), out: out, o: o, projectDir: projectDir, local: local, ask: !o.yes && o.terminal}
 
 	// Without a path: this project's skills.
 	root, deep := projectDir, o.deep
@@ -249,11 +255,11 @@ func (im *importer) one(f library.Found) (ok bool, err error) {
 		scope = library.ScopeGlobal
 	}
 	if !im.o.yes {
-		choices := "[P/g/s]"
+		def := "[p]"
 		if im.o.global {
-			choices = "[p/G/s]"
+			def = "[g]"
 		}
-		switch im.ask("Assign it to this project, to every folder, or skip it? " + choices) {
+		switch im.question("Assign to (p)roject, (g)lobal, or (s)kip? " + def) {
 		case "":
 		case "p", "project":
 			scope = library.ScopeProject
@@ -263,6 +269,17 @@ func (im *importer) one(f library.Found) (ok bool, err error) {
 			fmt.Fprintln(im.out, "Skipped.")
 			return false, nil
 		}
+	}
+	if scope == library.ScopeProject && im.proj == nil && !im.declined {
+		registered, err := confirmProject(im.in, im.out, im.projectDir, im.ask)
+		if err != nil {
+			return false, err
+		}
+		im.declined = !registered
+	}
+	if scope == library.ScopeProject && im.declined {
+		fmt.Fprintln(im.out, "Skipped: the folder is not a project. Assign it to every folder with g.")
+		return false, nil
 	}
 	src, cleanup, err := f.Stage()
 	if err != nil {
@@ -367,17 +384,17 @@ func (im *importer) name(f library.Found, src string) (name string, ok bool, err
 			return "", false, nil
 		}
 		fmt.Fprintf(im.out, "%s.\n", problem)
-		if name = im.ask("New name (empty to skip):"); name == "" {
+		if name = im.question("New name (empty to skip):"); name == "" {
 			fmt.Fprintln(im.out, "Skipped.")
 			return "", false, nil
 		}
 	}
 }
 
-// ask prints question and returns the answer, trimmed and in lower case.
+// question prints q and returns the answer, trimmed and in lower case.
 // No input gives "".
-func (im *importer) ask(question string) string {
-	fmt.Fprintf(im.out, "%s ", question)
+func (im *importer) question(q string) string {
+	fmt.Fprintf(im.out, "%s ", q)
 	line, _ := im.in.ReadString('\n')
 	return strings.ToLower(strings.TrimSpace(line))
 }

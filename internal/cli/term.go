@@ -27,3 +27,10 @@ func dim(out io.Writer, s string) string {
 	}
 	return "\x1b[2m" + s + "\x1b[0m"
 }
+
+// interactive reports whether in is a terminal, so a person can answer
+// questions. Tests replace it.
+var interactive = func(in io.Reader) bool {
+	f, ok := in.(*os.File)
+	return ok && term.IsTerminal(int(f.Fd()))
+}

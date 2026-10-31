@@ -831,6 +831,12 @@ From the v1 review: Quiver has many concepts (library, source, global, project, 
 6. **New-session note.** After `add` and `remove`, say that open assistant sessions see the change through `list_skills`, and the catalog in the next session.
 
 **Done when:** tests cover the guided init with each step taken and skipped, the bare `quiver` output, the confirmation, and the JSON output.
+
+**Notes:**
+- A run counts as a terminal when stdin is one (`interactive` in `internal/cli/term.go`). The guided init reads every answer through one `bufio.Reader`, so no answer is read ahead. Skills in `~/.claude/skills` default to global, those in the project's `.claude/skills` to the project; an import offer is shown only when there are skills to import, and the project offer is left out in the home folder, where both are the same folder.
+- `quiver` alone skips the auto-init, so on a new machine it suggests `quiver init` instead of creating the home. Next steps: `quiver init` without a home, `quiver new`/`quiver source add` with an empty library, `quiver add` when nothing is served here, else `quiver status`. It uses `QUIVER_PROJECT` like `status`.
+- The project question is asked only in a terminal, so scripts and pipes keep working without `--yes`. It names the folder `Register` would use: `project.NewRoot`, the nearest folder with `.git`. In `import`, a "no" skips the skill and every later project skill of the run, without asking again.
+- JSON fields: `status` gives `folder`, `project` (null outside a project), `skills` (`id`, `scope`, `always_on`, `in_library`) and `warnings`; `projects` gives `projects`, each with `id`, `name`, `skills`, `paths` and `missing`; `where` gives `id`, `in_library`, `global` and `projects` in the same form. `printJSON` in `list.go` is shared by every `--json`.
 """)
 
 task("TASKD6", "Notice of a new Quiver version", "TASKC1", """
@@ -1074,7 +1080,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

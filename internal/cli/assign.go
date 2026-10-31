@@ -22,6 +22,7 @@ type target struct {
 	global  bool
 	project string // --project path; empty means the current folder
 	always  bool   // also mark (add) or only unmark (remove) always-on
+	yes     bool   // register a new project without asking
 }
 
 func (t *target) flags(cmd *cobra.Command) {
@@ -29,6 +30,10 @@ func (t *target) flags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&t.project, "project", "", "project folder (default: the current folder)")
 	cmd.MarkFlagsMutuallyExclusive("global", "project")
 	projectFlag(cmd)
+}
+
+func (t *target) yesFlag(cmd *cobra.Command) {
+	cmd.Flags().BoolVarP(&t.yes, "yes", "y", false, "register a new project without asking")
 }
 
 func (t *target) alwaysFlag(cmd *cobra.Command, usage string) {
@@ -58,8 +63,9 @@ func newAddCmd() *cobra.Command {
 		Short: "Assign skills to this project, or to every folder with --global",
 		Long: `Assign skills to this project, or to every folder with --global.
 
-A folder without .quiver.json is registered first. Commit the new file, so
-the project keeps its ID.
+A folder without .quiver.json is registered first; in a terminal it asks
+before, unless --yes is given. Commit the new file, so the project keeps
+its ID.
 
 With --always the skills are also always-on: the assistant loads them before
 its first reply, from the next session on.`,
@@ -74,15 +80,16 @@ its first reply, from the next session on.`,
 		ValidArgsFunction: skillIDs(false, 0),
 		Args:              cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return add(cmd.OutOrStdout(), t, args)
+			return add(cmd.InOrStdin(), cmd.OutOrStdout(), t, args)
 		},
 	}
 	t.flags(cmd)
+	t.yesFlag(cmd)
 	t.alwaysFlag(cmd, "also make the skills always-on: loaded before the first reply")
 	return cmd
 }
 
-func add(out io.Writer, t target, ids []string) error {
+func add(in io.Reader, out io.Writer, t target, ids []string) error {
 	l, err := library.Load()
 	if err != nil {
 		return err
@@ -100,6 +107,9 @@ func add(out io.Writer, t target, ids []string) error {
 	var dir string
 	if !t.global {
 		if dir, err = t.dir(); err != nil {
+			return err
+		}
+		if ok, err := confirmProject(in, out, dir, !t.yes && interactive(in)); err != nil || !ok {
 			return err
 		}
 	}
@@ -160,7 +170,11 @@ func add(out io.Writer, t target, ids []string) error {
 	if projectID != "" {
 		where = reg.Projects[projectID].Name
 	}
-	return printServed(out, reg, projectID, where)
+	if err := printServed(out, reg, projectID, where); err != nil {
+		return err
+	}
+	sessionNote(out)
+	return nil
 }
 
 func newRemoveCmd() *cobra.Command {
@@ -271,7 +285,40 @@ func remove(out io.Writer, t target, ids []string) error {
 	case len(removed) > 0:
 		fmt.Fprintf(out, "Removed from %s: %s\n", where, strings.Join(removed, ", "))
 	}
-	return printServed(out, reg, projectID, where)
+	if err := printServed(out, reg, projectID, where); err != nil {
+		return err
+	}
+	if len(removed) > 0 {
+		sessionNote(out)
+	}
+	return nil
+}
+
+// sessionNote says when assistants see a changed assignment.
+func sessionNote(out io.Writer) {
+	fmt.Fprintln(out, "Open assistant sessions see the change through list_skills; the catalog and always-on skills change from the next session.")
+}
+
+// confirmProject asks before a command registers a new project for dir, so
+// a command run in the wrong folder does not create one there. It asks only
+// when ask is set: a person is at a terminal and --yes was not given. ok is
+// false when the answer is no.
+func confirmProject(in io.Reader, out io.Writer, dir string, ask bool) (ok bool, err error) {
+	if !ask {
+		return true, nil
+	}
+	if _, err := project.Find(dir); !errors.Is(err, project.ErrNotRegistered) {
+		return true, nil
+	}
+	root, err := project.NewRoot(dir)
+	if err != nil {
+		return false, err
+	}
+	if !confirmYes(in, out, "Register "+root+" as a project?") {
+		fmt.Fprintln(out, "Not registered.")
+		return false, nil
+	}
+	return true, nil
 }
 
 // reportProject tells the user about a new .quiver.json and a project

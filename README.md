@@ -39,22 +39,22 @@ The archives for every platform are also on the [releases page](https://github.c
 ## Quickstart
 
 ```sh
-# 1. Create the library in ~/.quiver (any other command does this too)
+# 1. Create the library in ~/.quiver, register the MCP server with your
+#    assistants and import the skills you already have
 quiver init
 
-# 2. Register the MCP server with your assistants, once for all projects
-quiver mcp install
-
-# 3. In a project folder, write a skill for that project
+# 2. In a project folder, write a skill for that project
 cd ~/code/app
 quiver new release-notes
 ```
+
+In a terminal, `quiver init` asks before each step: registering the MCP server (`quiver mcp install`), importing the skills in `~/.claude/skills` for every folder, and importing those in the current project's `.claude/skills`. Any step can be skipped and run later. `quiver init --yes`, or a run outside a terminal, only creates `~/.quiver`; any other command creates it too.
 
 `quiver new` opens the new `SKILL.md` in `$VISUAL` or `$EDITOR`. Write one sentence in `description` on when the assistant should use the skill, and the instructions below the frontmatter. Quiver commits the skill in `~/.quiver/local` and creates `~/code/app/.quiver.json`. Commit that file, so the project keeps its ID in every clone.
 
 Then start Claude Code in `~/code/app` and ask for the task, such as "write the release notes for this version". The assistant sees `release-notes` in Quiver's skill list and loads it. You can also run it yourself as `/quiver:release-notes`.
 
-`quiver status` shows what the assistant gets in the current folder.
+`quiver status` shows what the assistant gets in the current folder. `quiver` alone sums it up in three lines, with a next step, before the command list.
 
 ## Concepts
 
@@ -63,7 +63,7 @@ Then start Claude Code in `~/code/app` and ask for the task, such as "write the 
 - **Skill IDs.** A local skill's ID is its folder name, such as `release-notes`. A skill from a source is `<source>/<skill>`, such as `anthropic/pdf`.
 - **Assignments.** `registry.json` stores which skills are global and which projects get which skills. A folder that is not a project gets only the global skills.
 - **Assignments are yours.** They live in your `~/.quiver`, not in the project. A teammate who clones the project gets its `.quiver.json`, but not your skills or assignments. To share skills, put them in a git repository that everyone adds with `quiver source add`.
-- **Projects.** A project is the folder with `.quiver.json`, found by walking up from the current folder. It is created the first time you assign a skill there. The ID survives moves and renames. Git worktrees of one repository share the committed `.quiver.json`, so they are one project with the same skills. If a folder is copied, both copies have the same ID; `quiver status` warns, and `quiver projects split` gives the copy its own.
+- **Projects.** A project is the folder with `.quiver.json`, found by walking up from the current folder. It is created the first time you assign a skill there; in a terminal, `add`, `new` and `import` first ask `Register <folder> as a project?` (`--yes` skips the question). The ID survives moves and renames. Git worktrees of one repository share the committed `.quiver.json`, so they are one project with the same skills. If a folder is copied, both copies have the same ID; `quiver status` warns, and `quiver projects split` gives the copy its own.
 - **One copy of each skill.** A skill that Quiver serves and that Claude Code also loads by itself, from `~/.claude/skills`, the project's `.claude/skills` or an enabled plugin, may be loaded twice. `quiver import` therefore deletes the originals it copied, except those committed in a project's git, which teammates may still need (`--keep` keeps every original). `quiver status` and `quiver doctor` report the copies they find, by name or by content, and `quiver doctor --fix` deletes those not committed in git and not in a plugin.
 - **Always-on skills.** A skill added with `--always` is loaded before the assistant's first reply, for style or rules that apply to every answer. See the limits below.
 
@@ -73,7 +73,8 @@ Run `quiver help <command>` for the details and examples of each.
 
 | Command | What it does |
 |---|---|
-| `quiver init` | Create the Quiver home and anything missing in it. |
+| `quiver` | Show the project here, how many skills it is served and a next step, then the command list. |
+| `quiver init` | Create the Quiver home and anything missing in it; in a terminal, then offer to register the MCP server and import existing skills (`--yes`: only create the home). |
 | `quiver new <name>` | Create a local skill and assign it to this project (`--global`: every folder, `--none`: nowhere). |
 | `quiver edit <id>` | Open a local skill in your editor, then check and commit it. |
 | `quiver delete <id>` | Delete a local skill from the library. An assigned skill needs `--force`. |
@@ -85,13 +86,13 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver list` | List the library's skills and where each is assigned (`--source`, `--unassigned`, `--json`). |
 | `quiver show <id>` | Show a skill: where it comes from, where it is assigned, its files and its `SKILL.md` (`--json`). |
 | `quiver search <text>` | Search the IDs, names and descriptions of every library skill, also unassigned ones, and show whether each is served here (`--json`). |
-| `quiver status` | Show the project in this folder and the skills served here, with a warning for each copy Claude Code also loads. |
-| `quiver where <id>` | Show where one skill is assigned. |
+| `quiver status` | Show the project in this folder and the skills served here, with a warning for each copy Claude Code also loads (`--json`). |
+| `quiver where <id>` | Show where one skill is assigned (`--json`). |
 | `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. |
 | `quiver source list` | List sources with their skill count and commit. |
 | `quiver source remove <name>` | Delete a source. Refuses while its skills are assigned, unless `--force`. |
 | `quiver update [<name>...]` | Pull the latest skills of all or some sources, and list what changed. |
-| `quiver projects` | List projects; `rename`, `forget` and `split` manage them. |
+| `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
 | `quiver mcp install` | Register the MCP server with every installed assistant: Claude Code and Cursor (`--for <assistant>` for one, such as `claude-desktop`). |
 | `quiver mcp uninstall` | Remove it from them (`--for <assistant>` for one). |

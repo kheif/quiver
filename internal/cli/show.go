@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -96,9 +95,7 @@ func show(out io.Writer, id string, asJSON bool) error {
 		sh.Files = []string{}
 	}
 	if asJSON {
-		e := json.NewEncoder(out)
-		e.SetIndent("", "  ")
-		return e.Encode(sh)
+		return printJSON(out, sh)
 	}
 	printShown(out, sh)
 	return nil

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
@@ -75,9 +74,7 @@ func search(out io.Writer, text string, asJSON bool) error {
 		found = append(found, f)
 	}
 	if asJSON {
-		e := json.NewEncoder(out)
-		e.SetIndent("", "  ")
-		return e.Encode(struct {
+		return printJSON(out, struct {
 			Skills []foundSkill `json:"skills"`
 		}{found})
 	}
