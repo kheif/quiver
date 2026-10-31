@@ -120,6 +120,8 @@ func wantOriginals(t *testing.T, dir string, kept map[string]bool) {
 func TestImportKeep(t *testing.T) {
 	f := listEnv(t)
 	dir := importProject(t, f)
+	// p assigns to the project of the current folder.
+	t.Chdir(dir)
 	for _, args := range [][]string{{"import", "--keep", dir}, {"import", "--keep", "--yes", dir}} {
 		out, err := runIn(t, "p\np\nskip\np\n", args...)
 		if err != nil {
@@ -136,6 +138,8 @@ func TestImportKeep(t *testing.T) {
 func TestImportTracked(t *testing.T) {
 	f := listEnv(t)
 	dir := importProject(t, f)
+	// p assigns to the project of the current folder.
+	t.Chdir(dir)
 	gitIn(t, dir, "init", "--quiet")
 	gitIn(t, dir, "add", ".claude")
 	// notes: kept by default. pdf: skipped. review: deleted anyway.
@@ -154,6 +158,8 @@ func TestImportTracked(t *testing.T) {
 func TestImportNoAnswerKeeps(t *testing.T) {
 	f := listEnv(t)
 	dir := importProject(t, f)
+	// p assigns to the project of the current folder.
+	t.Chdir(dir)
 	out, err := runIn(t, "s\ns\np\n", "import", dir)
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)

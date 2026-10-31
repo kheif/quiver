@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/kheif/quiver/internal/project"
 )
 
 // TestMain points HOME and QUIVER_HOME at a temp folder, so a test that
@@ -37,5 +39,16 @@ func isolated(m *testing.M) int {
 			return 1
 		}
 	}
-	return m.Run()
+	// A test that assigns to the project of the current folder, the
+	// package folder, would register the repository: Register walks up to
+	// its .git. The release then fails on the dirty tree.
+	leak := filepath.Join("..", "..", project.FileName)
+	_, before := os.Stat(leak)
+	code := m.Run()
+	if _, after := os.Stat(leak); before != nil && after == nil {
+		fmt.Fprintf(os.Stderr, "a test wrote %s; run commands from a test folder (t.Chdir)\n", leak)
+		_ = os.Remove(leak)
+		return 1
+	}
+	return code
 }
