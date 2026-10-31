@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/kheif/quiver/internal/assistant"
 	"github.com/kheif/quiver/internal/config"
@@ -17,6 +19,7 @@ import (
 	"github.com/kheif/quiver/internal/git"
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/registry"
+	"github.com/kheif/quiver/internal/release"
 	"github.com/kheif/quiver/internal/server"
 	"github.com/kheif/quiver/internal/setup"
 	"github.com/kheif/quiver/internal/skill"
@@ -29,7 +32,8 @@ func newDoctorCmd() *cobra.Command {
 		Use:   "doctor",
 		Short: "Check the Quiver home, the library and the Claude Code setup",
 		Long: `Check the Quiver home, the library, the assignments and the Claude Code
-setup, and report each check as ok, warn or error.
+setup, and report each check as ok, warn or error. The last line, info,
+names the latest Quiver release (not with $` + noUpdateCheckEnv + `).
 
 With --fix it applies the safe fixes: it creates missing parts of the Quiver
 home, commits uncommitted changes in local/, deletes folders left over from
@@ -71,7 +75,7 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 		return err
 	}
 	d := &doc{in: bufio.NewReader(in), out: out, fix: fix, home: home}
-	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP} {
+	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP, d.checkVersion} {
 		check()
 	}
 	fmt.Fprintln(out)
@@ -581,5 +585,30 @@ func (d *doc) checkJSONAssistant(a *assistant.JSONAssistant, bin string, knowBin
 		d.report("warn", a.Name+" runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; %s", reg.Command, reg.Args, bin, fix))
 	default:
 		d.report("ok", "registered with "+a.Name)
+	}
+}
+
+// 10. The latest Quiver release. It is information, not a problem.
+func (d *doc) checkVersion() {
+	const title = "latest Quiver version"
+	current := currentVersion()
+	switch {
+	case os.Getenv(noUpdateCheckEnv) != "":
+		d.skip(title, "$"+noUpdateCheckEnv+" is set")
+		return
+	case devBuild(current):
+		d.skip(title, "development build "+current)
+		return
+	}
+	s, err := release.Check(context.Background(), time.Now(), "quiver/"+current)
+	switch line := newVersionLine(s.Latest); {
+	case line != "":
+		d.report("info", line)
+	case s.Latest == "" && err != nil:
+		d.report("info", title+" unknown", err.Error())
+	case s.Latest == "":
+		d.report("info", title+" unknown")
+	default:
+		d.report("info", fmt.Sprintf("Quiver %s is the latest version", current))
 	}
 }

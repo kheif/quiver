@@ -846,6 +846,13 @@ task("TASKD6", "Notice of a new Quiver version", "TASKC1", """
 4. `quiver doctor` shows the latest version as an info line.
 
 **Done when:** tests with a fake release endpoint cover newer, same, failed and disabled, and that the check runs at most once a day.
+
+**Notes:**
+- `internal/release` does the check: `Check` asks GitHub only when the saved check is a day old (or from the future), saves a failed request too, so it is tried again only the next day, and keeps the version found before. A broken state file is replaced; without a Quiver home nothing is asked. `Newer` compares major.minor.patch; a release is newer than its pre-releases. `LatestURL` is replaced in tests.
+- `cli.execute` starts the check before the command and waits for it at the end; `release.Timeout` (2 seconds) bounds the wait, once a day at most. `quiver mcp` and its shell completion never start it; `mcp install` and the other subcommands do. A command with `--json` set runs the check but prints no line.
+- A development build is `dev`, a Go pseudo-version (a commit between releases) or a version with `+` (`+dirty`). The install line: npm (`QUIVER_NPM=1`), `go install` (no ldflags version), the releases page on Windows until TASKD7, else the curl line, with `QUIVER_INSTALL_DIR` when the binary is not in `~/.local/bin`. `assistant.ShellQuote` is now exported for it.
+- `doctor` shows the latest version as an `info` line, which counts as neither warning nor error, and skips it with `QUIVER_NO_UPDATE_CHECK` or for a development build.
+- Checked against the real GitHub API on 2026-10-31: a 1.0.0 build reported 1.1.0.
 """)
 
 task("TASKD7", "`install.ps1` for Windows", "TASKC1", """
@@ -1080,7 +1087,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

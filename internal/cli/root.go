@@ -141,8 +141,20 @@ func overview(out io.Writer) error {
 
 // Execute runs the root command and returns the process exit code.
 func Execute() int {
-	if err := newRootCmd().Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
+	return execute(newRootCmd(), os.Args[1:], os.Stderr)
+}
+
+// execute runs root with args. While it runs, the check for a new Quiver
+// version runs too; its line comes last.
+func execute(root *cobra.Command, args []string, stderr io.Writer) int {
+	check := startVersionCheck(root, args, stderr)
+	root.SetArgs(args)
+	ran, err := root.ExecuteC()
+	if err != nil {
+		fmt.Fprintln(stderr, "error:", err)
+	}
+	check.finish(ran, stderr)
+	if err != nil {
 		return 1
 	}
 	return 0

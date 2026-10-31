@@ -36,6 +36,8 @@ go install github.com/kheif/quiver/cmd/quiver@latest
 
 The archives for every platform are also on the [releases page](https://github.com/kheif/quiver/releases). To build from a clone: `make build`, which writes `bin/quiver`.
 
+**New versions.** Once a day, a command run in a terminal asks GitHub for the latest release, while it runs, and remembers the answer in `~/.quiver/state/version-check.json`. When a newer version is out, the command ends with one line on stderr, with the install command that matches how you installed Quiver. Nothing is shown for `quiver mcp`, with `--json`, outside a terminal or for development builds, and a failed check is silent. `quiver doctor` shows the latest version. Set `QUIVER_NO_UPDATE_CHECK=1` to turn the check off.
+
 ## Quickstart
 
 ```sh

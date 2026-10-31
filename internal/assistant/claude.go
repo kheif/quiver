@@ -51,7 +51,7 @@ func HasClaude() bool {
 // AddCommand is the command that registers bin with Claude Code, quoted for
 // a POSIX shell.
 func AddCommand(bin string) string {
-	return "claude mcp add --scope user " + ServerName + " -- " + shellQuote(bin) + " mcp"
+	return "claude mcp add --scope user " + ServerName + " -- " + ShellQuote(bin) + " mcp"
 }
 
 // RemoveCommand is the command that removes the registration.
@@ -184,9 +184,9 @@ func claude(dir string, args ...string) (string, error) {
 	return string(out), nil
 }
 
-// shellQuote quotes s for a POSIX shell when it has characters the shell
+// ShellQuote quotes s for a POSIX shell when it has characters the shell
 // would interpret.
-func shellQuote(s string) string {
+func ShellQuote(s string) string {
 	if s != "" && strings.Trim(s, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/._-+@:=,") == "" {
 		return s
 	}
