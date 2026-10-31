@@ -112,7 +112,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK42](TASK42-split-machine-local-state-out-of-the-registry.md) | Split machine-local state out of the registry | TASK41 |
 | ✅ | [TASK43](TASK43-stable-skill-ids.md) | Stable skill IDs | TASK42 |
 | ✅ | [TASK44](TASK44-update-skill-mcp-tool.md) | `update_skill` MCP tool | TASK24 |
-|  | [TASK45](TASK45-search-skills-mcp-tool.md) | `search_skills` MCP tool | TASK36, TASK18 |
+| ✅ | [TASK45](TASK45-search-skills-mcp-tool.md) | `search_skills` MCP tool | TASK36, TASK18 |
 |  | [TASK46](TASK46-quiver-fork.md) | `quiver fork` | TASK12, TASK14 |
 |  | [TASK47](TASK47-pinning.md) | Pinning | TASK15 |
 |  | [TASK48](TASK48-update-preview.md) | Update preview | TASK15 |
