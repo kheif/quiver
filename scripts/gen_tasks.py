@@ -811,6 +811,13 @@ Today `mcp install` registers Quiver only with Claude Code (`internal/assistant/
 5. `doctor` checks each installed assistant's entry.
 
 **Done when:** tests cover install, update, uninstall, other keys kept and a broken file for each JSON assistant; the spike results are written down; the README lists the assistants.
+
+**Notes:**
+- Spike results in docs/spike-mcp-clients.md. Cursor (CLI 2026.10.22, `spike/b01/cursor-run.sh`): 6 of 6 fitting prompts loaded the skill, 0 of 4 others, always-on in 10 of 10; the server starts in the workspace folder, so project skills work. Claude Desktop 4.4212.0 (Chat): the tools work, but the model never gets `instructions`.
+- Decided 2026-10-31: Claude Desktop is set up only with `--for claude-desktop` (`JSONAssistant.NoInstructions`), with a note that skills are used only on request. `doctor` checks its entry only when there is one; `mcp uninstall` without `--for` removes it.
+- `internal/assistant/jsonconfig.go` keeps key order, the file's indentation and mode, and the entry's other fields such as `env`; it writes `<file>.quiver-backup` before each change. `fsutil.WriteFileAtomic` is the byte version of `WriteJSONAtomic`.
+- The JSON assistants always get the binary itself (`appCommand`), also from an npm install: with a desktop app's `PATH` the npm launcher fails with `env: node: No such file or directory`. Claude Code keeps the launcher on `PATH`.
+- `mcp install --print` is deprecated in favour of `quiver mcp config`.
 """)
 
 task("TASKD5", "First run and rough edges", "TASKD2", """
@@ -1067,7 +1074,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

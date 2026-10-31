@@ -83,7 +83,7 @@ A project is identified by a small `.quiver.json` file in its root:
 
 ### Skill catalog
 
-At session start, the server's `instructions` list the available skills (global and project) with their descriptions, and tell the assistant to load a fitting skill with `get_skill`. The assistant adds `instructions` to its system prompt, so it knows the skills from the first message.
+At session start, the server's `instructions` list the available skills (global and project) with their descriptions, and tell the assistant to load a fitting skill with `get_skill`. The assistant adds `instructions` to its system prompt, so it knows the skills from the first message. Claude Code and Cursor do; Claude Desktop drops them, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
 
 Tool descriptions are not used for this. Claude Code defers MCP tools, so the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). `instructions` are cut at about 4096 characters. A catalog that does not fit is replaced by a pointer: before its first reply, the assistant calls `list_skills`, which returns every skill with its whole description.
 
@@ -208,7 +208,7 @@ quiver doctor                       # Check the library and fix problems
 
 **v1.2**
 - `show`, `search`, every skill in the catalog: through `list_skills` when it does not fit in `instructions`
-- `mcp install` for Cursor and Claude Desktop
+- `mcp install` for Cursor, and for Claude Desktop with `--for` (it drops `instructions`)
 - Import removes originals; `doctor` and `status` find native copies of served skills
 - Guided first run, notice of a new Quiver version, `install.ps1` for Windows
 - Git timeouts, dependency and vulnerability checks

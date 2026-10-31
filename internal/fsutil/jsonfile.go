@@ -22,8 +22,13 @@ func WriteJSONAtomic(path string, v any) error {
 	if err != nil {
 		return fmt.Errorf("encode %s: %w", path, err)
 	}
-	data = append(data, '\n')
+	return WriteFileAtomic(path, append(data, '\n'), 0o644)
+}
 
+// WriteFileAtomic writes data to path with perm the way WriteJSONAtomic
+// does: through a synced temp file in the same folder that is renamed over
+// path.
+func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
@@ -45,7 +50,7 @@ func WriteJSONAtomic(path string, v any) error {
 	if err := tmp.Close(); err != nil {
 		return err
 	}
-	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
+	if err := os.Chmod(tmp.Name(), perm); err != nil {
 		return err
 	}
 	return rename(tmp.Name(), path)

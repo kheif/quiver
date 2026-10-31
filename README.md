@@ -42,7 +42,7 @@ The archives for every platform are also on the [releases page](https://github.c
 # 1. Create the library in ~/.quiver (any other command does this too)
 quiver init
 
-# 2. Register the MCP server with Claude Code, once for all projects
+# 2. Register the MCP server with your assistants, once for all projects
 quiver mcp install
 
 # 3. In a project folder, write a skill for that project
@@ -93,8 +93,9 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver update [<name>...]` | Pull the latest skills of all or some sources, and list what changed. |
 | `quiver projects` | List projects; `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
-| `quiver mcp install` | Register the MCP server with Claude Code (`--print` shows the setup for other assistants). |
-| `quiver mcp uninstall` | Remove it from Claude Code. |
+| `quiver mcp install` | Register the MCP server with every installed assistant: Claude Code and Cursor (`--for <assistant>` for one, such as `claude-desktop`). |
+| `quiver mcp uninstall` | Remove it from them (`--for <assistant>` for one). |
+| `quiver mcp config` | Print the MCP config entry for any other assistant. |
 | `quiver mcp` | Run the MCP server. Assistants start this. |
 | `quiver completion <shell>` | Print the completion script for `bash`, `zsh`, `fish` or `powershell`. |
 
@@ -108,7 +109,19 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 
 ## MCP server
 
-`quiver mcp install` runs `claude mcp add --scope user quiver -- <path to quiver> mcp`. For an assistant configured with JSON, `quiver mcp install --print` prints the entry:
+`quiver mcp install` sets up Claude Code and Cursor when it finds them, or only the assistant named with `--for`:
+
+| Assistant | `--for` | What it changes |
+|---|---|---|
+| Claude Code | `claude-code` | Runs `claude mcp add --scope user quiver -- <path to quiver> mcp`. |
+| Cursor | `cursor` | Adds `quiver` to `mcpServers` in `~/.cursor/mcp.json`. |
+| Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Only with `--for claude-desktop`. |
+
+An assistant counts as installed when the `claude` command is on `PATH`, or when its config folder exists. In the JSON files, every other key stays as it is, including an `env` of the `quiver` entry, and the old file is saved next to it as `<file>.quiver-backup`. A file that is not valid JSON is reported and never overwritten. Restart Cursor or Claude Desktop afterwards. `quiver doctor` checks the entry of each installed assistant (of Claude Desktop only when it has one). Cursor and Claude Desktop get the path of the binary itself, never the npm launcher, because desktop apps do not see your shell's `PATH` and so cannot find `node`. Cursor passes the skill list to the model and starts the server in the workspace folder, so project skills work there.
+
+**Claude Desktop** runs Quiver's tools but does not pass the server's instructions to the model, so it never sees the skill list or the always-on skills. A skill is used only when you ask for Quiver's skills in the prompt, such as "check the quiver skills for this". That is why `quiver mcp install` sets it up only with `--for claude-desktop`. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
+
+For any other assistant, `quiver mcp config` prints the entry:
 
 ```json
 { "mcpServers": { "quiver": { "command": "/path/to/quiver", "args": ["mcp"] } } }
@@ -116,7 +129,7 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 
 The server serves the project of the folder it is started in, or of `$QUIVER_PROJECT` when that is set. It logs to `~/.quiver/logs/`.
 
-Claude Code starts the server in the project folder. Other assistants may start it somewhere else, such as your home folder; there it serves only the global skills. Set `QUIVER_PROJECT` in that assistant's MCP config to serve a project's skills.
+Claude Code starts the server in the project folder. Other assistants may start it somewhere else, such as your home folder; there it serves only the global skills. Cursor starts it in the workspace folder. Claude Desktop never starts it in a project. Set `QUIVER_PROJECT` in that assistant's MCP config to serve a project's skills.
 
 **Instructions.** When a session starts, the server tells the assistant which skills exist here: their IDs and descriptions, the always-on skills, and that new skills are saved with `create_skill`.
 
@@ -155,7 +168,7 @@ To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).
 The last command deletes your own skills too. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
 
 ```sh
-quiver mcp uninstall      # remove the MCP server from Claude Code
+quiver mcp uninstall      # remove the MCP server from every assistant
 rm "$(command -v quiver)" # remove the binary; with npm: npm uninstall -g @kheif/quiver
 rm -rf ~/.quiver          # delete the library
 ```

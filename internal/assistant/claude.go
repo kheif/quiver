@@ -42,6 +42,12 @@ func (r *Registration) User() bool {
 	return strings.HasPrefix(r.Scope, "User")
 }
 
+// HasClaude reports whether the claude command is on PATH.
+func HasClaude() bool {
+	_, err := exec.LookPath("claude")
+	return err == nil
+}
+
 // AddCommand is the command that registers bin with Claude Code, quoted for
 // a POSIX shell.
 func AddCommand(bin string) string {
@@ -57,7 +63,7 @@ func RemoveCommand() string {
 func ConfigSnippet(bin string) string {
 	b, _ := json.MarshalIndent(map[string]any{
 		"mcpServers": map[string]any{
-			ServerName: map[string]any{"command": bin, "args": []string{"mcp"}},
+			ServerName: serverEntry{bin, []string{"mcp"}},
 		},
 	}, "", "  ")
 	return string(b)

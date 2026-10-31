@@ -95,7 +95,7 @@ func TestCommands(t *testing.T) {
 	if got := AddCommand("/Users/me/my tools/it's/quiver"); got != `claude mcp add --scope user quiver -- '/Users/me/my tools/it'\''s/quiver' mcp` {
 		t.Errorf("quoted: got %q", got)
 	}
-	want := "{\n  \"mcpServers\": {\n    \"quiver\": {\n      \"args\": [\n        \"mcp\"\n      ],\n      \"command\": \"/opt/bin/quiver\"\n    }\n  }\n}"
+	want := "{\n  \"mcpServers\": {\n    \"quiver\": {\n      \"command\": \"/opt/bin/quiver\",\n      \"args\": [\n        \"mcp\"\n      ]\n    }\n  }\n}"
 	if got := ConfigSnippet("/opt/bin/quiver"); got != want {
 		t.Errorf("snippet %s", got)
 	}

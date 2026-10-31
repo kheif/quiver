@@ -55,6 +55,7 @@ Items are ordered by priority within each section.
 - **Proposal:** Write the absolute path of the binary into the MCP config.
 - **Related:** TASK20
 - **Planned 2026-10-29:** kept for the new assistants in TASK37.
+- **Resolved 2026-10-31:** Cursor and Claude Desktop get the absolute path of the binary, also from an npm install (TASK37).
 
 ### B10 — Cap the `list_skills` description
 - **Resolved 2026-10-15:** The catalog moved into `instructions`, with a 3800-character budget and a `list_skills` hint (TASK18).

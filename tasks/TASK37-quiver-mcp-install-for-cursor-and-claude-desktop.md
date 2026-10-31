@@ -2,7 +2,7 @@
 
 **Phase:** Phase 4c — v1.2
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK33
 
@@ -17,3 +17,10 @@ Today `mcp install` registers Quiver only with Claude Code (`internal/assistant/
 5. `doctor` checks each installed assistant's entry.
 
 **Done when:** tests cover install, update, uninstall, other keys kept and a broken file for each JSON assistant; the spike results are written down; the README lists the assistants.
+
+**Notes:**
+- Spike results in docs/spike-mcp-clients.md. Cursor (CLI 2026.10.22, `spike/b01/cursor-run.sh`): 6 of 6 fitting prompts loaded the skill, 0 of 4 others, always-on in 10 of 10; the server starts in the workspace folder, so project skills work. Claude Desktop 4.4212.0 (Chat): the tools work, but the model never gets `instructions`.
+- Decided 2026-10-31: Claude Desktop is set up only with `--for claude-desktop` (`JSONAssistant.NoInstructions`), with a note that skills are used only on request. `doctor` checks its entry only when there is one; `mcp uninstall` without `--for` removes it.
+- `internal/assistant/jsonconfig.go` keeps key order, the file's indentation and mode, and the entry's other fields such as `env`; it writes `<file>.quiver-backup` before each change. `fsutil.WriteFileAtomic` is the byte version of `WriteJSONAtomic`.
+- The JSON assistants always get the binary itself (`appCommand`), also from an npm install: with a desktop app's `PATH` the npm launcher fails with `env: node: No such file or directory`. Claude Code keeps the launcher on `PATH`.
+- `mcp install --print` is deprecated in favour of `quiver mcp config`.

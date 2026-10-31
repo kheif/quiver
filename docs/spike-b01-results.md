@@ -105,4 +105,4 @@ Every session loaded the always-on skill first, then called `list_skills` before
 
 ## Still open
 
-- Other assistants (Cursor, Claude Desktop) may not defer tools or may handle `instructions` differently (TASK39).
+- Other assistants may handle `instructions` differently. Cursor passes them to the model, Claude Desktop drops them; see [spike-mcp-clients.md](spike-mcp-clients.md).

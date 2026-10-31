@@ -519,11 +519,35 @@ func describeCopy(c library.NativeCopy) string {
 	return fmt.Sprintf("%s (%s)", where, why)
 }
 
-// 9. Claude Code starts this quiver as its MCP server.
+// 9. Every installed assistant starts this quiver as its MCP server.
 func (d *doc) checkMCP() {
+	bin, _, binErr := command()
+	jsons, err := assistant.JSONAssistants()
+	if err != nil {
+		d.report("error", "assistant config folders", err.Error())
+	}
+	var installed []*assistant.JSONAssistant
+	for _, a := range jsons {
+		// One that drops the instructions is set up only on request, so a
+		// missing entry is no problem there.
+		if a.Installed() && (!a.NoInstructions || hasEntry(a)) {
+			installed = append(installed, a)
+		}
+	}
+	d.checkClaudeCode(bin, binErr == nil, len(installed) > 0)
+	appBin, appErr := appCommand()
+	for _, a := range installed {
+		d.checkJSONAssistant(a, appBin, appErr == nil)
+	}
+}
+
+func (d *doc) checkClaudeCode(bin string, knowBin, others bool) {
 	const title = "registered with Claude Code"
 	reg, err := assistant.Get("")
 	switch {
+	case errors.Is(err, assistant.ErrNoClaude) && others:
+		d.skip(title, "the claude command was not found")
+		return
 	case errors.Is(err, assistant.ErrNoClaude):
 		d.report("warn", "the claude command was not found, so the Claude Code setup was not checked")
 		return
@@ -534,8 +558,7 @@ func (d *doc) checkMCP() {
 		d.report("error", "not registered with Claude Code; run: quiver mcp install")
 		return
 	}
-	bin, _, err := command()
-	if err == nil && reg.Command != bin {
+	if knowBin && reg.Command != bin {
 		d.report("warn", "Claude Code runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; run: quiver mcp install", reg.Command, reg.Args, bin))
 		return
 	}
@@ -544,4 +567,19 @@ func (d *doc) checkMCP() {
 		return
 	}
 	d.report("ok", title)
+}
+
+func (d *doc) checkJSONAssistant(a *assistant.JSONAssistant, bin string, knowBin bool) {
+	fix := "run: quiver mcp install --for " + a.ID
+	reg, err := a.Get()
+	switch {
+	case err != nil:
+		d.report("error", a.Name+" MCP config", err.Error())
+	case reg == nil:
+		d.report("warn", fmt.Sprintf("%s is installed, but Quiver is not registered with it; %s", a.Name, fix))
+	case knowBin && (reg.Command != bin || reg.Args != "mcp"):
+		d.report("warn", a.Name+" runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; %s", reg.Command, reg.Args, bin, fix))
+	default:
+		d.report("ok", "registered with "+a.Name)
+	}
 }

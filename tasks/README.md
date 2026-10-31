@@ -99,7 +99,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK34](TASK34-hardening-git-timeouts-race-and-fuzz-tests-dependency-checks.md) | Hardening: git timeouts, race and fuzz tests, dependency checks | TASK33 |
 | ✅ | [TASK35](TASK35-duplicate-skills-import-removes-originals-doctor-and-status-find-copies.md) | Duplicate skills: import removes originals, doctor and status find copies | TASK33 |
 | ✅ | [TASK36](TASK36-quiver-show-quiver-search-every-skill-in-the-catalog.md) | `quiver show`, `quiver search`, every skill in the catalog | TASK33 |
-|  | [TASK37](TASK37-quiver-mcp-install-for-cursor-and-claude-desktop.md) | `quiver mcp install` for Cursor and Claude Desktop | TASK33 |
+| ✅ | [TASK37](TASK37-quiver-mcp-install-for-cursor-and-claude-desktop.md) | `quiver mcp install` for Cursor and Claude Desktop | TASK33 |
 |  | [TASK38](TASK38-first-run-and-rough-edges.md) | First run and rough edges | TASK35 |
 |  | [TASK39](TASK39-notice-of-a-new-quiver-version.md) | Notice of a new Quiver version | TASK33 |
 |  | [TASK40](TASK40-install-ps1-for-windows.md) | `install.ps1` for Windows | TASK33 |
