@@ -22,6 +22,7 @@ Items are ordered by priority within each section.
 - **Proposal:** Move `paths`, last update checks and other machine-local data into a gitignored `~/.quiver/state.json`. Keep only portable data in `registry.json`.
 - **Related:** TASK07, data-model.md, Multiple Machines in PROJECT.md
 - **Planned 2026-10-29:** TASK42.
+- **Resolved 2026-10-31:** `registry.json` version 2 holds only portable data; project paths live in `~/.quiver/state/projects.json` next to the version check. Version 1 is migrated on the first write (TASK42).
 
 ### B05 — Stable skill IDs
 - **Concern:** `<source>/<plugin>/<name>` is used only when names collide. If an update introduces a new collision, an existing ID changes and its assignments break silently.

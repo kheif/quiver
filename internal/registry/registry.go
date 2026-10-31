@@ -1,5 +1,7 @@
 // Package registry reads and writes ~/.quiver/registry.json: which skills are
-// global and which projects get which skills.
+// global and which projects get which skills. The folders where each project
+// was seen differ between machines, so they are kept apart, in
+// ~/.quiver/state/projects.json, and registry.json can be synced as it is.
 package registry
 
 import (
@@ -11,7 +13,15 @@ import (
 )
 
 // CurrentVersion is the newest registry.json version this binary understands.
-const CurrentVersion = 1
+// Version 1 kept each project's paths in registry.json.
+const CurrentVersion = 2
+
+// StateFile holds each project's paths on this machine, relative to the
+// Quiver home.
+const StateFile = "state/projects.json"
+
+// stateVersion is the newest StateFile version this binary understands.
+const stateVersion = 1
 
 // Registry is the content of registry.json.
 type Registry struct {
@@ -23,8 +33,10 @@ type Registry struct {
 
 // Project is one project's entry, keyed by the ID in its .quiver.json.
 type Project struct {
-	Name     string   `json:"name"`
-	Paths    []string `json:"paths"`
+	Name string `json:"name"`
+	// Paths lists the folders where the project was seen on this machine.
+	// It is stored in StateFile, not in registry.json.
+	Paths    []string `json:"-"`
 	Skills   []string `json:"skills"`
 	AlwaysOn []string `json:"alwaysOn,omitempty"`
 }
@@ -48,7 +60,31 @@ func Path() (string, error) {
 	return filepath.Join(home, "registry.json"), nil
 }
 
-// Load reads registry.json. A missing file gives the defaults.
+// state is the content of StateFile.
+type state struct {
+	Version int                 `json:"version"`
+	Paths   map[string][]string `json:"paths"`
+}
+
+// v1Paths reads the paths a version 1 registry.json kept per project.
+type v1Paths struct {
+	Projects map[string]*struct {
+		Paths []string `json:"paths"`
+	} `json:"projects"`
+}
+
+// StatePath returns the location of StateFile.
+func StatePath() (string, error) {
+	home, err := fsutil.QuiverHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, StateFile), nil
+}
+
+// Load reads registry.json and the paths in StateFile. A missing file gives
+// the defaults. A version 1 registry.json still holds the paths; they are
+// used, and move to StateFile on the next write.
 func Load() (*Registry, error) {
 	path, err := Path()
 	if err != nil {
@@ -56,16 +92,54 @@ func Load() (*Registry, error) {
 	}
 	r := Default()
 	if err := fsutil.ReadJSON(path, r); err != nil {
-		if errors.Is(err, fsutil.ErrNotExist) {
-			return Default(), nil
+		if !errors.Is(err, fsutil.ErrNotExist) {
+			return nil, err
 		}
+		r = Default()
+	} else if err := r.check(path); err != nil {
 		return nil, err
 	}
-	if err := r.check(path); err != nil {
+	paths, err := loadPaths()
+	if err != nil {
 		return nil, err
+	}
+	if r.Version == 1 {
+		var old v1Paths
+		if err := fsutil.ReadJSON(path, &old); err != nil {
+			return nil, err
+		}
+		for id, p := range old.Projects {
+			if p != nil {
+				paths[id] = append(paths[id], p.Paths...)
+			}
+		}
+	}
+	for id, p := range r.Projects {
+		p.Paths = paths[id]
 	}
 	r.normalize()
 	return r, nil
+}
+
+func loadPaths() (map[string][]string, error) {
+	path, err := StatePath()
+	if err != nil {
+		return nil, err
+	}
+	var s state
+	if err := fsutil.ReadJSON(path, &s); err != nil {
+		if errors.Is(err, fsutil.ErrNotExist) {
+			return map[string][]string{}, nil
+		}
+		return nil, err
+	}
+	if s.Version > stateVersion {
+		return nil, fmt.Errorf("%s has version %d, but this quiver supports only up to %d: update quiver", path, s.Version, stateVersion)
+	}
+	if s.Paths == nil {
+		s.Paths = map[string][]string{}
+	}
+	return s.Paths, nil
 }
 
 // Update loads the registry, applies fn and saves the result, all under one
@@ -86,12 +160,28 @@ func Update(fn func(*Registry) error) error {
 
 // Write saves r without taking the lock. Call it only inside
 // fsutil.WithLock, for example when one change touches several files.
+// The paths go to StateFile first, so a version 2 registry.json never
+// exists without them.
 func Write(r *Registry) error {
 	path, err := Path()
 	if err != nil {
 		return err
 	}
+	statePath, err := StatePath()
+	if err != nil {
+		return err
+	}
 	r.normalize()
+	s := state{Version: stateVersion, Paths: map[string][]string{}}
+	for id, p := range r.Projects {
+		if len(p.Paths) > 0 {
+			s.Paths[id] = p.Paths
+		}
+	}
+	if err := fsutil.WriteJSONAtomic(statePath, s); err != nil {
+		return err
+	}
+	r.Version = CurrentVersion
 	return fsutil.WriteJSONAtomic(path, r)
 }
 

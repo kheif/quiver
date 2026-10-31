@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/kheif/quiver/internal/project"
+	"github.com/kheif/quiver/internal/registry"
 )
 
 func TestWhere(t *testing.T) {
@@ -43,6 +44,21 @@ func TestProjectsGolden(t *testing.T) {
 		t.Fatal(err)
 	}
 	golden(t, "projects", f.run(t, "projects"))
+}
+
+// A registry.json synced from another machine names projects this machine
+// has not seen, so they have no paths in its state.
+func TestProjectsNotSeenOnThisMachine(t *testing.T) {
+	f := listEnv(t)
+	if err := os.Remove(filepath.Join(f.home, registry.StateFile)); err != nil {
+		t.Fatal(err)
+	}
+	if got := f.run(t, "projects"); !strings.Contains(got, "app   app-000001  2       (not seen on this machine)") {
+		t.Errorf("projects:\n%s", got)
+	}
+	if got := f.run(t, "where", "tdd"); got != "project api (not seen on this machine)\nproject app (not seen on this machine)\n" {
+		t.Errorf("where:\n%s", got)
+	}
 }
 
 func TestProjectsEmpty(t *testing.T) {

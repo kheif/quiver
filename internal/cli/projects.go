@@ -168,6 +168,9 @@ func listProjects(out io.Writer, asJSON bool) error {
 				paths[i] += " (missing)"
 			}
 		}
+		if len(paths) == 0 {
+			paths = []string{"(not seen on this machine)"}
+		}
 		fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", p.Name, id, len(p.Skills), strings.Join(paths, ", "))
 	}
 	return w.Flush()

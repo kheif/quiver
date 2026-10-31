@@ -123,8 +123,13 @@ func RegisterProject(dir string) (p *project.Project, created bool, copied *Poss
 	return p, created, copied, err
 }
 
-// ProjectLabel is how commands name a project: "<name> (<paths>)".
+// ProjectLabel is how commands name a project: "<name> (<paths>)". A
+// project from a synced registry.json may not have been seen on this
+// machine yet, so it has no paths.
 func ProjectLabel(name string, paths []string) string {
+	if len(paths) == 0 {
+		return fmt.Sprintf("%s (not seen on this machine)", name)
+	}
 	return fmt.Sprintf("%s (%s)", name, strings.Join(paths, ", "))
 }
 

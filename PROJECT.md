@@ -50,6 +50,7 @@ Quiver uses the standard Agent Skills format: a folder with a `SKILL.md` file (Y
 ~/.quiver/
 ├── config.json          # Remote sources and settings
 ├── registry.json        # Global skills, projects and their skills
+├── state/               # Machine-local: project folders, version check
 ├── local/               # Your own skills (a git repo)
 │   ├── db-migration/
 │   │   └── SKILL.md
@@ -191,7 +192,7 @@ quiver doctor                       # Check the library and fix problems
 
 ## Multiple Machines
 
-`~/.quiver/` is meant to be versioned with git. `local/` holds your skills. `config.json` and `registry.json` hold sources and assignments. Projects carry their ID in `.quiver.json`, so assignments carry over to another machine as they are.
+`~/.quiver/` is meant to be versioned with git. `local/` holds your skills. `config.json` and `registry.json` hold sources and assignments. Projects carry their ID in `.quiver.json`, so assignments carry over to another machine as they are. `state/` holds what differs per machine, such as the folders where each project was seen, and is not synced.
 
 ## Roadmap
 

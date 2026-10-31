@@ -22,19 +22,17 @@ Assignments: which skills are global, and which projects get which skills.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "global": ["caveman/caveman", "commit-rules", "anthropic/pdf"],
   "alwaysOn": ["caveman/caveman"],
   "projects": {
     "app-k3f9q2": {
       "name": "app",
-      "paths": ["/Users/me/code/app"],
       "skills": ["db-migration", "hga-expert"],
       "alwaysOn": []
     },
     "tool-8xw2mf": {
       "name": "tool",
-      "paths": ["/Users/me/scratch/tool"],
       "skills": ["quick-notes"]
     }
   }
@@ -42,6 +40,25 @@ Assignments: which skills are global, and which projects get which skills.
 ```
 
 `alwaysOn` lists skills that apply from the first message. The MCP server's `instructions` name them and tell the assistant to load them with `get_skill` before its first reply. Every ID in an `alwaysOn` list must also be in the matching `global` or `skills` list.
+
+The file holds only data that is the same on every machine, so it can be synced as it is. Version 1 also kept each project's `paths`. Quiver still reads version 1, and the first write moves the paths into `state/projects.json` and saves version 2. An older Quiver stops on version 2 with "update quiver".
+
+## `~/.quiver/state/`
+
+Machine-local data. It is never synced.
+
+- `projects.json`: the folders where each project was seen on this machine. A project from a synced `registry.json` that this machine has not seen yet has no entry. Projects no longer in `registry.json` are dropped on the next write.
+- `version-check.json`: the last check for a new Quiver version (TASK39).
+
+```json
+{
+  "version": 1,
+  "paths": {
+    "app-k3f9q2": ["/Users/me/code/app"],
+    "tool-8xw2mf": ["/Users/me/scratch/tool"]
+  }
+}
+```
 
 ## `<project>/.quiver.json`
 
@@ -59,7 +76,7 @@ The project's identity. The project does not need git; if it uses git, commit th
 ## Project registry fields
 
 - `name` is a display name. It defaults to the folder name.
-- `paths` lists the folders where this ID has been seen. It is only a hint and can differ between machines.
+- `paths` lists the folders where this ID has been seen on this machine, from `state/projects.json`. It is only a hint.
 - **Moved folder:** the ID shows up at a new path and the old path is gone. Quiver updates `paths`.
 - **Copied folder:** the same ID shows up at two existing paths. Quiver warns, and `quiver projects split` gives the copy its own ID.
 
