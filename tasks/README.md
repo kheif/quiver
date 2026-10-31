@@ -103,7 +103,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK38](TASK38-first-run-and-rough-edges.md) | First run and rough edges | TASK35 |
 | ✅ | [TASK39](TASK39-notice-of-a-new-quiver-version.md) | Notice of a new Quiver version | TASK33 |
 | ✅ | [TASK40](TASK40-install-ps1-for-windows.md) | `install.ps1` for Windows | TASK33 |
-|  | [TASK41](TASK41-release-v1-2-0.md) | Release v1.2.0 | TASK34, TASK35, TASK36, TASK37, TASK38, TASK39, TASK40 |
+| ✅ | [TASK41](TASK41-release-v1-2-0.md) | Release v1.2.0 | TASK34, TASK35, TASK36, TASK37, TASK38, TASK39, TASK40 |
 
 ### Phase 5 — v2
 

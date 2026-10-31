@@ -159,13 +159,15 @@ Every action in the TUI is also a command, for scripts and quick use:
 
 ```bash
 # Setup
-quiver init                         # Create ~/.quiver
+quiver init                         # Create ~/.quiver; in a terminal, also register the MCP server and import existing skills
 quiver mcp install                  # Register the MCP server with Claude Code / Cursor
+quiver                              # The project here, its skill count and a next step
 
 # Skills
 quiver list                         # All skills, and where each one is assigned
 quiver new <name>                   # Create a local skill
 quiver edit <name>                  # Open a local skill in $EDITOR
+quiver show <skill>                 # Where a skill comes from, where it is assigned, its SKILL.md
 quiver search <text>
 quiver fork <source/skill>
 
