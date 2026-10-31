@@ -20,6 +20,11 @@ type Config struct {
 // Source is a remote git repository that skills are read from.
 type Source struct {
 	Repo string `json:"repo"`
+	// IDs maps each skill ID given out in the source, without the
+	// "<source>/" prefix, to the skill's folder in the repo. An ID never
+	// changes once given, so assignments survive an update that adds a
+	// skill with the same name. IDs of skills removed upstream are kept.
+	IDs map[string]string `json:"ids,omitempty"`
 }
 
 // Default returns the config used when config.json does not exist.

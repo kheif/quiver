@@ -1,13 +1,16 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
 
+	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/registry"
 )
@@ -109,6 +112,58 @@ func TestUpdate(t *testing.T) {
 	out, err = runIn(t, "", "update", "acme")
 	if err != nil || !strings.Contains(out, "acme: up to date") {
 		t.Errorf("second update: %v\n%s", err, out)
+	}
+}
+
+// A second skill named pdf does not take the ID of the first, also for a
+// source added before IDs were saved.
+func TestUpdateKeepsSkillIDs(t *testing.T) {
+	for _, saved := range []bool{true, false} {
+		t.Run(fmt.Sprintf("saved=%v", saved), func(t *testing.T) {
+			sourceEnv(t)
+			bare := bareSource(t, "src", "pdf")
+			if !saved {
+				err := config.Update(func(c *config.Config) error {
+					s := c.Sources["src"]
+					s.IDs = nil
+					c.Sources["src"] = s
+					return nil
+				})
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			if _, err := runIn(t, "", "add", "src/pdf", "--global"); err != nil {
+				t.Fatal(err)
+			}
+			push(t, bare, map[string]string{"extra/pdf/SKILL.md": "---\nname: pdf\ndescription: Other.\n---\n"}, false)
+
+			out, err := runIn(t, "", "update")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(out, "added    src/extra/pdf") || strings.Contains(out, "removed") || strings.Contains(out, "warning") {
+				t.Errorf("output:\n%s", out)
+			}
+			l, err := library.Load()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if s, err := l.Get("src/pdf"); err != nil || s.Description != "Test skill." {
+				t.Errorf("src/pdf: %+v, %v", s, err)
+			}
+			if s, err := l.Get("src/extra/pdf"); err != nil || s.Description != "Other." {
+				t.Errorf("src/extra/pdf: %+v, %v", s, err)
+			}
+			c, err := config.Load()
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := map[string]string{"pdf": "skills/pdf", "extra/pdf": "extra/pdf"}
+			if got := c.Sources["src"].IDs; !reflect.DeepEqual(got, want) {
+				t.Errorf("ids = %v", got)
+			}
+		})
 	}
 }
 

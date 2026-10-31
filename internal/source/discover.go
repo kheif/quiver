@@ -100,6 +100,51 @@ func (d *Discovery) qualifyCollisions() {
 	d.Warnings = append(d.Warnings, warnings...)
 }
 
+// Stabilize gives each skill whose folder is in known (ID to folder) that
+// ID again, so IDs given out before do not change when a skill with the
+// same name is added. A new skill keeps its discovered ID unless a known
+// one has it: then it gets <plugin>/<name>, or its folder path. It returns
+// known with the IDs of the new skills added.
+func (d *Discovery) Stabilize(known map[string]string) map[string]string {
+	out := make(map[string]string, len(known)+len(d.Skills))
+	byDir := make(map[string]string, len(known))
+	for id, dir := range known {
+		out[id] = dir
+		byDir[dir] = id
+	}
+	var fresh []*Found
+	for i := range d.Skills {
+		f := &d.Skills[i]
+		if id, ok := byDir[f.Dir]; ok {
+			f.ID = id
+		} else {
+			fresh = append(fresh, f)
+		}
+	}
+	for _, f := range fresh {
+		id := f.ID
+		if _, taken := out[id]; taken {
+			id = f.Dir
+			if q := f.Plugin + "/" + path.Base(f.ID); f.Plugin != "" && !has(out, q) {
+				id = q
+			}
+			for n := 2; has(out, id); n++ {
+				id = fmt.Sprintf("%s-%d", f.Dir, n)
+			}
+			d.warn("ID %s is already given to another skill; using %s for %s", f.ID, id, f.Dir)
+		}
+		f.ID = id
+		out[id] = f.Dir
+	}
+	sort.Slice(d.Skills, func(i, j int) bool { return d.Skills[i].ID < d.Skills[j].ID })
+	return out
+}
+
+func has(m map[string]string, k string) bool {
+	_, ok := m[k]
+	return ok
+}
+
 func (d *Discovery) warn(format string, args ...any) {
 	d.Warnings = append(d.Warnings, fmt.Sprintf(format, args...))
 }

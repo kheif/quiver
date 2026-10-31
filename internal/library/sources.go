@@ -89,7 +89,7 @@ func (s *Staged) Keep() error {
 			return err
 		}
 		moved = true
-		c.Sources[s.Name] = config.Source{Repo: s.URL}
+		c.Sources[s.Name] = config.Source{Repo: s.URL, IDs: s.Discovery.Stabilize(nil)}
 		return nil
 	})
 	if err != nil && moved {

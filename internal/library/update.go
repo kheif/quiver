@@ -3,10 +3,12 @@ package library
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/git"
 	"github.com/kheif/quiver/internal/source"
 )
@@ -42,10 +44,17 @@ func UpdateSource(name string, reset bool) (*Update, error) {
 	if _, err := os.Stat(repo); errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("source %s is not downloaded; add it again", name)
 	}
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+	saved := cfg.Sources[name].IDs
 	before, err := discover(repo)
 	if err != nil {
 		return nil, err
 	}
+	// A source added before IDs were saved starts from the current ones.
+	ids := before.Stabilize(saved)
 	from, err := git.Head(repo)
 	if err != nil {
 		return nil, err
@@ -68,18 +77,33 @@ func UpdateSource(name string, reset bool) (*Update, error) {
 		return nil, err
 	}
 	if u.From == u.To {
-		return u, nil
+		return u, saveIDs(name, saved, ids)
 	}
 	after, err := discover(repo)
 	if err != nil {
 		return nil, err
 	}
+	ids = after.Stabilize(ids)
 	paths, err := git.DiffNames(repo, u.From, u.To)
 	if err != nil {
 		return nil, err
 	}
 	u.compare(before, after, paths)
-	return u, nil
+	return u, saveIDs(name, saved, ids)
+}
+
+// saveIDs records the source's skill IDs in the config when they changed.
+func saveIDs(name string, saved, ids map[string]string) error {
+	if maps.Equal(saved, ids) {
+		return nil
+	}
+	return config.Update(func(c *config.Config) error {
+		if src, ok := c.Sources[name]; ok {
+			src.IDs = ids
+			c.Sources[name] = src
+		}
+		return nil
+	})
 }
 
 // compare sorts skills into added, changed and removed. A skill changed when

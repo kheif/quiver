@@ -29,6 +29,7 @@ Items are ordered by priority within each section.
 - **Proposal:** Fix the ID when a skill is first discovered and keep it. Alternatively, always use plugin-qualified IDs for marketplace repos.
 - **Related:** TASK11, data-model.md
 - **Planned 2026-10-29:** TASK43.
+- **Resolved 2026-10-31:** Each source's IDs are saved in `config.json` when it is added and by `quiver update`; known folders keep their ID and only new skills are qualified on a clash (TASK43).
 
 ## Security
 

@@ -168,3 +168,61 @@ func TestDiscoverCollisions(t *testing.T) {
 		})
 	}
 }
+
+func TestStabilize(t *testing.T) {
+	d := &Discovery{Skills: []Found{
+		{ID: "skills/pdf", Dir: "skills/pdf"},
+		{ID: "extra/pdf", Dir: "extra/pdf"},
+		{ID: "docx", Dir: "skills/docx"},
+		{ID: "xlsx", Dir: "skills/xlsx", Plugin: "office"},
+		{ID: "pptx", Dir: "pptx"},
+	}}
+	known := map[string]string{
+		"pdf":  "skills/pdf", // kept although a second pdf appeared
+		"docx": "old/docx",   // removed upstream, so its ID stays taken
+		"xlsx": "gone/xlsx",  // the same: a new xlsx gets <plugin>/xlsx
+		"pptx": "pptx",
+	}
+	got := d.Stabilize(known)
+	want := []Found{
+		{ID: "extra/pdf", Dir: "extra/pdf"},
+		{ID: "office/xlsx", Dir: "skills/xlsx", Plugin: "office"},
+		{ID: "pdf", Dir: "skills/pdf"},
+		{ID: "pptx", Dir: "pptx"},
+		{ID: "skills/docx", Dir: "skills/docx"},
+	}
+	if !reflect.DeepEqual(d.Skills, want) {
+		t.Errorf("skills = %+v", d.Skills)
+	}
+	wantIDs := map[string]string{
+		"pdf": "skills/pdf", "docx": "old/docx", "xlsx": "gone/xlsx", "pptx": "pptx",
+		"extra/pdf": "extra/pdf", "office/xlsx": "skills/xlsx", "skills/docx": "skills/docx",
+	}
+	if !reflect.DeepEqual(got, wantIDs) {
+		t.Errorf("ids = %v", got)
+	}
+	if len(d.Warnings) != 2 {
+		t.Errorf("warnings = %q", d.Warnings)
+	}
+	if known["extra/pdf"] != "" {
+		t.Error("known was changed")
+	}
+}
+
+func TestStabilizeWithoutKnownKeepsDiscoveredIDs(t *testing.T) {
+	d := discover(t, "testdata/nested")
+	ids := d.Stabilize(nil)
+	want := map[string]string{"lint": "tools/lint", "writer": "docs/guides/writer"}
+	if !reflect.DeepEqual(ids, want) || len(d.Warnings) != 0 {
+		t.Errorf("ids = %v, warnings = %q", ids, d.Warnings)
+	}
+}
+
+// A folder path that is itself a known ID still gives a unique one.
+func TestStabilizeFolderTaken(t *testing.T) {
+	d := &Discovery{Skills: []Found{{ID: "a/pdf", Dir: "a/pdf"}}}
+	ids := d.Stabilize(map[string]string{"a/pdf": "b/pdf"})
+	if d.Skills[0].ID != "a/pdf-2" || ids["a/pdf-2"] != "a/pdf" {
+		t.Errorf("skills = %+v, ids = %v", d.Skills, ids)
+	}
+}

@@ -46,7 +46,7 @@ func Load() (*Library, error) {
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		if err := l.addRemote(filepath.Join(home, "sources", name), name); err != nil {
+		if err := l.addRemote(filepath.Join(home, "sources", name), name, cfg.Sources[name].IDs); err != nil {
 			return nil, err
 		}
 	}
@@ -83,8 +83,9 @@ func (l *Library) addLocal(dir string) error {
 }
 
 // addRemote adds the skills discovery finds in a source repository. Their
-// ID is "<source>/<discovered ID>". A missing folder is a warning.
-func (l *Library) addRemote(dir, name string) error {
+// ID is "<source>/<ID>", where the ID is the one recorded in ids for the
+// skill's folder, or the discovered one. A missing folder is a warning.
+func (l *Library) addRemote(dir, name string, ids map[string]string) error {
 	if _, err := os.Stat(dir); errors.Is(err, os.ErrNotExist) {
 		l.Warnings = append(l.Warnings, fmt.Sprintf("source %s is not downloaded; add it again", name))
 		return nil
@@ -93,6 +94,7 @@ func (l *Library) addRemote(dir, name string) error {
 	if err != nil {
 		return fmt.Errorf("source %s: %w", name, err)
 	}
+	d.Stabilize(ids)
 	for _, w := range d.Warnings {
 		l.Warnings = append(l.Warnings, fmt.Sprintf("source %s: %s", name, w))
 	}

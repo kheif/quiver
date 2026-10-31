@@ -10,11 +10,16 @@ The user's settings.
 {
   "version": 1,
   "sources": {
-    "anthropic": { "repo": "https://github.com/anthropics/skills.git" },
+    "anthropic": {
+      "repo": "https://github.com/anthropics/skills.git",
+      "ids": { "pdf": "skills/pdf", "docx": "skills/docx" }
+    },
     "team": { "repo": "git@github.com:my-org/skills.git" }
   }
 }
 ```
+
+`ids` maps each skill ID given out in the source, without the `<source>/` prefix, to the skill's folder in the repo. See Skill ID below. It is written when the source is added and by `quiver update`; a source without it uses the IDs discovery gives.
 
 ## `~/.quiver/registry.json`
 
@@ -86,6 +91,7 @@ The project's identity. The project does not need git; if it uses git, commit th
 - Remote skills: `<source>/<name>`, such as `anthropic/pdf`.
 - Collisions inside one source: `<source>/<plugin>/<name>`, or `<source>/<folder path>` when the skill has no plugin.
 - A skill at a repo's root is named after the source: `<source>/<source>`.
+- A remote skill keeps its ID: the source's `ids` in `config.json` remember which folder got which ID. When an update adds a skill whose ID is already given, only the new skill gets `<source>/<plugin>/<name>` or its folder path. The ID of a skill removed upstream stays taken, and `quiver update` and `doctor` report the skill as removed upstream.
 
 ## Skills served in a project
 
