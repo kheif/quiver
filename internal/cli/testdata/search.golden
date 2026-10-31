@@ -1,0 +1,6 @@
+ID           HERE     DESCRIPTION
+acme/deploy           Test skill.
+acme/review  global   Test skill.
+notes                 Keep notes.
+pdf          global   Fill in and read PDF forms.
+tdd          project  Write the test first. Then write the code that makes it pass, and refactor while the tests stay green.

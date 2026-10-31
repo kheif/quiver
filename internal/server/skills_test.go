@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -113,6 +114,50 @@ func TestListSkills(t *testing.T) {
 	got := list()
 	if len(got) != 3 || got[1].ID != "draft" || got[1].Scope != "project" {
 		t.Errorf("after assign: %+v", got)
+	}
+}
+
+// list_skills returns every skill with its whole description, however many
+// there are: project skills first, then global ones, always-on marked.
+func TestListSkillsMany(t *testing.T) {
+	w, local := skillsEnv(t)
+	desc := strings.Repeat("Use this skill when the task is about its area. ", 20)
+	files := map[string]string{}
+	var ids []string
+	for i := range 200 {
+		id := fmt.Sprintf("skill-%03d", i)
+		ids = append(ids, id)
+		files[id+"/SKILL.md"] = "---\nname: " + id + "\ndescription: " + desc + "\n---\n"
+	}
+	writeFiles(t, local, files)
+	err := registry.Update(func(r *registry.Registry) error {
+		r.AssignGlobal(ids[:100]...)
+		if err := r.Assign(w.ProjectID(), ids[100:]...); err != nil {
+			return err
+		}
+		return r.MarkAlwaysOnGlobal("skill-000")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := listSkills(t, w)()
+	if len(got) != 202 {
+		t.Fatalf("%d skills", len(got))
+	}
+	for i, s := range got {
+		project := i < 101 // db-migration and skill-100 to skill-199
+		if project != (s.Scope == "project") {
+			t.Errorf("%d: %s is %s", i, s.ID, s.Scope)
+		}
+		if strings.HasPrefix(s.ID, "skill-") && s.Description != strings.TrimSpace(desc) {
+			t.Errorf("%s: description %q", s.ID, s.Description)
+		}
+		if s.AlwaysOn != (s.ID == "skill-000") {
+			t.Errorf("%s: always-on %v", s.ID, s.AlwaysOn)
+		}
+	}
+	if got[0].ID != "db-migration" || got[1].ID != "skill-100" || got[101].ID != "pdf" || got[102].ID != "skill-000" {
+		t.Errorf("order: %s %s %s %s", got[0].ID, got[1].ID, got[101].ID, got[102].ID)
 	}
 }
 

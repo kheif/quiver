@@ -1,0 +1,11 @@
+ID:       acme/review
+Name:     review
+Source:   acme (<commit>)
+Folder:   $TMP/001/q/sources/acme/skills/review
+Assigned: every folder
+          project app ($TMP/005/app)
+
+---
+name: review
+description: Test skill.
+---

@@ -10,8 +10,9 @@ import (
 // fewer than characters, so the limit holds for any text.
 const maxInstructions = 3800
 
-// maxDescription is the most characters of a description in the catalog.
-const maxDescription = 150
+// maxDescription guards the catalog against huge descriptions. The Agent
+// Skills format allows at most 1024 characters.
+const maxDescription = 1024
 
 const catalogHeader = "Skills (reusable instructions for specific tasks). Before starting a task, check whether one fits. If it does, call the get_skill tool of this server with its id and follow it.\n"
 
@@ -37,45 +38,30 @@ func pointer(skills []servedSkill) string {
 	return "Always-on skills: " + strings.Join(ids, ", ") + ". Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n"
 }
 
-// catalog lists the skills for the server's instructions, in at most
-// budget bytes. Descriptions are shortened to maxDescription characters.
-// If the list is still too long, descriptions are dropped from the end,
-// then IDs, and the list ends with a pointer to list_skills. It returns ""
-// when there are no skills.
+// catalog lists the skills for the server's instructions, if the list fits
+// in budget bytes. If it does not, it returns a pointer to list_skills
+// instead, which returns every skill with its whole description. It
+// returns "" when there are no skills.
 func catalog(skills []servedSkill, budget int) string {
 	if len(skills) == 0 {
 		return ""
 	}
-	lines := make([]string, len(skills))
-	size := len(catalogHeader)
-	for i, s := range skills {
-		lines[i] = fmt.Sprintf("- %s: %s\n", s.ID, shorten(s.Description))
-		size += len(lines[i])
-	}
-	for i := len(lines) - 1; i >= 0 && size > budget; i-- {
-		short := "- " + skills[i].ID + "\n"
-		size += len(short) - len(lines[i])
-		lines[i] = short
-	}
-	if size <= budget {
-		return catalogHeader + strings.Join(lines, "")
-	}
 	var b strings.Builder
 	b.WriteString(catalogHeader)
-	for i, line := range lines {
-		// Line i fits only if the pointer to the lines after it fits too.
-		if b.Len()+len(line)+len(more(len(lines)-i-1)) > budget {
-			b.WriteString(more(len(lines) - i))
-			break
-		}
-		b.WriteString(line)
+	for _, s := range skills {
+		fmt.Fprintf(&b, "- %s: %s\n", s.ID, shorten(s.Description))
 	}
-	return b.String()
+	if b.Len() <= budget {
+		return b.String()
+	}
+	return listPointer(len(skills))
 }
 
-// more is the last catalog line when n skills are left out.
-func more(n int) string {
-	return fmt.Sprintf("…and %d more: call list_skills\n", n)
+// listPointer replaces the catalog when it is too long for the
+// instructions. Like the always-on pointer, it has the assistant call a
+// tool before its first reply.
+func listPointer(n int) string {
+	return fmt.Sprintf("Skills (reusable instructions for specific tasks): this folder has %d, too many to list here. Before your first reply in this conversation, call the list_skills tool of this server; it lists the skills of this folder. Before starting a task, check whether one fits. If it does, call the get_skill tool of this server with its id and follow it.\n", n)
 }
 
 // shorten puts a description on one line and cuts it to maxDescription

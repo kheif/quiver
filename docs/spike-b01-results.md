@@ -54,7 +54,7 @@ With always-on text in `instructions`, one of two `general-purpose` subagents fo
 ## Design changes
 
 - **Skill catalog:** moved from the `list_skills` description to `instructions` (TASK18). The catalog is fixed for the session.
-- **Budget:** `instructions` stay under 3800 characters. Descriptions are shortened, then dropped, then the list ends with `…and N more: call list_skills` (TASK18).
+- **Budget:** `instructions` stay under 3800 characters. Descriptions are shortened, then dropped, then the list ends with `…and N more: call list_skills` (TASK18). Since TASK36, a catalog that does not fit is replaced by a pointer to `list_skills`; see "Catalog through list_skills" below.
 - **Always-on:** a pointer in `instructions` plus `get_skill`, instead of the full skill text (TASK19).
 - **Project resolution:** `QUIVER_PROJECT`, then the working directory, walking up to `.quiver.json`. No MCP roots (TASK17).
 - **Live updates:** only `prompts/list_changed`; new skills reach the catalog in the next session (TASK26).
@@ -89,6 +89,19 @@ Two turns, then `/compact`, then two more turns. Always-on held after compaction
 | 4 | 479 | 501 |
 
 The skill loaded before the first reply and the summary kept it ("the caveman skill (always-on, from the quiver MCP server) stays active"). Replies were about 15% shorter in total (4–20% per turn), with the answer first.
+
+## Catalog through list_skills (TASK36)
+
+Measured on 2026-10-31 with Claude Code 2.1.308 and the real `quiver mcp`. Same fixtures, plus 40 unrelated `filler-NN` skills, so the catalog no longer fits in `instructions`. Instead, `instructions` hold the always-on pointer, then: "this folder has 44, too many to list here. Before your first reply in this conversation, call the list_skills tool of this server …". Run it with `make spike-catalog` (`spike/b01/catalog-all.sh`, `FILLER=40` in `run-real.sh`).
+
+| Check | Result |
+|---|---|
+| Fitting prompts that called `list_skills`, then loaded the right skill | **10 / 10** (the six fitting prompts, and four of them again) |
+| Non-fitting prompts that loaded a skill other than the always-on one | **0 / 2** (both still called `list_skills`) |
+| Fitting prompt after `/compact` that called `list_skills`, then loaded the skill | **4 / 4** |
+| Always-on followed, single turn | **12 / 12** |
+
+Every session loaded the always-on skill first, then called `list_skills` before its first reply. In the compacted sessions, the first turns were non-fitting prompts. There the model called `list_skills` at the fitting prompt after `/compact`. In two `sql-migration-review` runs the model loaded the skill and its checklist, then tried `Write`. Headless runs allow only Quiver tools, so the answer lacks the markers. The skill was still loaded.
 
 ## Still open
 

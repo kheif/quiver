@@ -85,7 +85,7 @@ A project is identified by a small `.quiver.json` file in its root:
 
 At session start, the server's `instructions` list the available skills (global and project) with their descriptions, and tell the assistant to load a fitting skill with `get_skill`. The assistant adds `instructions` to its system prompt, so it knows the skills from the first message.
 
-Tool descriptions are not used for this. Claude Code defers MCP tools, so the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). `instructions` are cut at about 4096 characters, so long catalogs are shortened and end with a hint to call `list_skills`.
+Tool descriptions are not used for this. Claude Code defers MCP tools, so the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). `instructions` are cut at about 4096 characters. A catalog that does not fit is replaced by a pointer: before its first reply, the assistant calls `list_skills`, which returns every skill with its whole description.
 
 ### Tools
 

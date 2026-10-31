@@ -1,0 +1,9 @@
+ID:       notes
+Source:   local (<commit>)
+Folder:   $TMP/001/q/local/notes
+Assigned: nowhere
+
+---
+name: notes
+description: Keep notes.
+---

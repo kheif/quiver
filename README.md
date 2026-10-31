@@ -83,6 +83,8 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. |
 | `quiver remove <id>...` | Unassign skills. They stay in the library. |
 | `quiver list` | List the library's skills and where each is assigned (`--source`, `--unassigned`, `--json`). |
+| `quiver show <id>` | Show a skill: where it comes from, where it is assigned, its files and its `SKILL.md` (`--json`). |
+| `quiver search <text>` | Search the IDs, names and descriptions of every library skill, also unassigned ones, and show whether each is served here (`--json`). |
 | `quiver status` | Show the project in this folder and the skills served here, with a warning for each copy Claude Code also loads. |
 | `quiver where <id>` | Show where one skill is assigned. |
 | `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. |
@@ -122,7 +124,7 @@ Claude Code starts the server in the project folder. Other assistants may start 
 
 | Tool | Input | Result |
 |---|---|---|
-| `list_skills` | — | The skills served here: ID, name, description, and `global` or `project`. |
+| `list_skills` | — | Every skill served here, project skills first: ID, name, whole description, `global` or `project`, and whether it is always-on. |
 | `get_skill` | `id` | The skill's instructions, its extra files and its folder. |
 | `get_skill_file` | `id`, `path` | One extra file of a skill, such as `references/checklist.md`. Large and binary files return their path instead. |
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |

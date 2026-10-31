@@ -2,7 +2,7 @@
 
 **Phase:** Phase 4c — v1.2
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK33
 
@@ -17,3 +17,10 @@
    - Too many skills for one tool result (hundreds) is for later: group them by area, and list an area on request.
 
 **Done when:** tests cover show for a local and a remote skill, search ranking, the catalog in `instructions` when it fits and the `list_skills` pointer when it does not, and `list_skills` with 200 skills.
+
+**Notes:**
+- `catalog` lists every served skill or none: a list over the budget becomes `listPointer`. `maxDescription` is 1024, the Agent Skills limit.
+- `list_skills` adds `always_on` and sorts project skills first; `loadServed` keeps each part sorted by ID.
+- `library.Search` ranks an exact ID like an exact name, and an ID that contains the text like a name that contains it.
+- `quiver search` shows `global` or `project` under HERE; `quiver show` gives the HEAD of `local/` or of the source as the commit.
+- Measured with 44 skills: 10 of 10 fitting prompts called `list_skills` and loaded the skill, 4 of 4 after `/compact` (docs/spike-b01-results.md, `make spike-catalog`).

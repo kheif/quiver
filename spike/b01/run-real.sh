@@ -2,7 +2,8 @@
 # usage: run-real.sh <id> <prompt>
 # Runs one headless Claude Code session against the real `quiver mcp`, with
 # the B01 fixture skills in a fresh Quiver home. Needs $OUT and $QUIVER.
-# Set RESUME=<session id> to continue a session instead of starting one.
+# Set RESUME=<session id> to continue a session instead of starting one,
+# and FILLER=<n> for a catalog too long for the instructions.
 set -e
 SPIKE=$(cd "$(dirname "$0")" && pwd)
 d=$OUT/real/$1
@@ -13,6 +14,16 @@ if [ ! -d "$QUIVER_HOME" ]; then
   cp -R "$SPIKE"/skills/* "$SPIKE"/always/* "$QUIVER_HOME/local/"
   (cd "$d/proj" && "$QUIVER" add sql-migration-review release-notes k8s-debug > /dev/null \
     && "$QUIVER" add reply-style --always > /dev/null)
+  # FILLER=<n> adds n unrelated skills, so the catalog does not fit in the
+  # instructions and the server points to list_skills instead.
+  if [ -n "$FILLER" ]; then
+    for i in $(seq -w 1 "$FILLER"); do
+      mkdir -p "$QUIVER_HOME/local/filler-$i"
+      printf -- '---\nname: filler-%s\ndescription: Use when planning garden bed %s, its soil, watering schedule, companion plants and when to sow each vegetable.\n---\nAnswer about gardening.\n' "$i" "$i" \
+        > "$QUIVER_HOME/local/filler-$i/SKILL.md"
+    done
+    (cd "$d/proj" && "$QUIVER" add $(cd "$QUIVER_HOME/local" && ls -d filler-*) > /dev/null)
+  fi
 fi
 cat > "$d/mcp.json" <<J
 {"mcpServers":{"quiver":{"command":"$QUIVER","args":["mcp"],"env":{"QUIVER_HOME":"$QUIVER_HOME"}}}}

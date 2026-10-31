@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -23,7 +24,8 @@ type SkillInfo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	// Scope is "global" or "project".
-	Scope string `json:"scope"`
+	Scope    string `json:"scope"`
+	AlwaysOn bool   `json:"always_on,omitempty"`
 }
 
 // servedSkill is a skill served in the project.
@@ -69,7 +71,7 @@ func addSkillTools(s *mcp.Server, sess *session) {
 	}
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "list_skills",
-		Description: "List the skills available in this project: the global skills and the project's own, including skills assigned during this session.",
+		Description: "List every skill available in this project with its whole description: the project's own skills first, then the global ones, including skills assigned during this session. Always-on skills are marked.",
 	}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, listOut, error) {
 		_, skills, err := loadServed(sess.projectID())
 		if err != nil {
@@ -77,8 +79,16 @@ func addSkillTools(s *mcp.Server, sess *session) {
 		}
 		out := listOut{Skills: []SkillInfo{}}
 		for _, s := range skills {
-			out.Skills = append(out.Skills, SkillInfo{ID: s.ID, Name: s.Name, Description: s.Description, Scope: s.Scope})
+			out.Skills = append(out.Skills, SkillInfo{ID: s.ID, Name: s.Name, Description: s.Description, Scope: s.Scope, AlwaysOn: s.AlwaysOn})
 		}
+		// Project skills first; loadServed sorts each part by ID.
+		rank := func(s SkillInfo) int {
+			if s.Scope == "project" {
+				return 0
+			}
+			return 1
+		}
+		slices.SortStableFunc(out.Skills, func(a, b SkillInfo) int { return cmp.Compare(rank(a), rank(b)) })
 		return nil, out, nil
 	})
 

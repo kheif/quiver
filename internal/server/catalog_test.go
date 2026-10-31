@@ -60,18 +60,22 @@ func TestInstructionsAlwaysOn(t *testing.T) {
 	}
 }
 
-func TestPointerKeepsBudget(t *testing.T) {
+// Too many skills for the instructions: the always-on pointer stays first,
+// then the pointer to list_skills replaces the list.
+func TestInstructionsTooManySkills(t *testing.T) {
 	var many []servedSkill
 	for i := range 500 {
-		many = append(many, servedSkill{Skill: &skill.Skill{ID: fmt.Sprintf("source/skill-%03d", i)}, AlwaysOn: i < 3})
-	}
-	p := pointer(many)
-	if !strings.HasPrefix(p, "Always-on skills: source/skill-000, source/skill-001, source/skill-002. ") {
-		t.Errorf("pointer %q", p)
+		many = append(many, servedSkill{Skill: &skill.Skill{ID: fmt.Sprintf("source/skill-%03d", i), Description: strings.Repeat("x", 300)}, AlwaysOn: i < 3})
 	}
 	got := buildInstructions(many)
-	if len(got) > maxInstructions || !strings.HasSuffix(got, "call list_skills\n\n"+createHint) {
-		t.Errorf("%d bytes, ends %q", len(got), got[max(0, len(got)-300):])
+	want := "Always-on skills: source/skill-000, source/skill-001, source/skill-002. " +
+		"Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n" +
+		listPointer(500) + "\n" + createHint
+	if got != want {
+		t.Errorf("got %q\nwant %q", got, want)
+	}
+	if len(got) > maxInstructions {
+		t.Errorf("%d bytes", len(got))
 	}
 }
 
@@ -83,56 +87,28 @@ func TestInstructionsNoSkills(t *testing.T) {
 }
 
 func TestCatalogShortensDescriptions(t *testing.T) {
-	long := strings.Repeat("é", 200)
-	got := catalog(skills("Multi\nline   text.", long), 10000)
-	want := header + "- a: Multi line text.\n- b: " + strings.Repeat("é", 149) + "…\n"
+	long := strings.Repeat("é", maxDescription+1)
+	got := catalog(skills("Multi\nline   text.", long), 100000)
+	want := header + "- a: Multi line text.\n- b: " + strings.Repeat("é", maxDescription-1) + "…\n"
 	if got != want {
 		t.Errorf("got %q\nwant %q", got, want)
 	}
 }
 
+// The whole list or none: a list that does not fit becomes the pointer.
 func TestCatalogBudget(t *testing.T) {
-	check := func(skills []servedSkill, budget int, want string) {
-		t.Helper()
-		if got := catalog(skills, budget); got != header+want {
-			t.Errorf("budget %d: got %q\nwant %q", budget, got, header+want)
-		}
-	}
-	// Descriptions are dropped from the end.
 	two := skills("A.", "B.")
-	check(two, len(header+"- a: A.\n- b: B.\n"), "- a: A.\n- b: B.\n")
-	check(two, len(header+"- a: A.\n- b: B.\n")-1, "- a: A.\n- b\n")
-	check(two, len(header+"- a\n- b\n"), "- a\n- b\n")
-
-	// When the IDs do not fit either, the list ends with a pointer.
-	var three []servedSkill
-	for _, c := range "abc" {
-		three = append(three, servedSkill{Skill: &skill.Skill{ID: strings.Repeat(string(c), 40)}})
+	list := header + "- a: A.\n- b: B.\n"
+	if got := catalog(two, len(list)); got != list {
+		t.Errorf("fits: got %q", got)
 	}
-	a, b := "- "+strings.Repeat("a", 40)+"\n", "- "+strings.Repeat("b", 40)+"\n"
-	check(three, len(header+a+b+"…and 1 more: call list_skills\n"), a+b+"…and 1 more: call list_skills\n")
-	check(three, len(header+a+"…and 2 more: call list_skills\n"), a+"…and 2 more: call list_skills\n")
-	check(three, len(header+a+"…and 2 more: call list_skills\n")-1, "…and 3 more: call list_skills\n")
-
+	if got := catalog(two, len(list)-1); got != listPointer(2) {
+		t.Errorf("one byte over: got %q", got)
+	}
+	if !strings.Contains(listPointer(2), "this folder has 2, too many to list here. Before your first reply in this conversation, call the list_skills tool of this server") {
+		t.Errorf("pointer %q", listPointer(2))
+	}
 	if got := catalog(nil, 3800); got != "" {
 		t.Errorf("no skills: %q", got)
-	}
-}
-
-func TestCatalogManySkills(t *testing.T) {
-	var many []servedSkill
-	for i := range 500 {
-		many = append(many, servedSkill{Skill: &skill.Skill{ID: fmt.Sprintf("source/skill-%03d", i), Description: strings.Repeat("x", 300)}})
-	}
-	got := catalog(many, maxInstructions)
-	if len(got) > 3800 {
-		t.Errorf("%d bytes", len(got))
-	}
-	listed := strings.Count(got, "\n- ")
-	if listed == 0 || !strings.HasSuffix(got, fmt.Sprintf("\n…and %d more: call list_skills\n", 500-listed)) {
-		t.Errorf("%d listed, ends %q", listed, got[max(0, len(got)-60):])
-	}
-	if strings.Contains(got, "xxx") {
-		t.Error("descriptions kept")
 	}
 }

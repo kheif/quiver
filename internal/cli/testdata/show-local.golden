@@ -1,0 +1,11 @@
+ID:       pdf
+Source:   local (<commit>)
+Folder:   $TMP/001/q/local/pdf
+Assigned: every folder, always-on
+Files:    references/forms.md
+          scripts/fill.sh
+
+---
+name: pdf
+description: Fill in and read PDF forms.
+---
