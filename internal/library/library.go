@@ -21,6 +21,8 @@ const LocalSource = "local"
 // Library is a snapshot of all skills, keyed by skill ID.
 type Library struct {
 	skills map[string]*skill.Skill
+	// pins maps pinned skill IDs to the commit they are served from.
+	pins map[string]string
 	// Warnings lists skills that were skipped or look wrong. They never stop
 	// a load.
 	Warnings []string
@@ -36,7 +38,7 @@ func Load() (*Library, error) {
 	if err != nil {
 		return nil, err
 	}
-	l := &Library{skills: map[string]*skill.Skill{}}
+	l := &Library{skills: map[string]*skill.Skill{}, pins: map[string]string{}}
 	if err := l.addLocal(filepath.Join(home, "local")); err != nil {
 		return nil, err
 	}
@@ -49,8 +51,35 @@ func Load() (*Library, error) {
 		if err := l.addRemote(filepath.Join(home, "sources", name), name, cfg.Sources[name].IDs); err != nil {
 			return nil, err
 		}
+		l.addPinned(cfg, name)
 	}
 	return l, nil
+}
+
+// addPinned replaces the source's pinned skills with their pinned
+// version. A pin whose folder is missing serves nothing, so an assigned
+// skill never changes without notice.
+func (l *Library) addPinned(cfg *config.Config, source string) {
+	for _, id := range pinIDs(cfg, source) {
+		p := cfg.Pins[id]
+		delete(l.skills, id)
+		at, err := PinDir(source, p.Commit)
+		if err != nil {
+			continue
+		}
+		dir := filepath.Join(at, filepath.FromSlash(p.Dir))
+		if _, err := os.Stat(dir); err != nil {
+			l.Warnings = append(l.Warnings, fmt.Sprintf("%s is pinned to %s, but that commit is not checked out; run quiver update %s", id, short(p.Commit), source))
+			continue
+		}
+		l.addSkill(dir, source, id)
+		l.pins[id] = p.Commit
+	}
+}
+
+// PinnedAt returns the commit the skill is pinned to, or "".
+func (l *Library) PinnedAt(id string) string {
+	return l.pins[id]
 }
 
 // All returns every skill, sorted by ID.

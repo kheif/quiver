@@ -19,6 +19,8 @@ The user's settings.
 }
 ```
 
+`pins` (optional, next to `sources`) keeps source skills at one commit: `"pins": { "anthropic/pdf": { "commit": "<40-character hash>", "dir": "skills/pdf" } }`. `dir` is the skill's folder at that commit. The commit is checked out with `git worktree` into `sources/.pins/<source>@<commit>/`, which is machine-local; `quiver update` checks out pins that are missing, and `doctor --fix` deletes folders no pin uses.
+
 `ids` maps each skill ID given out in the source, without the `<source>/` prefix, to the skill's folder in the repo. See Skill ID below. It is written when the source is added and by `quiver update`; a source without it uses the IDs discovery gives.
 
 ## `~/.quiver/registry.json`

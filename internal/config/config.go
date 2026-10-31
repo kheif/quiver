@@ -15,6 +15,16 @@ const CurrentVersion = 1
 type Config struct {
 	Version int               `json:"version"`
 	Sources map[string]Source `json:"sources"`
+	// Pins maps the IDs of pinned source skills, such as acme/pdf, to the
+	// commit they are served from.
+	Pins map[string]Pin `json:"pins,omitempty"`
+}
+
+// Pin keeps a source skill at one commit of its source.
+type Pin struct {
+	Commit string `json:"commit"`
+	// Dir is the skill's folder in the repo at that commit.
+	Dir string `json:"dir"`
 }
 
 // Source is a remote git repository that skills are read from.

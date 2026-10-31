@@ -91,6 +91,11 @@ func updateNames(args []string) ([]string, error) {
 }
 
 func printUpdate(out io.Writer, u *library.Update, r *registry.Registry) {
+	defer func() {
+		for _, e := range u.PinErrors {
+			fmt.Fprintf(out, "  warning: pin of %s\n", e)
+		}
+	}()
 	if u.From == u.To {
 		fmt.Fprintf(out, "%s: up to date (%s)\n", u.Source, short(u.To))
 		return
@@ -108,7 +113,10 @@ func printUpdate(out io.Writer, u *library.Update, r *registry.Registry) {
 			fmt.Fprintf(out, "  %-8s %s\n", group.label, id)
 		}
 	}
-	if len(u.Added)+len(u.Changed)+len(u.Removed) == 0 {
+	for _, id := range u.Pinned {
+		fmt.Fprintf(out, "  %-8s %s (changed upstream; kept at its pin until quiver unpin %s)\n", "pinned", id, id)
+	}
+	if len(u.Added)+len(u.Changed)+len(u.Removed)+len(u.Pinned) == 0 {
 		fmt.Fprintln(out, "  no skill changes")
 	}
 	// Assignments of removed skills stay, so the user decides what replaces

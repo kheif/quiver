@@ -6,6 +6,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/kheif/quiver/internal/config"
@@ -25,6 +26,12 @@ type Update struct {
 	Added   []string
 	Changed []string
 	Removed []string
+	// Pinned lists pinned skills that changed or were removed upstream.
+	// They stay at their pinned commit, so they are not in Changed or
+	// Removed.
+	Pinned []string
+	// PinErrors lists pins whose commit could not be checked out.
+	PinErrors []string
 }
 
 // ErrDiverged is returned by UpdateSource when the remote history was
@@ -77,7 +84,7 @@ func UpdateSource(name string, reset bool) (*Update, error) {
 		return nil, err
 	}
 	if u.From == u.To {
-		return u, saveIDs(name, saved, ids)
+		return u, u.finish(name, saved, ids)
 	}
 	after, err := discover(repo)
 	if err != nil {
@@ -89,7 +96,33 @@ func UpdateSource(name string, reset bool) (*Update, error) {
 		return nil, err
 	}
 	u.compare(before, after, paths)
-	return u, saveIDs(name, saved, ids)
+	u.keepPinned(cfg)
+	return u, u.finish(name, saved, ids)
+}
+
+// keepPinned moves pinned skills out of Changed and Removed into Pinned.
+func (u *Update) keepPinned(cfg *config.Config) {
+	pinned := func(id string) bool {
+		if _, ok := cfg.Pins[id]; ok {
+			u.Pinned = append(u.Pinned, id)
+			return true
+		}
+		return false
+	}
+	u.Changed = slices.DeleteFunc(u.Changed, pinned)
+	u.Removed = slices.DeleteFunc(u.Removed, pinned)
+	slices.Sort(u.Pinned)
+}
+
+// finish saves the skill IDs and checks out pinned commits that are
+// missing, such as pins in a config from another machine.
+func (u *Update) finish(name string, saved, ids map[string]string) error {
+	if err := saveIDs(name, saved, ids); err != nil {
+		return err
+	}
+	var err error
+	u.PinErrors, err = RestorePins(name)
+	return err
 }
 
 // saveIDs records the source's skill IDs in the config when they changed.

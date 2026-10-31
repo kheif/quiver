@@ -272,6 +272,9 @@ func RemoveSource(name string, force bool) (Usage, error) {
 			}
 		}
 		delete(c.Sources, name)
+		for _, id := range pinIDs(c, name) {
+			delete(c.Pins, id)
+		}
 		if err := config.Write(c); err != nil {
 			return restore(trash, target, err)
 		}
@@ -280,10 +283,16 @@ func RemoveSource(name string, force bool) (Usage, error) {
 	if err != nil {
 		return u, err
 	}
-	if trash != "" {
-		return u, os.RemoveAll(trash)
+	// The worktrees of the source's pins belong to the deleted clone.
+	pins, _ := filepath.Glob(filepath.Join(dir, PinsFolder, name+"@*"))
+	errs := []error{}
+	for _, p := range pins {
+		errs = append(errs, os.RemoveAll(p))
 	}
-	return u, nil
+	if trash != "" {
+		errs = append(errs, os.RemoveAll(trash))
+	}
+	return u, errors.Join(errs...)
 }
 
 // restore moves a source folder back from trash after a failed removal.

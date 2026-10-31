@@ -37,7 +37,7 @@ names the latest Quiver release (not with $` + noUpdateCheckEnv + `).
 
 With --fix it applies the safe fixes: it creates missing parts of the Quiver
 home, commits uncommitted changes in local/, deletes folders left over from
-an interrupted source add or remove, and, after asking, unassigns skills
+an interrupted source add or remove and pin folders no pin uses, and, after asking, unassigns skills
 that are not in the library and deletes copies of served skills that
 Claude Code also loads by itself. Copies committed in git and copies in
 plugins are only reported.`,
@@ -75,7 +75,7 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 		return err
 	}
 	d := &doc{in: bufio.NewReader(in), out: out, fix: fix, home: home}
-	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP, d.checkVersion} {
+	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkPins, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP, d.checkVersion} {
 		check()
 	}
 	fmt.Fprintln(out)
@@ -357,6 +357,44 @@ func (d *doc) checkSources() {
 			return nil
 		})
 		d.fixed("warn", err, "deleted them")
+	}
+}
+
+// Pinned commits that are missing, and pin folders no pin uses.
+func (d *doc) checkPins() {
+	const title = "pinned skills are checked out"
+	if d.cfg == nil {
+		d.skip(title, "config.json is invalid")
+		return
+	}
+	var missing []string
+	for id, p := range d.cfg.Pins {
+		source, _, _ := strings.Cut(id, "/")
+		at, err := library.PinDir(source, p.Commit)
+		if err != nil {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(at, filepath.FromSlash(p.Dir))); err != nil {
+			missing = append(missing, fmt.Sprintf("%s at %s: run quiver update %s", id, short(p.Commit), source))
+		}
+	}
+	sort.Strings(missing)
+	if len(missing) > 0 {
+		d.report("warn", "pinned skills that are not checked out, so they are not served", missing...)
+	} else if len(d.cfg.Pins) > 0 {
+		d.report("ok", fmt.Sprintf("%s: %s", title, plural(len(d.cfg.Pins), "pin")))
+	}
+	unused, err := library.UnusedPins()
+	if err != nil {
+		d.report("error", "sources/"+library.PinsFolder+" cannot be read", err.Error())
+		return
+	}
+	if len(unused) == 0 {
+		return
+	}
+	d.report("warn", "pin folders that no pin uses", unused...)
+	if d.fix {
+		d.fixed("warn", fsutil.WithLock(library.RemoveUnusedPins), "deleted them")
 	}
 }
 

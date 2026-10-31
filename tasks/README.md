@@ -114,7 +114,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK44](TASK44-update-skill-mcp-tool.md) | `update_skill` MCP tool | TASK24 |
 | ✅ | [TASK45](TASK45-search-skills-mcp-tool.md) | `search_skills` MCP tool | TASK36, TASK18 |
 | ✅ | [TASK46](TASK46-quiver-fork.md) | `quiver fork` | TASK12, TASK14 |
-|  | [TASK47](TASK47-pinning.md) | Pinning | TASK15 |
+| ✅ | [TASK47](TASK47-pinning.md) | Pinning | TASK15 |
 |  | [TASK48](TASK48-update-preview.md) | Update preview | TASK15 |
 |  | [TASK49](TASK49-library-sync-between-machines.md) | Library sync between machines | TASK30 |
 |  | [TASK50](TASK50-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK37 |

@@ -55,3 +55,30 @@ func TestLoadRejectsInvalidSourceName(t *testing.T) {
 		t.Fatal("want error")
 	}
 }
+
+func TestValidatePins(t *testing.T) {
+	commit := strings.Repeat("a", 40)
+	for _, c := range []struct {
+		id   string
+		pin  Pin
+		want string
+	}{
+		{"acme/pdf", Pin{Commit: commit, Dir: "skills/pdf"}, ""},
+		{"acme/solo", Pin{Commit: commit, Dir: "."}, ""},
+		{"other/pdf", Pin{Commit: commit, Dir: "pdf"}, "not a skill of a source"},
+		{"pdf", Pin{Commit: commit, Dir: "pdf"}, "not a skill of a source"},
+		{"acme/pdf", Pin{Commit: "abc", Dir: "pdf"}, "invalid commit"},
+		{"acme/pdf", Pin{Commit: commit, Dir: "../pdf"}, "invalid folder"},
+		{"acme/pdf", Pin{Commit: commit, Dir: "/pdf"}, "invalid folder"},
+		{"acme/pdf", Pin{Commit: commit, Dir: "a/../pdf"}, "invalid folder"},
+		{"acme/pdf", Pin{Commit: commit}, "invalid folder"},
+	} {
+		cfg := Default()
+		cfg.Sources["acme"] = Source{Repo: "x"}
+		cfg.Pins = map[string]Pin{c.id: c.pin}
+		err := cfg.Validate()
+		if c.want == "" && err != nil || c.want != "" && (err == nil || !strings.Contains(err.Error(), c.want)) {
+			t.Errorf("%s %+v: got %v, want %q", c.id, c.pin, err, c.want)
+		}
+	}
+}

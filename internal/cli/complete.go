@@ -73,6 +73,23 @@ func sourceSkillIDs(_ *cobra.Command, args []string, toComplete string) ([]cobra
 	return suggest(ids, args, toComplete), noFiles
 }
 
+// pinnedIDs completes the IDs of pinned skills, for unpin.
+func pinnedIDs(_ *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+	if len(args) >= 1 {
+		return nil, noFiles
+	}
+	c, err := config.Load()
+	if err != nil {
+		return nil, noFiles
+	}
+	ids := make([]string, 0, len(c.Pins))
+	for id, p := range c.Pins {
+		ids = append(ids, id+"\tpinned at "+short(p.Commit))
+	}
+	slices.Sort(ids)
+	return suggest(ids, args, toComplete), noFiles
+}
+
 // assignedIDs completes the skills that remove can take away: the global
 // ones with --global, otherwise those of the project in --project or the
 // current folder.

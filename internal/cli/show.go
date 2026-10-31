@@ -42,7 +42,8 @@ type shownSkill struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	Source      string       `json:"source"`
-	Commit      string       `json:"commit"` // HEAD of local/ or of the source; "" if unknown
+	Commit      string       `json:"commit"` // HEAD of local/ or of the source, or the pinned commit; "" if unknown
+	Pinned      bool         `json:"pinned"`
 	Dir         string       `json:"dir"`
 	Assigned    []assignment `json:"assigned"`
 	Files       []string     `json:"files"`
@@ -88,8 +89,10 @@ func show(out io.Writer, id string, asJSON bool) error {
 			repo = filepath.Join(dir, s.Source)
 		}
 	}
-	if head, err := git.Head(repo); err == nil {
-		sh.Commit = head[:min(7, len(head))]
+	if pin := l.PinnedAt(s.ID); pin != "" {
+		sh.Commit, sh.Pinned = short(pin), true
+	} else if head, err := git.Head(repo); err == nil {
+		sh.Commit = short(head)
 	}
 	if sh.Files == nil {
 		sh.Files = []string{}
@@ -119,7 +122,10 @@ func assignments(r *registry.Registry, id string) []assignment {
 
 func printShown(out io.Writer, sh shownSkill) {
 	source := sh.Source
-	if sh.Commit != "" {
+	switch {
+	case sh.Pinned:
+		source += " (pinned at " + sh.Commit + ")"
+	case sh.Commit != "":
 		source += " (" + sh.Commit + ")"
 	}
 	fmt.Fprintf(out, "ID:       %s\n", sh.ID)

@@ -2,6 +2,7 @@ package git
 
 import (
 	"errors"
+	"os"
 	"os/exec"
 )
 
@@ -45,5 +46,41 @@ func ResetToUpstream(dir string) error {
 		return err
 	}
 	_, err := run(dir, "reset", "--quiet", "--hard", "@{u}")
+	return err
+}
+
+// ResolveCommit returns the full hash of the commit rev names in dir.
+func ResolveCommit(dir, rev string) (string, error) {
+	return run(dir, "rev-parse", "--verify", "--quiet", "--end-of-options", rev+"^{commit}")
+}
+
+// FetchHistory downloads the whole history of a shallow clone, or new
+// commits of a full one, so older commits can be resolved.
+func FetchHistory(dir string) error {
+	args := []string{"fetch", "--quiet"}
+	if shallow, err := run(dir, "rev-parse", "--is-shallow-repository"); err == nil && shallow == "true" {
+		args = append(args, "--unshallow")
+	}
+	_, err := runNetwork(dir, args...)
+	return err
+}
+
+// AddWorktree checks commit out into path, detached, as a worktree of the
+// repository in dir. Its objects stay in dir.
+func AddWorktree(dir, path, commit string) error {
+	_, err := run(dir, "worktree", "add", "--quiet", "--detach", "--", path, commit)
+	return err
+}
+
+// RemoveWorktree deletes the worktree at path and forgets it in dir. A
+// folder git does not know as a worktree is deleted too.
+func RemoveWorktree(dir, path string) error {
+	if _, err := run(dir, "worktree", "remove", "--force", path); err == nil {
+		return nil
+	}
+	if err := os.RemoveAll(path); err != nil {
+		return err
+	}
+	_, err := run(dir, "worktree", "prune")
 	return err
 }
