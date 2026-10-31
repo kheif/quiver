@@ -21,7 +21,7 @@ fail() {
 case "$(uname -s)" in
 Darwin) os=darwin ;;
 Linux) os=linux ;;
-*) fail "unsupported system $(uname -s); on Windows, install with: npm install -g @kheif/quiver" ;;
+*) fail "unsupported system $(uname -s); on Windows, install in PowerShell with: irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex" ;;
 esac
 case "$(uname -m)" in
 x86_64 | amd64) arch=amd64 ;;

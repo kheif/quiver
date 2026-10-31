@@ -20,6 +20,14 @@ curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | sh
 
 The script downloads the latest release for your system, checks its checksum and installs `quiver` into `~/.local/bin`. Set `QUIVER_VERSION=v1.0.0` for a given release, or `QUIVER_INSTALL_DIR` for another folder. Run it again to update.
 
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex
+```
+
+The same steps for Windows: it installs `quiver.exe` into `%LOCALAPPDATA%\Programs\quiver` and adds that folder to your user `PATH`, without admin rights; open a new terminal afterwards. `QUIVER_VERSION` and `QUIVER_INSTALL_DIR` work the same way, set with `$env:QUIVER_INSTALL_DIR = '...'` before the line.
+
 **npm (macOS, Linux and Windows):**
 
 ```sh
@@ -175,6 +183,8 @@ quiver mcp uninstall      # remove the MCP server from every assistant
 rm "$(command -v quiver)" # remove the binary; with npm: npm uninstall -g @kheif/quiver
 rm -rf ~/.quiver          # delete the library
 ```
+
+On Windows, after `quiver mcp uninstall`, delete `%LOCALAPPDATA%\Programs\quiver` and `%USERPROFILE%\.quiver`, and remove the folder from your user `PATH` in the environment variables settings.
 
 Projects keep their `.quiver.json`; delete it there if you no longer need it.
 

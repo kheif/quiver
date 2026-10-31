@@ -5,11 +5,11 @@ A tag `v<major>.<minor>.<patch>` releases Quiver. `.github/workflows/release.yml
 1. runs the tests,
 2. builds the archives with GoReleaser and publishes the GitHub release with `checksums.txt`,
 3. publishes the npm packages (`@kheif/quiver` and one package per platform) with npm trusted publishing,
-4. installs the release with `install.sh` on Linux and macOS, and with npm on Linux, macOS and Windows.
+4. installs the release with `install.sh` on Linux and macOS, with `install.ps1` on Windows, and with npm on Linux, macOS and Windows.
 
 A tag with a suffix, such as `v1.1.0-rc.1`, is a prerelease: GitHub marks it so, `releases/latest` skips it, and npm publishes it under the `next` tag.
 
-Every push already runs the `release-dry-run` CI job, which builds the archives and the npm packages and installs both without publishing anything.
+Every push already runs the `release-dry-run` CI job, which builds the archives and the npm packages and installs both without publishing anything, and `release-dry-run-windows`, which installs the Windows archive with `install.ps1`.
 
 ## A normal release
 

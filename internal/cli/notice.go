@@ -16,6 +16,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// goos is runtime.GOOS. Tests replace it.
+var goos = runtime.GOOS
+
 // noUpdateCheckEnv turns the check for a new Quiver version off.
 const noUpdateCheckEnv = "QUIVER_NO_UPDATE_CHECK"
 
@@ -103,8 +106,8 @@ func upgradeCommand() string {
 	case version == "dev":
 		// A release build has the version from ldflags; go install does not.
 		return "go install github.com/kheif/quiver/cmd/quiver@latest"
-	case runtime.GOOS == "windows":
-		return "download it from https://github.com/kheif/quiver/releases/latest"
+	case goos == "windows":
+		return windowsUpgradeCommand()
 	}
 	line := "curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | sh"
 	bin, err := executable()
@@ -117,4 +120,19 @@ func upgradeCommand() string {
 		line = "curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | QUIVER_INSTALL_DIR=" + assistant.ShellQuote(dir) + " sh"
 	}
 	return line
+}
+
+// windowsUpgradeCommand is the PowerShell line of install.ps1, with
+// QUIVER_INSTALL_DIR when quiver.exe is not in its default folder.
+func windowsUpgradeCommand() string {
+	line := "irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex"
+	bin, err := executable()
+	if err != nil {
+		return line
+	}
+	dir := filepath.Dir(bin)
+	if local := os.Getenv("LOCALAPPDATA"); local != "" && strings.EqualFold(dir, filepath.Join(local, "Programs", "quiver")) {
+		return line
+	}
+	return "$env:QUIVER_INSTALL_DIR = '" + strings.ReplaceAll(dir, "'", "''") + "'; " + line
 }

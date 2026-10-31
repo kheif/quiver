@@ -52,6 +52,21 @@ jobs:
       - run: curl -fsSL "https://raw.githubusercontent.com/kheif/quiver/$GITHUB_REF_NAME/install.sh" | QUIVER_VERSION="$GITHUB_REF_NAME" sh
       - run: ~/.local/bin/quiver --version | grep -F "${GITHUB_REF_NAME#v}"
 
+  verify-powershell:
+    needs: release
+    runs-on: windows-latest
+    steps:
+      - shell: powershell
+        run: |
+          $env:QUIVER_VERSION = $env:GITHUB_REF_NAME
+          irm "https://raw.githubusercontent.com/kheif/quiver/$env:GITHUB_REF_NAME/install.ps1" | iex
+      - shell: pwsh
+        run: |
+          # A new shell's PATH, from the registry.
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+          $v = quiver --version
+          if ($v -notlike "*$($env:GITHUB_REF_NAME.TrimStart('v'))*") { throw "quiver --version printed $v" }
+
   verify-npm:
     needs: release
     strategy:

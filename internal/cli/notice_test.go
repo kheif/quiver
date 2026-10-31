@@ -169,6 +169,25 @@ func TestUpgradeCommand(t *testing.T) {
 	}
 }
 
+func TestWindowsUpgradeCommand(t *testing.T) {
+	noticeEnv(t, "v1.3.0")
+	old := goos
+	goos = "windows"
+	t.Cleanup(func() { goos = old })
+	local := t.TempDir()
+	t.Setenv("LOCALAPPDATA", local)
+	fakeExecutable(t, filepath.Join(local, "Programs", "quiver", "quiver.exe"))
+	irm := "irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex"
+	if got := upgradeCommand(); got != irm {
+		t.Errorf("default folder: %q", got)
+	}
+	other := filepath.Join(t.TempDir(), "Bob's tools")
+	fakeExecutable(t, filepath.Join(other, "quiver.exe"))
+	if got, want := upgradeCommand(), "$env:QUIVER_INSTALL_DIR = '"+strings.ReplaceAll(other, "'", "''")+"'; "+irm; got != want {
+		t.Errorf("other folder:\ngot  %q\nwant %q", got, want)
+	}
+}
+
 func TestDoctorVersion(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Windows gets the releases page instead of the curl line")

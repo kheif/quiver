@@ -88,3 +88,38 @@ jobs:
           node scripts/npm-publish.mjs 0.0.0-ci --pack
           npm install -g dist/npm/kheif-quiver-0.0.0-ci.tgz dist/npm/kheif-quiver-linux-x64-0.0.0-ci.tgz
           quiver --version
+
+  # install.ps1 on a clean Windows machine, from the same snapshot archives:
+  # first in Windows PowerShell 5.1, then again over it in PowerShell 7.
+  release-dry-run-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          check-latest: true
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
+        with:
+          version: v2.18.3
+          args: release --snapshot --clean
+      - name: install.ps1 (Windows PowerShell)
+        shell: powershell
+        run: |
+          $env:QUIVER_DOWNLOAD_URL = "$PWD\dist"
+          Get-Content -Raw install.ps1 | Invoke-Expression
+      - name: install.ps1 again (PowerShell 7)
+        shell: pwsh
+        run: |
+          $env:QUIVER_DOWNLOAD_URL = "file:///" + ("$PWD/dist" -replace '\\', '/')
+          Get-Content -Raw install.ps1 | Invoke-Expression
+      - name: quiver in a new shell
+        shell: pwsh
+        run: |
+          # A step keeps the runner's PATH; build it from the registry, as a
+          # new shell does.
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+          (Get-Command quiver).Source
+          quiver --version
