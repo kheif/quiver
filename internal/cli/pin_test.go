@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kheif/quiver/internal/assistant/assistanttest"
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/library"
 )
@@ -149,6 +150,7 @@ func TestPinOlderCommit(t *testing.T) {
 // checks it out; doctor reports it, and unused pin folders.
 func TestPinRestoreAndDoctor(t *testing.T) {
 	home := sourceEnv(t)
+	assistanttest.Install(t) // doctor must not run the real claude
 	bareSource(t, "acme", "pdf")
 	if _, err := runIn(t, "", "pin", "acme/pdf"); err != nil {
 		t.Fatal(err)

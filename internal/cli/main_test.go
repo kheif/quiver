@@ -44,11 +44,31 @@ func isolated(m *testing.M) int {
 	// its .git. The release then fails on the dirty tree.
 	leak := filepath.Join("..", "..", project.FileName)
 	_, before := os.Stat(leak)
+	// A tool a test runs, such as the real claude, may write into the
+	// current folder too.
+	entries := names(".")
 	code := m.Run()
 	if _, after := os.Stat(leak); before != nil && after == nil {
 		fmt.Fprintf(os.Stderr, "a test wrote %s; run commands from a test folder (t.Chdir)\n", leak)
 		_ = os.Remove(leak)
-		return 1
+		code = 1
+	}
+	for name := range names(".") {
+		if !entries[name] {
+			fmt.Fprintf(os.Stderr, "a test wrote %s into the package folder; run commands from a test folder (t.Chdir) and stub assistants (assistanttest.Install)\n", name)
+			_ = os.RemoveAll(name)
+			code = 1
+		}
 	}
 	return code
+}
+
+// names returns the names of the entries in dir.
+func names(dir string) map[string]bool {
+	out := map[string]bool{}
+	entries, _ := os.ReadDir(dir)
+	for _, e := range entries {
+		out[e.Name()] = true
+	}
+	return out
 }
