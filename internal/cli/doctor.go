@@ -17,7 +17,9 @@ import (
 	"github.com/kheif/quiver/internal/git"
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/registry"
+	"github.com/kheif/quiver/internal/server"
 	"github.com/kheif/quiver/internal/setup"
+	"github.com/kheif/quiver/internal/skill"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +34,9 @@ setup, and report each check as ok, warn or error.
 With --fix it applies the safe fixes: it creates missing parts of the Quiver
 home, commits uncommitted changes in local/, deletes folders left over from
 an interrupted source add or remove, and, after asking, unassigns skills
-that are not in the library.`,
+that are not in the library and deletes copies of served skills that
+Claude Code also loads by itself. Copies committed in git and copies in
+plugins are only reported.`,
 		Example: `  quiver doctor
   quiver doctor --fix`,
 		ValidArgsFunction: noArgs,
@@ -67,7 +71,7 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 		return err
 	}
 	d := &doc{in: bufio.NewReader(in), out: out, fix: fix, home: home}
-	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkProjects, d.checkClashes, d.checkMCP} {
+	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP} {
 		check()
 	}
 	fmt.Fprintln(out)
@@ -423,7 +427,99 @@ func (d *doc) checkClashes() {
 	d.report("warn", "served skills that share a name", found...)
 }
 
-// 8. Claude Code starts this quiver as its MCP server.
+// 8. Skills served here that Claude Code also loads by itself.
+func (d *doc) checkNative() {
+	const title = "no served skill is also installed in Claude Code"
+	if d.reg == nil || d.lib == nil {
+		d.skip(title, "the registry or the library could not be loaded")
+		return
+	}
+	copies, err := servedCopies(d.reg, d.lib)
+	if err != nil {
+		d.report("error", title, err.Error())
+		return
+	}
+	if len(copies) == 0 {
+		d.report("ok", title)
+		return
+	}
+	var details []string
+	var deletable []library.NativeCopy
+	for _, c := range copies {
+		line := c.ID + ": " + describeCopy(c)
+		switch {
+		case c.Plugin != "":
+			line += "; disable the plugin in Claude Code with /plugin"
+		case c.Tracked:
+			line += "; it is committed in git, delete it there if no one needs it"
+		default:
+			deletable = append(deletable, c)
+		}
+		details = append(details, line)
+	}
+	details = append(details, "The assistant may load these skills twice.")
+	d.report("warn", "served skills that are also installed in Claude Code", details...)
+	if !d.fix || len(deletable) == 0 {
+		return
+	}
+	if !confirm(d.in, d.out, fmt.Sprintf("       Delete %s?", plural(len(deletable), "copy"))) {
+		fmt.Fprintln(d.out, "       Not deleted.")
+		return
+	}
+	for _, c := range deletable {
+		if err = os.RemoveAll(c.Dir); err != nil {
+			break
+		}
+	}
+	if len(deletable) < len(copies) {
+		// Plugin and committed copies are still there.
+		if err == nil {
+			fmt.Fprintf(d.out, "       fixed: deleted %s\n", plural(len(deletable), "copy"))
+		} else {
+			fmt.Fprintf(d.out, "       fix failed: %v\n", err)
+		}
+		return
+	}
+	d.fixed("warn", err, "deleted "+plural(len(deletable), "copy"))
+}
+
+// servedCopies returns the Claude Code skills that are copies of a skill
+// served in the folder the server would use.
+func servedCopies(r *registry.Registry, l *library.Library) ([]library.NativeCopy, error) {
+	w, err := server.Resolve()
+	if err != nil {
+		return nil, err
+	}
+	var served []*skill.Skill
+	for _, id := range r.Served(w.ProjectID()) {
+		if s, err := l.Get(id); err == nil {
+			served = append(served, s)
+		}
+	}
+	root := ""
+	if w.Project != nil {
+		root = w.Project.Root
+	}
+	return library.NativeCopies(served, root)
+}
+
+// describeCopy says where a copy is and why it counts as one.
+func describeCopy(c library.NativeCopy) string {
+	why := "same name"
+	switch {
+	case c.SameName && c.SameText:
+		why = "same name and content"
+	case c.SameText:
+		why = "same content"
+	}
+	where := c.Dir
+	if c.Plugin != "" {
+		where = "plugin " + c.Plugin
+	}
+	return fmt.Sprintf("%s (%s)", where, why)
+}
+
+// 9. Claude Code starts this quiver as its MCP server.
 func (d *doc) checkMCP() {
 	const title = "registered with Claude Code"
 	reg, err := assistant.Get("")

@@ -164,3 +164,15 @@ func confirm(in io.Reader, out io.Writer, question string) bool {
 	answer := strings.ToLower(strings.TrimSpace(line))
 	return answer == "y" || answer == "yes"
 }
+
+// confirmYes is confirm with yes as the default. No input at all, as at
+// the end of a script's input, is no.
+func confirmYes(in io.Reader, out io.Writer, question string) bool {
+	fmt.Fprintf(out, "%s [Y/n] ", question)
+	line, err := bufio.NewReader(in).ReadString('\n')
+	if err != nil && line == "" {
+		return false
+	}
+	answer := strings.ToLower(strings.TrimSpace(line))
+	return answer == "" || answer == "y" || answer == "yes"
+}

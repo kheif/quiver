@@ -2,7 +2,7 @@
 
 **Phase:** Phase 4c — v1.2
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK33
 
@@ -16,3 +16,9 @@ A skill that is both in Quiver and in a native skill folder is loaded twice (bac
 3. **status.** `quiver status` prints a warning line for each native copy of a served skill, with the hint `quiver doctor --fix`.
 
 **Done when:** tests cover import of tracked and untracked originals with and without `--yes` and `--keep`, the doctor check and fix, and the status warning; the README and import help describe the new default.
+
+**Notes:**
+- `library.NativeSkills` reads `~/.claude/skills` (or `$CLAUDE_CONFIG_DIR/skills`), the project's `.claude/skills`, and the `skills/` folder of each plugin in `plugins/installed_plugins.json` that the user, project or local settings enable; a later settings file wins, as in Claude Code. A project-scoped plugin counts only in its project.
+- Plugin copies are reported, never deleted: a plugin update would bring them back. The hint is to disable the plugin.
+- An import question that gets no input at all, as at the end of a script's input, keeps the original.
+- Paths in the doctor and status lines are absolute, so a copy in `~/.claude/skills` and one in the project are told apart.

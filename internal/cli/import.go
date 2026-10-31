@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kheif/quiver/internal/fsutil"
+	"github.com/kheif/quiver/internal/git"
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/project"
 	"github.com/kheif/quiver/internal/registry"
@@ -20,6 +21,7 @@ import (
 type importOptions struct {
 	deep   bool
 	yes    bool
+	keep   bool
 	global bool
 	name   string // only for one skill
 }
@@ -28,8 +30,8 @@ func newImportCmd() *cobra.Command {
 	var o importOptions
 	cmd := &cobra.Command{
 		Use:   "import [<folder> | <skill>]",
-		Short: "Copy skills into the library",
-		Long: `Copy skills into the library and assign them to the project of the current
+		Short: "Move skills into the library",
+		Long: `Move skills into the library and assign them to the project of the current
 folder, or to every folder.
 
   quiver import             the .claude/skills of this project (--deep: every folder of it)
@@ -42,15 +44,23 @@ the folder or file name; --name sets another one when importing one skill.
 Markdown files without frontmatter, such as READMEs, are not skills. Skills
 without a description are skipped and listed at the end.
 
-For each skill it asks where to assign it, a new name if the name is taken,
-and whether to delete the original. --global makes every folder the default.
-With --yes it asks nothing: taken names are skipped and the originals are
-kept.`,
+For each skill it asks where to assign it and a new name if the name is
+taken. --global makes every folder the default. With --yes it asks nothing:
+taken names are skipped.
+
+After a skill is imported, its original is deleted, so the assistant does
+not load it twice; the copy in the library is committed in its git. An
+original committed in the git of a project is kept unless you say so,
+because teammates who do not use Quiver may need it; --yes keeps it too.
+--keep keeps every original.`,
 		Example: `  # Import the .claude/skills of the project in this folder
   quiver import
 
   # Import every skill in a folder and its subfolders, and ask nothing
   quiver import ~/Downloads/skill-pack --yes
+
+  # Import and keep the originals
+  quiver import --keep
 
   # Import one skill under another name
   quiver import ~/Downloads/greeter/SKILL.md --name demo
@@ -66,7 +76,8 @@ kept.`,
 		},
 	}
 	cmd.Flags().BoolVar(&o.deep, "deep", false, "without a folder: search every folder of this project, not only .claude/skills")
-	cmd.Flags().BoolVarP(&o.yes, "yes", "y", false, "ask nothing; keep the originals")
+	cmd.Flags().BoolVarP(&o.yes, "yes", "y", false, "ask nothing; delete the originals that are not committed in git")
+	cmd.Flags().BoolVar(&o.keep, "keep", false, "keep every original")
 	cmd.Flags().BoolVar(&o.global, "global", false, "assign to every folder by default, instead of the project")
 	cmd.Flags().StringVar(&o.name, "name", "", "name in the library, when importing one skill")
 	return cmd
@@ -290,17 +301,41 @@ func (im *importer) one(f library.Found) (ok bool, err error) {
 	for _, w := range res.Warnings {
 		fmt.Fprintln(im.out, "warning:", w)
 	}
+	return true, im.removeOriginal(f)
+}
+
+// removeOriginal deletes the original of an imported skill, unless --keep
+// is set, it is committed in git (unless the user says so), or the user
+// says no.
+func (im *importer) removeOriginal(f library.Found) error {
+	if im.o.keep {
+		return nil
+	}
 	what := "folder"
 	if f.File != "" {
 		what = "file"
 	}
-	if !im.o.yes && confirm(im.in, im.out, "Delete the original "+what+" "+im.rel(f.Path())+"?") {
-		if err := os.RemoveAll(f.Path()); err != nil {
-			return true, err
+	path := im.rel(f.Path())
+	if git.Tracked(filepath.Dir(f.Path()), filepath.Base(f.Path())) {
+		msg := fmt.Sprintf("The original %s %s is committed in git, so teammates who do not use Quiver may need it.", what, path)
+		if im.o.yes {
+			fmt.Fprintf(im.out, "%s Kept.\n", msg)
+			return nil
 		}
-		fmt.Fprintln(im.out, "Deleted.")
+		fmt.Fprintln(im.out, msg)
+		if !confirm(im.in, im.out, "Delete it anyway?") {
+			fmt.Fprintln(im.out, "Kept.")
+			return nil
+		}
+	} else if !im.o.yes && !confirmYes(im.in, im.out, "Delete the original "+what+" "+path+"?") {
+		fmt.Fprintln(im.out, "Kept.")
+		return nil
 	}
-	return true, nil
+	if err := os.RemoveAll(f.Path()); err != nil {
+		return err
+	}
+	fmt.Fprintf(im.out, "Deleted the original %s %s.\n", what, path)
+	return nil
 }
 
 // name returns the library name for f, whose files are in src. A taken or
@@ -354,10 +389,14 @@ func (im *importer) rel(path string) string {
 	return path
 }
 
-// plural returns "1 skill" or "<n> skills".
+// plural returns "1 skill" or "<n> skills"; a word ending in y, such as
+// copy, becomes copies.
 func plural(n int, word string) string {
 	if n == 1 {
 		return "1 " + word
+	}
+	if w, ok := strings.CutSuffix(word, "y"); ok {
+		return fmt.Sprintf("%d %sies", n, w)
 	}
 	return fmt.Sprintf("%d %ss", n, word)
 }

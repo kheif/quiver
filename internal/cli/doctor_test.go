@@ -44,7 +44,7 @@ func TestDoctorClean(t *testing.T) {
 	}
 }
 
-// doctorEnv is listEnv with one problem for each check from 2 to 8. The
+// doctorEnv is listEnv with one problem for each check from 2 to 7 and 9. The
 // broken local skill is already in listEnv.
 func doctorEnv(t *testing.T) fixture {
 	t.Helper()
@@ -206,4 +206,75 @@ func TestDoctorClaudeRunsOtherQuiver(t *testing.T) {
 		t.Errorf("a warning is not an error: %v", err)
 	}
 	wantLines(t, out, "warn   Claude Code runs another quiver\n       it runs /old/quiver mcp, but this is /opt/bin/quiver; run: quiver mcp install", "1 warning, no errors.")
+}
+
+// nativeEnv is listEnv with copies of served skills in Claude Code: pdf
+// in ~/.claude/skills, tdd committed in app's .claude/skills and review in
+// an enabled plugin.
+func nativeEnv(t *testing.T) (fixture, string) {
+	t.Helper()
+	f := listEnv(t)
+	claude := t.TempDir()
+	t.Setenv("CLAUDE_CONFIG_DIR", claude)
+	plugin := filepath.Join(claude, "plugins", "cache", "acme")
+	writeFiles(t, claude, map[string]string{
+		"skills/pdf/SKILL.md":   "---\nname: pdf\ndescription: My own PDF skill.\n---\n",
+		"skills/other/SKILL.md": "---\nname: other\ndescription: Not served.\n---\n",
+		"settings.json":         `{"enabledPlugins": {"acme@market": true}}`,
+		"plugins/installed_plugins.json": `{"version": 2, "plugins": {"acme@market": [{"scope": "user", "installPath": "` +
+			filepath.ToSlash(plugin) + `"}]}}`,
+		"plugins/cache/acme/skills/review/SKILL.md": "---\nname: review\ndescription: Review.\n---\n",
+	})
+	writeFiles(t, f.app, map[string]string{
+		".claude/skills/tdd/SKILL.md": "---\nname: tdd\ndescription: Tests first.\n---\n",
+	})
+	gitIn(t, f.app, "init", "--quiet")
+	gitIn(t, f.app, "add", ".claude")
+	t.Chdir(f.app)
+	return f, claude
+}
+
+func TestDoctorNativeCopies(t *testing.T) {
+	f, claude := nativeEnv(t)
+	registered(t)
+	out, _ := runIn(t, "", "doctor")
+	wantLines(t, out,
+		"warn   served skills that are also installed in Claude Code",
+		"pdf: "+filepath.Join(claude, "skills", "pdf")+" (same name)",
+		"acme/review: plugin acme@market (same name); disable the plugin in Claude Code with /plugin",
+		filepath.Join("app", ".claude", "skills", "tdd")+" (same name); it is committed in git, delete it there if no one needs it")
+	if strings.Contains(out, "other") {
+		t.Errorf("unserved skill reported:\n%s", out)
+	}
+
+	// --fix deletes only the copy that is neither committed nor in a plugin.
+	out, _ = runIn(t, "y\n", "doctor", "--fix")
+	wantLines(t, out, "Delete 1 copy? [y/N] ", "fixed: deleted 1 copy")
+	if _, err := os.Stat(filepath.Join(claude, "skills", "pdf")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("pdf copy kept: %v", err)
+	}
+	for _, kept := range []string{filepath.Join(claude, "plugins", "cache", "acme", "skills", "review"), filepath.Join(f.app, ".claude", "skills", "tdd")} {
+		if _, err := os.Stat(kept); err != nil {
+			t.Errorf("%s: %v", kept, err)
+		}
+	}
+	out, _ = runIn(t, "", "doctor")
+	if strings.Contains(out, "skills/pdf") {
+		t.Errorf("pdf still reported:\n%s", out)
+	}
+}
+
+func TestDoctorNativeFixAll(t *testing.T) {
+	f := listEnv(t)
+	claude := t.TempDir()
+	t.Setenv("CLAUDE_CONFIG_DIR", claude)
+	writeFiles(t, claude, map[string]string{"skills/pdf/SKILL.md": "---\nname: pdf\ndescription: Copy.\n---\n"})
+	registered(t)
+	t.Chdir(f.app)
+	out, _ := runIn(t, "n\n", "doctor", "--fix")
+	wantLines(t, out, "Delete 1 copy? [y/N]        Not deleted.")
+	out, _ = runIn(t, "y\n", "doctor", "--fix")
+	wantLines(t, out, "fixed: deleted 1 copy")
+	out, _ = runIn(t, "", "doctor")
+	wantLines(t, out, "ok     no served skill is also installed in Claude Code")
 }

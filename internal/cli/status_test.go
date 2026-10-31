@@ -57,3 +57,16 @@ func TestStatusMissingSkill(t *testing.T) {
 		t.Errorf("output missing %q:\n%s", want, out)
 	}
 }
+
+func TestStatusNativeCopies(t *testing.T) {
+	_, claude := nativeEnv(t)
+	out, err := runIn(t, "", "status")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	wantLines(t, out,
+		"warning: pdf is also installed in Claude Code, so it may be loaded twice: "+filepath.Join(claude, "skills", "pdf")+" (same name)\n",
+		"warning: acme/review is also installed in Claude Code, so it may be loaded twice: plugin acme@market (same name)\n",
+		"warning: tdd is also installed in Claude Code",
+		"Run quiver doctor --fix to delete the copies.\n")
+}

@@ -46,7 +46,7 @@ func TestImport(t *testing.T) {
 		"notes is already in the library with the same content; assigned it to this project.",
 		"the library already has a different skill named pdf.\nNew name (empty to skip): Imported pdf-web into the library and assigned it to this project.",
 		"Imported review into the library and assigned it to every folder.",
-		"Delete the original folder " + filepath.Join(".claude", "skills", "review") + "? [y/N] Deleted.",
+		"Delete the original folder " + filepath.Join(".claude", "skills", "review") + "? [Y/n] Deleted the original folder " + filepath.Join(".claude", "skills", "review") + ".",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output missing %q:\n%s", want, out)
@@ -78,14 +78,18 @@ func TestImport(t *testing.T) {
 	}
 }
 
+// --yes deletes the originals that are not committed in git and keeps
+// the committed ones.
 func TestImportYes(t *testing.T) {
 	f := listEnv(t)
 	dir := importProject(t, f)
+	gitIn(t, dir, "init", "--quiet")
+	gitIn(t, dir, "add", filepath.Join(".claude", "skills", "notes"))
 	out, err := runIn(t, "", "import", "--yes", "--global", dir)
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	if !strings.Contains(out, "Skipped: the library already has a different skill named pdf.") || strings.Contains(out, "[y/N]") {
+	if !strings.Contains(out, "Skipped: the library already has a different skill named pdf.") || strings.Contains(out, "[y/N]") || strings.Contains(out, "[Y/n]") {
 		t.Errorf("output:\n%s", out)
 	}
 	r := loadRegistry(t)
@@ -97,11 +101,65 @@ func TestImportYes(t *testing.T) {
 	if _, ok := r.Projects["web-000003"]; ok {
 		t.Error("project registered for global imports")
 	}
-	for _, name := range []string{"pdf", "notes", "review"} {
-		if _, err := os.Stat(filepath.Join(dir, ".claude", "skills", name)); err != nil {
-			t.Errorf("%s original: %v", name, err)
+	wantLines(t, out, "The original folder "+filepath.Join(".claude", "skills", "notes")+" is committed in git, so teammates who do not use Quiver may need it. Kept.")
+	// pdf was skipped, notes is committed, review was deleted.
+	wantOriginals(t, dir, map[string]bool{"pdf": true, "notes": true, "review": false})
+}
+
+func wantOriginals(t *testing.T, dir string, kept map[string]bool) {
+	t.Helper()
+	for name, keep := range kept {
+		_, err := os.Stat(filepath.Join(dir, ".claude", "skills", name))
+		if keep && err != nil || !keep && !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("%s original (keep %v): %v", name, keep, err)
 		}
 	}
+}
+
+// --keep keeps every original and asks nothing about them.
+func TestImportKeep(t *testing.T) {
+	f := listEnv(t)
+	dir := importProject(t, f)
+	for _, args := range [][]string{{"import", "--keep", dir}, {"import", "--keep", "--yes", dir}} {
+		out, err := runIn(t, "p\np\nskip\np\n", args...)
+		if err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+		if strings.Contains(out, "original") {
+			t.Errorf("%v asked about the originals:\n%s", args, out)
+		}
+		wantOriginals(t, dir, map[string]bool{"pdf": true, "notes": true, "review": true})
+	}
+}
+
+// A committed original is kept by default; the user can still delete it.
+func TestImportTracked(t *testing.T) {
+	f := listEnv(t)
+	dir := importProject(t, f)
+	gitIn(t, dir, "init", "--quiet")
+	gitIn(t, dir, "add", ".claude")
+	// notes: kept by default. pdf: skipped. review: deleted anyway.
+	out, err := runIn(t, "p\n\ns\np\ny\n", "import", dir)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	notes := filepath.Join(".claude", "skills", "notes")
+	wantLines(t, out,
+		"The original folder "+notes+" is committed in git, so teammates who do not use Quiver may need it.\nDelete it anyway? [y/N] Kept.",
+		"Delete it anyway? [y/N] Deleted the original folder "+filepath.Join(".claude", "skills", "review")+".")
+	wantOriginals(t, dir, map[string]bool{"pdf": true, "notes": true, "review": false})
+}
+
+// Without an answer, as at the end of a script's input, the original is kept.
+func TestImportNoAnswerKeeps(t *testing.T) {
+	f := listEnv(t)
+	dir := importProject(t, f)
+	out, err := runIn(t, "s\ns\np\n", "import", dir)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	wantLines(t, out, "? [Y/n] Kept.")
+	wantOriginals(t, dir, map[string]bool{"review": true})
 }
 
 func TestImportNothing(t *testing.T) {
@@ -144,7 +202,7 @@ func TestImportOneFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	wantLines(t, out, "Imported demo into the library and assigned it to this project.", "Delete the original file greeter.md? [y/N] ")
+	wantLines(t, out, "Imported demo into the library and assigned it to this project.", "Delete the original file greeter.md? [Y/n] Kept.")
 	data, _ := os.ReadFile(filepath.Join(f.home, "local", "demo", "SKILL.md"))
 	if want := "---\nname: demo\ndescription: Greet people.\n---\nSay hello.\n"; string(data) != want {
 		t.Errorf("SKILL.md = %q", data)
@@ -173,7 +231,7 @@ func TestImportOneSkillMD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	wantLines(t, out, "Imported deploy into the library and assigned it to every folder.", "Delete the original folder deploy? [y/N] Deleted.")
+	wantLines(t, out, "Imported deploy into the library and assigned it to every folder.", "Delete the original folder deploy? [Y/n] Deleted the original folder deploy.")
 	if _, err := os.Stat(filepath.Join(f.home, "local", "deploy", "scripts", "run.sh")); err != nil {
 		t.Errorf("scripts not copied: %v", err)
 	}

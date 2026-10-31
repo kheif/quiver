@@ -8,7 +8,7 @@ import (
 )
 
 // TestMain points HOME and QUIVER_HOME at a temp folder, so a test that
-// forgets sourceEnv never touches the real ~/.quiver.
+// forgets sourceEnv never touches the real ~/.quiver or ~/.claude.
 func TestMain(m *testing.M) {
 	os.Exit(isolated(m))
 }
@@ -29,6 +29,8 @@ func isolated(m *testing.M) int {
 		"USERPROFILE":    dir,
 		"QUIVER_HOME":    filepath.Join(dir, ".quiver"),
 		"QUIVER_PROJECT": "",
+		// Claude Code's folder is then $HOME/.claude.
+		"CLAUDE_CONFIG_DIR": "",
 	} {
 		if err := os.Setenv(k, v); err != nil {
 			fmt.Fprintln(os.Stderr, err)

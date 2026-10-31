@@ -76,7 +76,7 @@ Items are ordered by priority within each section.
 - **Concern:** A skill can be served by Quiver and also be installed natively (`~/.claude/skills`, plugins), so it loads twice. Example: the caveman plugin.
 - **Proposal:** `quiver doctor` detects these duplicates and suggests disabling the native copy.
 - **Related:** doctor task (Phase 3)
-- **Planned 2026-10-29:** TASK35 (import removes originals, `doctor` and `status` find copies).
+- **Resolved 2026-10-31:** `quiver import` deletes the originals it copied, except those committed in git; `doctor` and `status` find copies in `~/.claude/skills`, the project's `.claude/skills` and enabled plugins (TASK35).
 
 ### B14 — Name collision
 - **Concern:** "Quiver" is already used by other products, for example a notes app.

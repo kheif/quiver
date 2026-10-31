@@ -70,7 +70,7 @@ func (e *env) environ() []string {
 	for _, kv := range os.Environ() {
 		key, _, _ := strings.Cut(kv, "=")
 		switch strings.ToUpper(key) {
-		case "HOME", "USERPROFILE", "PATH", "XDG_CONFIG_HOME", "QUIVER_HOME", "QUIVER_PROJECT", "VISUAL", "EDITOR":
+		case "HOME", "USERPROFILE", "PATH", "XDG_CONFIG_HOME", "QUIVER_HOME", "QUIVER_PROJECT", "CLAUDE_CONFIG_DIR", "VISUAL", "EDITOR":
 			continue
 		}
 		if strings.HasPrefix(key, "GIT_") {

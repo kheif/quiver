@@ -66,5 +66,15 @@ func status(out io.Writer) error {
 			fmt.Fprintf(out, "warning: %s is assigned but not in the library, so it is not served\n", id)
 		}
 	}
+	copies, err := servedCopies(r, l)
+	if err != nil {
+		return err
+	}
+	for _, c := range copies {
+		fmt.Fprintf(out, "warning: %s is also installed in Claude Code, so it may be loaded twice: %s\n", c.ID, describeCopy(c))
+	}
+	if len(copies) > 0 {
+		fmt.Fprintln(out, "Run quiver doctor --fix to delete the copies.")
+	}
 	return nil
 }
