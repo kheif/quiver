@@ -152,6 +152,7 @@ Claude Code starts the server in the project folder. Other assistants may start 
 | `get_skill` | `id` | The skill's instructions, its extra files and its folder. |
 | `get_skill_file` | `id`, `path` | One extra file of a skill, such as `references/checklist.md`. Large and binary files return their path instead. |
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |
+| `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. |
 
 **Prompts.** Every served skill is also an MCP prompt. In Claude Code it appears as `/quiver:<id>`; text after the command is passed to the skill as the task.
 
@@ -170,7 +171,7 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - Add only sources you trust, and read their skills before you assign them.
 - `quiver update` prints the old and new commit of each source, and the skills that were added, changed or removed. To read the changes of a source you do not control: `git -C ~/.quiver/sources/<name> diff <old> <new>`.
 - Source skills are read-only in Quiver. To change one, copy it into your own skills.
-- `create_skill` lets the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`.
+- `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`. Every change is a commit in `~/.quiver/local`, so `git -C ~/.quiver/local log -p` shows it and `git revert` undoes it.
 
 To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).
 
