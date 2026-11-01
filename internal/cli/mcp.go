@@ -67,21 +67,29 @@ $QUIVER_PROJECT when that is set. It logs to ~/.quiver/logs.`,
 	return cmd
 }
 
-// claudeCode is the mcp install name of Claude Code, which is set up with
-// the claude command. The other assistants are configured by JSON.
-const claudeCode = "claude-code"
+// The mcp install names of the assistants set up with their own command:
+// Claude Code with claude, Codex with codex. The other assistants are
+// configured by JSON.
+const (
+	claudeCode = "claude-code"
+	codexID    = "codex"
+)
 
 // mcpTarget is an assistant mcp install or uninstall works on: Claude Code
-// when json is nil.
+// or Codex by id when json is nil.
 type mcpTarget struct {
+	id   string
 	json *assistant.JSONAssistant
 }
 
 func (t mcpTarget) name() string {
-	if t.json == nil {
-		return "Claude Code"
+	switch {
+	case t.json != nil:
+		return t.json.Name
+	case t.id == codexID:
+		return "Codex"
 	}
-	return t.json.Name
+	return "Claude Code"
 }
 
 // assistantIDs returns the names mcp install and uninstall take.
@@ -90,7 +98,7 @@ func assistantIDs() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	ids := []string{claudeCode}
+	ids := []string{claudeCode, codexID}
 	for _, a := range all {
 		ids = append(ids, a.ID)
 	}
@@ -98,10 +106,9 @@ func assistantIDs() ([]string, error) {
 }
 
 // mcpTargets returns the assistants named by ids, or with no ids every
-// assistant that is installed. Claude Code counts as installed when the
-// claude command is on PATH. An assistant that drops the server's instructions is only
-// included by name, or for uninstall when it has a quiver entry.
-func mcpTargets(ids []string, uninstall bool) ([]mcpTarget, error) {
+// assistant that is installed. Claude Code and Codex count as installed when
+// their command is on PATH.
+func mcpTargets(ids []string) ([]mcpTarget, error) {
 	jsons, err := assistant.JSONAssistants()
 	if err != nil {
 		return nil, err
@@ -118,21 +125,23 @@ func mcpTargets(ids []string, uninstall bool) ([]mcpTarget, error) {
 	all := len(ids) == 0
 	var ts []mcpTarget
 	if slices.Contains(ids, claudeCode) || all && assistant.HasClaude() {
-		ts = append(ts, mcpTarget{})
+		ts = append(ts, mcpTarget{id: claudeCode})
+	}
+	if slices.Contains(ids, codexID) || all && assistant.HasCodex() {
+		ts = append(ts, mcpTarget{id: codexID})
 	}
 	for _, a := range jsons {
-		if slices.Contains(ids, a.ID) || all && a.Installed() && (!a.NoInstructions || uninstall && hasEntry(a)) {
-			ts = append(ts, mcpTarget{a})
+		if slices.Contains(ids, a.ID) || all && a.Installed() {
+			ts = append(ts, mcpTarget{id: a.ID, json: a})
 		}
 	}
 	return ts, nil
 }
 
-// hasEntry reports whether a has a quiver entry. A config that cannot be
-// read counts as registered, so the caller reports its error.
-func hasEntry(a *assistant.JSONAssistant) bool {
-	reg, err := a.Get()
-	return reg != nil || err != nil
+// supportedList returns the names mcp install takes, for the help.
+func supportedList() string {
+	ids, _ := assistantIDs()
+	return strings.Join(ids, ", ")
 }
 
 // assistantArgs completes the assistant names not given yet.
@@ -146,17 +155,17 @@ func newMCPInstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install [assistant...]",
 		Short: "Register the MCP server with your assistants",
-		Long: `Register the MCP server with every assistant that is installed: Claude Code
-(for every project of this user) and Cursor. Name assistants to set up only
-those: claude-code, cursor, claude-desktop. Claude Desktop is set up only
-when named: it does not pass Quiver's skill list to the model, so skills are
-used only when you ask for them. For any other assistant, add the entry that
-quiver mcp config prints to its MCP config.
+		Long: `Register the MCP server with every supported assistant that is installed,
+or only with the assistants named. Some assistants use Quiver's skills only
+when you ask for them in the prompt; mcp install says which. For any other
+assistant, add the entry that quiver mcp config prints to its MCP config.
+
+Supported assistants: ` + supportedList() + `
 
 Run it again after moving the quiver binary: a registration that points to
-another binary is replaced. In Cursor's and Claude Desktop's JSON files,
-every other key is kept, and the old file is saved next to it with the
-suffix .quiver-backup.`,
+another binary is replaced. In the assistants' JSON files, every other key
+is kept, and the old file is saved next to it with the suffix
+.quiver-backup.`,
 		Example: `  quiver mcp install
 
   # Only Cursor
@@ -195,7 +204,7 @@ func mcpInstall(out io.Writer, ids []string) error {
 	if err != nil {
 		return err
 	}
-	ts, err := mcpTargets(ids, false)
+	ts, err := mcpTargets(ids)
 	if err != nil {
 		return err
 	}
@@ -209,41 +218,81 @@ func mcpInstall(out io.Writer, ids []string) error {
 	}
 	var errs []error
 	for _, t := range ts {
-		if t.json == nil {
-			if err := installClaude(out, bin); err != nil {
-				errs = append(errs, err)
-			}
-			continue
-		}
-		a, bin := t.json, appBin
-		res, err := a.Install(bin)
-		if err != nil {
-			fmt.Fprintf(out, "%s: not registered: %v\n", a.Name, err)
-			errs = append(errs, err)
-			continue
-		}
-		switch res {
-		case assistant.Unchanged:
-			fmt.Fprintf(out, "Already registered with %s: %s mcp\n", a.Name, bin)
-		case assistant.Updated:
-			fmt.Fprintf(out, "Updated the %s registration to %s mcp (%s)\n", a.Name, bin, a.Path)
+		var err error
+		switch t.id {
+		case claudeCode:
+			err = installClaude(out, bin)
+		case codexID:
+			err = installCodex(out, appBin)
 		default:
-			fmt.Fprintf(out, "Registered with %s: %s mcp (%s)\n", a.Name, bin, a.Path)
+			err = installJSON(out, t.json, appBin)
 		}
-		if res != assistant.Unchanged {
-			fmt.Fprintf(out, "Restart %s to use it.\n", a.Name)
-		}
-		if a.Global {
-			fmt.Fprintf(out, "%s does not start Quiver in a project folder, so it gets only the global skills.\n", a.Name)
-		}
-		if a.NoInstructions {
-			fmt.Fprintf(out, "%s does not pass Quiver's skill list to the model: a skill is used only when you ask for Quiver's skills in the prompt, and always-on skills do not apply.\n", a.Name)
+		if err != nil {
+			errs = append(errs, err)
 		}
 	}
 	if viaNpm {
 		fmt.Fprintln(out, "Installed with npm: the path depends on your Node version. After switching Node versions (nvm, fnm, volta), run quiver mcp install again.")
 	}
 	return errors.Join(errs...)
+}
+
+// onRequestNote says that name uses Quiver's skills only when asked.
+func onRequestNote(out io.Writer, name string) {
+	fmt.Fprintf(out, "%s uses Quiver's skills only when you ask for them in the prompt, such as \"check the quiver skills for this\".\n", name)
+}
+
+func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
+	res, err := a.Install(bin)
+	if err != nil {
+		fmt.Fprintf(out, "%s: not registered: %v\n", a.Name, err)
+		return err
+	}
+	switch res {
+	case assistant.Unchanged:
+		fmt.Fprintf(out, "Already registered with %s: %s mcp\n", a.Name, bin)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the %s registration to %s mcp (%s)\n", a.Name, bin, a.Path)
+	default:
+		fmt.Fprintf(out, "Registered with %s: %s mcp (%s)\n", a.Name, bin, a.Path)
+	}
+	if res != assistant.Unchanged {
+		fmt.Fprintf(out, "Restart %s to use it.\n", a.Name)
+	}
+	if a.Global {
+		fmt.Fprintf(out, "%s does not start Quiver in a project folder, so it gets only the global skills.\n", a.Name)
+	}
+	if a.OnRequest {
+		onRequestNote(out, a.Name)
+	}
+	return nil
+}
+
+// installCodex registers bin with Codex. The Codex app reads the same
+// config, and desktop apps have no node on PATH, so bin is the binary itself.
+func installCodex(out io.Writer, bin string) error {
+	res, err := assistant.CodexInstall(bin)
+	if errors.Is(err, assistant.ErrNoCodex) {
+		fmt.Fprintf(out, "The codex command was not found. To register Quiver with Codex, run:\n  %s\n", assistant.CodexAddCommand(bin))
+		return nil
+	}
+	if err != nil {
+		fmt.Fprintf(out, "Codex: not registered: %v\n", err)
+		return err
+	}
+	switch res {
+	case assistant.Unchanged:
+		fmt.Fprintf(out, "Already registered with Codex: %s mcp\n", bin)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the Codex registration to %s mcp\n", bin)
+	default:
+		fmt.Fprintf(out, "Registered with Codex: %s mcp\n", bin)
+	}
+	if res != assistant.Unchanged {
+		fmt.Fprintln(out, "Start a new Codex session to use it.")
+	}
+	onRequestNote(out, "Codex")
+	return nil
 }
 
 func installClaude(out io.Writer, bin string) error {
@@ -277,9 +326,11 @@ func newMCPUninstallCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "uninstall [assistant...]",
 		Short: "Remove the MCP server from your assistants",
-		Long: `Remove the MCP server from every assistant that has it, or only from the
-assistants named: claude-code, cursor, claude-desktop. The Quiver home and its
-skills are not touched.`,
+		Long: `Remove the MCP server from every supported assistant that is installed, or
+only from the assistants named. The Quiver home and its skills are not
+touched.
+
+Supported assistants: ` + supportedList(),
 		Example: `  quiver mcp uninstall
 
   # Only Claude Desktop
@@ -293,7 +344,7 @@ skills are not touched.`,
 }
 
 func mcpUninstall(out io.Writer, ids []string) error {
-	ts, err := mcpTargets(ids, true)
+	ts, err := mcpTargets(ids)
 	if err != nil {
 		return err
 	}
@@ -305,13 +356,20 @@ func mcpUninstall(out io.Writer, ids []string) error {
 	for _, t := range ts {
 		var res assistant.Result
 		var err error
-		if t.json == nil {
+		switch t.id {
+		case claudeCode:
 			res, err = assistant.Uninstall()
 			if errors.Is(err, assistant.ErrNoClaude) {
 				fmt.Fprintf(out, "The claude command was not found. To remove Quiver from Claude Code, run:\n  %s\n", assistant.RemoveCommand())
 				continue
 			}
-		} else {
+		case codexID:
+			res, err = assistant.CodexUninstall()
+			if errors.Is(err, assistant.ErrNoCodex) {
+				fmt.Fprintf(out, "The codex command was not found. To remove Quiver from Codex, run:\n  %s\n", assistant.CodexRemoveCommand())
+				continue
+			}
+		default:
 			res, err = t.json.Uninstall()
 		}
 		switch {
@@ -320,7 +378,7 @@ func mcpUninstall(out io.Writer, ids []string) error {
 			errs = append(errs, err)
 		case res == assistant.Removed:
 			fmt.Fprintf(out, "Removed from %s.\n", t.name())
-		case t.json == nil:
+		case t.id == claudeCode:
 			fmt.Fprintln(out, "Quiver was not registered with Claude Code for this user.")
 		default:
 			fmt.Fprintf(out, "Quiver was not registered with %s.\n", t.name())

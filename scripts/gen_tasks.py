@@ -970,6 +970,13 @@ TASKD4 added Cursor and Claude Desktop and the shared JSON installer. `mcp insta
 4. Confirm that each assistant passes the project folder (roots or working directory) correctly. Record any assistant that needs `QUIVER_PROJECT`.
 
 **Done when:** Install and uninstall work for each supported assistant, and each one sees the correct project's skills.
+
+**Notes:**
+- Spike results in docs/spike-mcp-clients.md (`spike/b01/codex-run.sh`, `spike/b01/antigravity-run.sh`). Codex 0.166 defers MCP tools, so its model gets `instructions` only after it searches for Quiver's tools: 0 of 6 fitting prompts loaded a skill unprompted, every one did when the prompt named Quiver. Antigravity CLI 1.4.12 writes `instructions` to a file the model rarely reads: 1 of 6. Both start the server in the working directory, so project skills work. Gemini CLI 0.66 could not be measured: its Google sign-in is refused. VS Code is not measured yet.
+- Codex is set up with `codex mcp add`, which keeps `config.toml`'s comments; it replaces the whole entry, so `internal/assistant/codex.go` passes an existing `env` again. Antigravity is a JSON assistant (`~/.gemini/config/mcp_config.json`), installed when `~/.gemini/antigravity-cli` exists.
+- Decided 2026-11-01: `mcp install` without names sets up every supported assistant that is installed, Claude Desktop included (`JSONAssistant.NoInstructions` became `OnRequest`). Codex, Claude Desktop and Antigravity get a note that they use Quiver's skills only when asked. `doctor` checks every installed assistant.
+- The read tools (`list_skills`, `get_skill`, `get_skill_file`, `search_skills`) are marked `readOnlyHint`, so Codex runs them without asking.
+- `internal/cli` tests drop the folders holding `codex` from `PATH` and use `assistanttest.InstallCodex`; `TestRealCodex` checks the fake against the real codex in a throwaway `CODEX_HOME` when it is installed.
 """)
 
 task("TASK39", "Interactive TUI (`quiver` with no arguments)", "TASK33, TASK10", """
@@ -1099,7 +1106,7 @@ assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
 REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
 remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

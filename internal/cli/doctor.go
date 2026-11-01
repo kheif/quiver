@@ -568,16 +568,33 @@ func (d *doc) checkMCP() {
 	}
 	var installed []*assistant.JSONAssistant
 	for _, a := range jsons {
-		// One that drops the instructions is set up only on request, so a
-		// missing entry is no problem there.
-		if a.Installed() && (!a.NoInstructions || hasEntry(a)) {
+		if a.Installed() {
 			installed = append(installed, a)
 		}
 	}
-	d.checkClaudeCode(bin, binErr == nil, len(installed) > 0)
+	hasCodex := assistant.HasCodex()
+	d.checkClaudeCode(bin, binErr == nil, hasCodex || len(installed) > 0)
 	appBin, appErr := appCommand()
+	if hasCodex {
+		d.checkCodex(appBin, appErr == nil)
+	}
 	for _, a := range installed {
 		d.checkJSONAssistant(a, appBin, appErr == nil)
+	}
+}
+
+func (d *doc) checkCodex(bin string, knowBin bool) {
+	const fix = "run: quiver mcp install codex"
+	reg, err := assistant.CodexGet()
+	switch {
+	case err != nil:
+		d.report("error", "registered with Codex", err.Error())
+	case reg == nil:
+		d.report("warn", "Codex is installed, but Quiver is not registered with it; "+fix)
+	case knowBin && (reg.Command != bin || reg.Args != "mcp"):
+		d.report("warn", "Codex runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; %s", reg.Command, reg.Args, bin, fix))
+	default:
+		d.report("ok", "registered with Codex")
 	}
 }
 

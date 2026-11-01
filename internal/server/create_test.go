@@ -255,3 +255,24 @@ func TestSlug(t *testing.T) {
 		}
 	}
 }
+
+// Tools that change nothing are marked read-only, so Codex runs them
+// without asking.
+func TestReadToolAnnotations(t *testing.T) {
+	w, _ := createEnv(t)
+	cs := connect(t, New(Options{Version: "dev", Log: discard, Where: w}))
+	res, err := cs.ListTools(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var readOnly []string
+	for _, tool := range res.Tools {
+		if tool.Annotations != nil && tool.Annotations.ReadOnlyHint {
+			readOnly = append(readOnly, tool.Name)
+		}
+	}
+	slices.Sort(readOnly)
+	if want := []string{"get_skill", "get_skill_file", "list_skills", "search_skills"}; !slices.Equal(readOnly, want) {
+		t.Errorf("read-only tools = %q", readOnly)
+	}
+}

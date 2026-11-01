@@ -1,4 +1,5 @@
-// Package assistanttest puts a fake claude command on PATH for tests.
+// Package assistanttest puts fake claude and codex commands on PATH for
+// tests.
 package assistanttest
 
 import (
@@ -45,7 +46,7 @@ case "$1 $2" in
 esac
 `
 
-// Fake is a fake claude command.
+// Fake is a fake claude or codex command.
 type Fake struct{ dir string }
 
 // Install puts a fake claude command first on PATH, with no registration.
@@ -66,6 +67,16 @@ func Install(t *testing.T) *Fake {
 func (f *Fake) SetUser(t *testing.T, command, args string) {
 	t.Helper()
 	f.write(t, "user", command+"|"+args)
+}
+
+// SetCodex stores a registration of the fake codex that runs command with
+// args, and env ("K=V" or "").
+func (f *Fake) SetCodex(t *testing.T, command, args, env string) {
+	t.Helper()
+	if env != "" {
+		env = "--env " + env
+	}
+	f.write(t, "user", command+"|"+args+"|"+env)
 }
 
 // SetLocal stores a local registration that wins in the current folder.
@@ -101,4 +112,51 @@ func (f *Fake) write(t *testing.T, name, content string) {
 	if err := os.WriteFile(filepath.Join(f.dir, name), []byte(content+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// codexScript answers "mcp get --json", "mcp add" and "mcp remove" for the
+// server named quiver like Codex does. $DIR/user holds the registration as
+// "<command>|<args>|<env>", env being "--env K=V" options or empty. Every
+// call is appended to $DIR/calls.
+const codexScript = `#!/bin/sh
+dir="$(dirname "$0")"
+echo "$*" >> "$dir/calls"
+case "$1 $2" in
+"mcp get")
+  if [ ! -f "$dir/user" ]; then echo "Error: No MCP server named '$3' found."; exit 1; fi
+  IFS='|' read -r command args env < "$dir/user"
+  envjson=null
+  if [ -n "$env" ]; then envjson="{\"$(echo "$env" | sed 's/^--env //; s/=/\": \"/')\"}"; fi
+  printf '{"name":"quiver","transport":{"type":"stdio","command":"%s","args":["%s"],"env":%s}}\n' "$command" "$args" "$envjson"
+  ;;
+"mcp add")
+  # mcp add [--env K=V] quiver -- <command> <args>
+  shift 2
+  env=
+  if [ "$1" = "--env" ]; then env="--env $2"; shift 2; fi
+  printf '%s|%s|%s\n' "$3" "$4" "$env" > "$dir/user"
+  echo "Added global MCP server 'quiver'."
+  ;;
+"mcp remove")
+  if [ ! -f "$dir/user" ]; then echo "No MCP server named '$3' found."; exit 0; fi
+  rm "$dir/user"
+  echo "Removed global MCP server 'quiver'."
+  ;;
+*) echo "unexpected: $*"; exit 2 ;;
+esac
+`
+
+// InstallCodex puts a fake codex command first on PATH, with no
+// registration. The fake keeps at most one env variable.
+func InstallCodex(t *testing.T) *Fake {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake codex command is a shell script")
+	}
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "codex"), []byte(codexScript), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	return &Fake{dir}
 }

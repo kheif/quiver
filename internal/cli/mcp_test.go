@@ -240,69 +240,83 @@ func TestMCPInstallNpm(t *testing.T) {
 // the others alone.
 func TestMCPInstallEveryAssistant(t *testing.T) {
 	f := assistanttest.Install(t)
-	apps := appHome(t, "cursor", "claude-desktop")
+	apps := appHome(t, "cursor", "claude-desktop", "antigravity")
+	cx := assistanttest.InstallCodex(t)
 	fakeExecutable(t, "/opt/bin/quiver")
 	out, err := runIn(t, "", "mcp", "install")
 	if err != nil {
 		t.Fatal(err)
 	}
-	cursor, desktop := apps["cursor"], apps["claude-desktop"]
+	cursor, desktop, agy := apps["cursor"], apps["claude-desktop"], apps["antigravity"]
 	wantLines(t, out,
 		"Registered with Claude Code: /opt/bin/quiver mcp",
-		"Registered with Cursor: /opt/bin/quiver mcp ("+cursor.Path+")\nRestart Cursor to use it.",
+		"Registered with Codex: /opt/bin/quiver mcp\nStart a new Codex session to use it.\nCodex uses Quiver's skills only when you ask for them in the prompt",
+		"Registered with Cursor: /opt/bin/quiver mcp ("+cursor.Path+")\nRestart Cursor to use it.\n",
+		"Registered with Claude Desktop: /opt/bin/quiver mcp ("+desktop.Path+")",
+		"Claude Desktop does not start Quiver in a project folder, so it gets only the global skills.\nClaude Desktop uses Quiver's skills only when you ask for them in the prompt",
+		"Registered with Antigravity: /opt/bin/quiver mcp ("+agy.Path+")\nRestart Antigravity to use it.\nAntigravity uses Quiver's skills only when you ask for them in the prompt",
 	)
+	if strings.Contains(out, "Cursor uses") {
+		t.Errorf("Cursor gets the on-request note:\n%s", out)
+	}
 	if f.User() != "/opt/bin/quiver|mcp" {
 		t.Errorf("claude user %q", f.User())
 	}
-	if reg, err := cursor.Get(); err != nil || reg == nil || reg.Command != "/opt/bin/quiver" {
-		t.Errorf("cursor: %+v %v", reg, err)
+	if cx.User() != "/opt/bin/quiver|mcp|" {
+		t.Errorf("codex user %q", cx.User())
 	}
-	// Claude Desktop drops the instructions, so it is set up only when named, and
-	// doctor does not miss it.
-	if strings.Contains(out, "Claude Desktop") {
-		t.Errorf("set up Claude Desktop:\n%s", out)
+	for _, a := range []*assistant.JSONAssistant{cursor, desktop, agy} {
+		if reg, err := a.Get(); err != nil || reg == nil || reg.Command != "/opt/bin/quiver" {
+			t.Errorf("%s: %+v %v", a.ID, reg, err)
+		}
 	}
-	if reg, err := desktop.Get(); reg != nil || err != nil {
-		t.Errorf("claude desktop: %+v %v", reg, err)
-	}
-	out, _ = runIn(t, "", "doctor")
-	if strings.Contains(out, "Claude Desktop") {
-		t.Errorf("doctor reports Claude Desktop:\n%s", out)
-	}
-	out, err = runIn(t, "", "mcp", "install", "claude-desktop")
-	if err != nil {
-		t.Fatal(err)
-	}
-	wantLines(t, out,
-		"Registered with Claude Desktop: /opt/bin/quiver mcp ("+desktop.Path+")",
-		"Claude Desktop does not start Quiver in a project folder, so it gets only the global skills.",
-		"Claude Desktop does not pass Quiver's skill list to the model",
-	)
 
 	out, _ = runIn(t, "", "doctor")
-	wantLines(t, out, "ok     registered with Claude Code", "ok     registered with Cursor", "ok     registered with Claude Desktop")
+	wantLines(t, out, "ok     registered with Claude Code", "ok     registered with Codex", "ok     registered with Cursor", "ok     registered with Claude Desktop", "ok     registered with Antigravity")
 
 	out, err = runIn(t, "", "mcp", "install")
-	if err != nil || strings.Contains(out, "Restart") {
+	if err != nil || strings.Contains(out, "Restart") || strings.Contains(out, "Start a new") {
 		t.Errorf("second install: %v\n%s", err, out)
 	}
-	wantLines(t, out, "Already registered with Cursor: /opt/bin/quiver mcp")
+	wantLines(t, out, "Already registered with Cursor: /opt/bin/quiver mcp", "Already registered with Codex: /opt/bin/quiver mcp")
 
 	fakeExecutable(t, "/usr/local/bin/quiver")
 	out, _ = runIn(t, "", "doctor")
-	wantLines(t, out, "warn   Cursor runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install cursor")
+	wantLines(t, out,
+		"warn   Cursor runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install cursor",
+		"warn   Codex runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install codex",
+	)
 
 	out, err = runIn(t, "", "mcp", "uninstall")
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantLines(t, out, "Removed from Claude Code.", "Removed from Cursor.", "Removed from Claude Desktop.")
+	wantLines(t, out, "Removed from Claude Code.", "Removed from Codex.", "Removed from Cursor.", "Removed from Claude Desktop.", "Removed from Antigravity.")
 	out, _ = runIn(t, "", "doctor")
-	wantLines(t, out, "warn   Cursor is installed, but Quiver is not registered with it; run: quiver mcp install cursor")
-	out, err = runIn(t, "", "mcp", "uninstall", "cursor")
-	if err != nil || !strings.Contains(out, "Quiver was not registered with Cursor.") {
+	wantLines(t, out,
+		"warn   Codex is installed, but Quiver is not registered with it; run: quiver mcp install codex",
+		"warn   Cursor is installed, but Quiver is not registered with it; run: quiver mcp install cursor",
+	)
+	out, err = runIn(t, "", "mcp", "uninstall", "cursor", "codex")
+	if err != nil || !strings.Contains(out, "Quiver was not registered with Cursor.") || !strings.Contains(out, "Quiver was not registered with Codex.") {
 		t.Errorf("second uninstall: %v\n%s", err, out)
 	}
+}
+
+// Without the codex command, mcp install codex prints the command to run.
+func TestMCPInstallNoCodex(t *testing.T) {
+	appHome(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install", "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantLines(t, out, "The codex command was not found. To register Quiver with Codex, run:\n  codex mcp add quiver -- /opt/bin/quiver mcp")
+	out, err = runIn(t, "", "mcp", "uninstall", "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantLines(t, out, "The codex command was not found. To remove Quiver from Codex, run:\n  codex mcp remove quiver")
 }
 
 func TestMCPInstallNamed(t *testing.T) {
@@ -319,7 +333,7 @@ func TestMCPInstallNamed(t *testing.T) {
 	if len(f.Calls()) != 0 || apps["claude-desktop"].Installed() {
 		t.Errorf("set up other assistants: %q", f.Calls())
 	}
-	if _, err := runIn(t, "", "mcp", "install", "cursor", "vim"); err == nil || !strings.Contains(err.Error(), "use one of: claude-code, cursor, claude-desktop") {
+	if _, err := runIn(t, "", "mcp", "install", "cursor", "vim"); err == nil || !strings.Contains(err.Error(), "use one of: claude-code, codex, cursor, claude-desktop, antigravity") {
 		t.Errorf("unknown assistant: %v", err)
 	}
 

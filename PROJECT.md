@@ -84,7 +84,7 @@ A project is identified by a small `.quiver.json` file in its root:
 
 ### Skill catalog
 
-At session start, the server's `instructions` list the available skills (global and project) with their descriptions, and tell the assistant to load a fitting skill with `get_skill`. The assistant adds `instructions` to its system prompt, so it knows the skills from the first message. Claude Code and Cursor do; Claude Desktop drops them, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
+At session start, the server's `instructions` list the available skills (global and project) with their descriptions, and tell the assistant to load a fitting skill with `get_skill`. The assistant adds `instructions` to its system prompt, so it knows the skills from the first message. Claude Code and Cursor do. Codex and Antigravity pass them only after the model looks for Quiver's tools, and Claude Desktop drops them, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
 
 Tool descriptions are not used for this. Claude Code defers MCP tools, so the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). `instructions` are cut at about 4096 characters. A catalog that does not fit is replaced by a pointer: before its first reply, the assistant calls `list_skills`, which returns every skill with its whole description.
 
@@ -161,7 +161,7 @@ Every action in the TUI is also a command, for scripts and quick use:
 ```bash
 # Setup
 quiver init                         # Create ~/.quiver; in a terminal, also register the MCP server and import existing skills
-quiver mcp install                  # Register the MCP server with Claude Code / Cursor
+quiver mcp install                  # Register the MCP server with every installed assistant
 quiver                              # The project here, its skill count and a next step
 
 # Skills
@@ -224,7 +224,7 @@ quiver doctor                       # Check the library and fix problems
 - Pinning remote skills to a commit
 - Update preview with diffs
 - Library sync between machines
-- `mcp install` for more assistants
+- More assistants for `mcp install`, which sets up every supported assistant that is installed
 - Interactive TUI with search
 - Background update checks with notices
 

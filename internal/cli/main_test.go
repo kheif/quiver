@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kheif/quiver/internal/project"
@@ -33,6 +34,10 @@ func isolated(m *testing.M) int {
 		"QUIVER_PROJECT": "",
 		// Claude Code's folder is then $HOME/.claude.
 		"CLAUDE_CONFIG_DIR": "",
+		"CODEX_HOME":        filepath.Join(dir, ".codex"),
+		// The real codex is never run: tests that need it use
+		// assistanttest.InstallCodex.
+		"PATH": withoutCommand(os.Getenv("PATH"), "codex"),
 	} {
 		if err := os.Setenv(k, v); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -71,4 +76,15 @@ func names(dir string) map[string]bool {
 		out[e.Name()] = true
 	}
 	return out
+}
+
+// withoutCommand returns path without the folders that hold name.
+func withoutCommand(path, name string) string {
+	var keep []string
+	for _, dir := range filepath.SplitList(path) {
+		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+			keep = append(keep, dir)
+		}
+	}
+	return strings.Join(keep, string(os.PathListSeparator))
 }

@@ -64,6 +64,10 @@ func loadServed(projectID string) (*library.Library, []servedSkill, error) {
 	return l, out, nil
 }
 
+// readOnly marks a tool that changes nothing, so assistants may run it
+// without asking, as Codex does.
+var readOnly = &mcp.ToolAnnotations{ReadOnlyHint: true}
+
 // addSkillTools registers the tools that read skills.
 func addSkillTools(s *mcp.Server, sess *session) {
 	type listOut struct {
@@ -71,6 +75,7 @@ func addSkillTools(s *mcp.Server, sess *session) {
 	}
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "list_skills",
+		Annotations: readOnly,
 		Description: "List every skill available in this project with its whole description: the project's own skills first, then the global ones, including skills assigned during this session. Always-on skills are marked.",
 	}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, listOut, error) {
 		_, skills, err := loadServed(sess.projectID())
@@ -97,6 +102,7 @@ func addSkillTools(s *mcp.Server, sess *session) {
 	}
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "get_skill",
+		Annotations: readOnly,
 		Description: "Load a skill: its instructions (SKILL.md), its extra files and its folder. Follow the instructions.",
 	}, func(_ context.Context, _ *mcp.CallToolRequest, in getIn) (*mcp.CallToolResult, any, error) {
 		l, skills, err := loadServed(sess.projectID())
@@ -123,6 +129,7 @@ func addSkillTools(s *mcp.Server, sess *session) {
 	}
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "get_skill_file",
+		Annotations: readOnly,
 		Description: "Load an extra file of a skill, such as references/checklist.md. Large and binary files are not returned; you get their absolute path instead.",
 	}, func(_ context.Context, _ *mcp.CallToolRequest, in fileIn) (*mcp.CallToolResult, any, error) {
 		l, err := library.Load()

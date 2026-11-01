@@ -20,15 +20,14 @@ type JSONAssistant struct {
 	ID   string // the mcp install argument
 	Name string
 	Dir  string // the assistant's own folder; it exists once the assistant ran
-	Path string // the config file, inside Dir
+	Path string // the config file
 	// Global means the assistant starts servers outside any project, so
 	// Quiver serves only the global skills there.
 	Global bool
-	// NoInstructions means the assistant does not pass the server's
-	// instructions to the model, so it never sees the skill list or the
-	// always-on skills (docs/spike-mcp-clients.md). mcp install sets it up
-	// only when asked by name.
-	NoInstructions bool
+	// OnRequest means the model sees Quiver's skill list and always-on
+	// skills only when the prompt asks for Quiver's skills, if at all
+	// (docs/spike-mcp-clients.md). mcp install says so.
+	OnRequest bool
 }
 
 // Cursor is Cursor's user-wide MCP config.
@@ -49,13 +48,24 @@ func ClaudeDesktop() (*JSONAssistant, error) {
 		return nil, err
 	}
 	dir := filepath.Join(config, "Claude")
-	return &JSONAssistant{ID: "claude-desktop", Name: "Claude Desktop", Dir: dir, Path: filepath.Join(dir, "claude_desktop_config.json"), Global: true, NoInstructions: true}, nil
+	return &JSONAssistant{ID: "claude-desktop", Name: "Claude Desktop", Dir: dir, Path: filepath.Join(dir, "claude_desktop_config.json"), Global: true, OnRequest: true}, nil
+}
+
+// Antigravity is the MCP config of the Antigravity CLI (agy). It keeps the
+// server's instructions in a file that the model rarely reads.
+func Antigravity() (*JSONAssistant, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	dir := filepath.Join(home, ".gemini")
+	return &JSONAssistant{ID: "antigravity", Name: "Antigravity", Dir: filepath.Join(dir, "antigravity-cli"), Path: filepath.Join(dir, "config", "mcp_config.json"), OnRequest: true}, nil
 }
 
 // JSONAssistants returns every assistant configured by JSON.
 func JSONAssistants() ([]*JSONAssistant, error) {
 	var all []*JSONAssistant
-	for _, f := range []func() (*JSONAssistant, error){Cursor, ClaudeDesktop} {
+	for _, f := range []func() (*JSONAssistant, error){Cursor, ClaudeDesktop, Antigravity} {
 		a, err := f()
 		if err != nil {
 			return nil, err

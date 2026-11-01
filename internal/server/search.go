@@ -37,7 +37,8 @@ func addSearchTool(s *mcp.Server, sess *session) {
 		Query string `json:"query" jsonschema:"text to find in skill IDs, names and descriptions, such as pdf or pull request"`
 	}
 	mcp.AddTool(s, &mcp.Tool{
-		Name: "search_skills",
+		Name:        "search_skills",
+		Annotations: readOnly,
 		Description: `Search the user's whole Quiver library, including skills not assigned in this project. ` +
 			`Each match says whether it is assigned here. ` +
 			`You may suggest an unassigned skill to the user when it fits the task, but do not assume it applies: ` +

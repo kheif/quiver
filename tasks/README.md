@@ -117,7 +117,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK47](TASK47-pinning.md) | Pinning | TASK15 |
 | ✅ | [TASK48](TASK48-update-preview.md) | Update preview | TASK15 |
 | ✅ | [TASK49](TASK49-library-sync-between-machines.md) | Library sync between machines | TASK30 |
-|  | [TASK50](TASK50-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK37 |
+| ✅ | [TASK50](TASK50-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK37 |
 |  | [TASK51](TASK51-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK45, TASK14 |
 |  | [TASK52](TASK52-background-update-checks.md) | Background update checks | TASK51, TASK15 |
 |  | [TASK53](TASK53-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |

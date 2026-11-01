@@ -107,7 +107,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
-| `quiver mcp install [assistant...]` | Register the MCP server with every installed assistant: Claude Code and Cursor. Name assistants, such as `claude-desktop`, to set up only those. |
+| `quiver mcp install [assistant...]` | Register the MCP server with every supported assistant that is installed, or only with the assistants named. See [MCP server](#mcp-server). |
 | `quiver mcp uninstall [assistant...]` | Remove it from them, or only from the assistants named. |
 | `quiver mcp config` | Print the MCP config entry for any other assistant. |
 | `quiver mcp` | Run the MCP server. Assistants start this. |
@@ -123,17 +123,19 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 
 ## MCP server
 
-`quiver mcp install` sets up Claude Code and Cursor when it finds them. `quiver mcp install cursor claude-desktop` sets up only the assistants named:
+`quiver mcp install` sets up every supported assistant that is installed. Name assistants to set up only those, such as `quiver mcp install codex cursor`. The supported assistants:
 
 | Assistant | Name | What it changes |
 |---|---|---|
 | Claude Code | `claude-code` | Runs `claude mcp add --scope user quiver -- <path to quiver> mcp`. |
+| Codex | `codex` | Runs `codex mcp add quiver -- <path to quiver> mcp`, which writes `~/.codex/config.toml` (or `$CODEX_HOME`). The Codex CLI and app share it. |
 | Cursor | `cursor` | Adds `quiver` to `mcpServers` in `~/.cursor/mcp.json`. |
-| Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Only when named. |
+| Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). |
+| Antigravity | `antigravity` | Adds `quiver` to `mcpServers` in `~/.gemini/config/mcp_config.json`, which the Antigravity CLI (`agy`) reads. |
 
-An assistant counts as installed when the `claude` command is on `PATH`, or when its config folder exists. In the JSON files, every other key stays as it is, including an `env` of the `quiver` entry, and the old file is saved next to it as `<file>.quiver-backup`. A file that is not valid JSON is reported and never overwritten. Restart Cursor or Claude Desktop afterwards. `quiver doctor` checks the entry of each installed assistant (of Claude Desktop only when it has one). Cursor and Claude Desktop get the path of the binary itself, never the npm launcher, because desktop apps do not see your shell's `PATH` and so cannot find `node`. Cursor passes the skill list to the model and starts the server in the workspace folder, so project skills work there.
+An assistant counts as installed when its command (`claude`, `codex`) is on `PATH`, or when its config folder exists (`~/.gemini/antigravity-cli` for Antigravity). In the JSON files, every other key stays as it is, including an `env` of the `quiver` entry, and the old file is saved next to it as `<file>.quiver-backup`. A file that is not valid JSON is reported and never overwritten. When Codex already has a `quiver` entry, its `env` is kept too. Restart the assistant afterwards. `quiver doctor` checks the entry of each installed assistant. Every assistant but Claude Code gets the path of the binary itself, never the npm launcher, because desktop apps do not see your shell's `PATH` and so cannot find `node`. Cursor passes the skill list to the model and starts the server in the workspace folder, so project skills work there.
 
-**Claude Desktop** runs Quiver's tools but does not pass the server's instructions to the model, so it never sees the skill list or the always-on skills. A skill is used only when you ask for Quiver's skills in the prompt, such as "check the quiver skills for this". That is why `quiver mcp install` sets it up only with `quiver mcp install claude-desktop`. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
+**Codex, Claude Desktop and Antigravity** use Quiver's skills only when you ask for them in the prompt, such as "check the quiver skills for this"; `quiver mcp install` says so. Codex loads an MCP server's tools, and with them its instructions, only when the model searches for them. Antigravity puts the instructions in a file the model rarely reads. Claude Desktop drops them. Once asked, Codex and Antigravity also follow the always-on skills; Claude Desktop does not. Codex and Antigravity start the server in the project folder, so project skills work there. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
 
 For any other assistant, `quiver mcp config` prints the entry:
 

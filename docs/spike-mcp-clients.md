@@ -1,8 +1,8 @@
-# Spike: Cursor and Claude Desktop over MCP
+# Spike: other assistants over MCP
 
-TASK37 adds Cursor and Claude Desktop to `quiver mcp install`. The skill catalog and the always-on skills reach the assistant only through the server's `instructions` (see [spike-b01-results.md](spike-b01-results.md)). An assistant that does not pass `instructions` to the model never sees the skills. This spike checks each assistant before Quiver lists it as supported.
+TASK37 adds Cursor and Claude Desktop to `quiver mcp install`; TASK50 adds Codex and Antigravity and checks Gemini CLI. VS Code is not measured yet. The skill catalog and the always-on skills reach the assistant only through the server's `instructions` (see [spike-b01-results.md](spike-b01-results.md)). An assistant that does not pass `instructions` to the model never sees the skills. This spike checks each assistant before Quiver lists it as supported.
 
-**Status:** done on 2026-10-31. Cursor passes `instructions` to the model; Claude Desktop does not.
+**Status:** Cursor and Claude Desktop done on 2026-10-31, Codex, Antigravity and Gemini CLI on 2026-11-01. Cursor passes `instructions` to the model. Codex and Antigravity pass them only once the model looks for Quiver's tools. Claude Desktop drops them.
 
 ## Setup
 
@@ -19,7 +19,7 @@ TASK37 adds Cursor and Claude Desktop to `quiver mcp install`. The skill catalog
    - Claude Desktop: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS), `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
 4. Check that the server started: `/tmp/quiver-gui-spike/home/logs/mcp.log` has a `server started` line. In Cursor, the server also shows in Settings → MCP.
 
-For Cursor, `PATH=$HOME/.local/bin:$PATH QUIVER=$PWD/bin/quiver spike/b01/cursor-run.sh /tmp/quiver-cursor-spike` does all of this and runs every prompt headless with the Cursor CLI (after `cursor-agent login`); `python3 spike/b01/cursor-analyze.py /tmp/quiver-cursor-spike/out` summarizes the sessions.
+Codex and Antigravity have their own scripts, described in their results below. For Cursor, `PATH=$HOME/.local/bin:$PATH QUIVER=$PWD/bin/quiver spike/b01/cursor-run.sh /tmp/quiver-cursor-spike` does all of this and runs every prompt headless with the Cursor CLI (after `cursor-agent login`); `python3 spike/b01/cursor-analyze.py /tmp/quiver-cursor-spike/out` summarizes the sessions.
 
 The fixture skills end each answer with a marker such as `[used:k8s-debug]`. The always-on skill `reply-style` ends every reply with `[always-on]` and writes headings in lowercase.
 
@@ -77,8 +77,50 @@ Asked whether its context held instructions from a server named quiver, the mode
 
 The Code tab of Claude Desktop is Claude Code and uses Claude Code's own MCP config, not `claude_desktop_config.json`; spike B01 covers it.
 
+### Codex
+
+Measured on 2026-11-01 with `codex-cli` 0.166.0 (model `gpt-6-astra`), headless, with `QUIVER=$PWD/bin/quiver spike/b01/codex-run.sh <dir>` and `python3 spike/b01/codex-analyze.py <dir>/out`. The script passes the server with `-c mcp_servers.quiver...`, so `~/.codex/config.toml` is not changed. `codex exec` cannot ask for approval, so the first run set `default_tools_approval_mode = "approve"`; once the read tools were marked read-only (`readOnlyHint`), Codex ran them without approval.
+
+Codex always defers MCP tools (`tool_search_always_defer_mcp_tools`): the model sees no Quiver tool until it searches for one. The server's instructions come with the tools: asked for Quiver's skills, the model called `get_skill` with IDs that only the instructions name, `reply-style` first.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | The server starts | Yes; `server started` in the log, in the workspace folder. |
+| 2 | A fitting prompt loads the skill | **0 / 6.** The model never searched for Quiver's tools. With Quiver named in the prompt, 4 / 4 loaded the right skill and ended with its marker. |
+| 3 | A non-fitting prompt loads no skill | 0 / 4 loaded a skill. |
+| 4 | Always-on applies from the first reply | **0 / 10.** With Quiver named in the prompt, 5 / 5. |
+| 5 | `get_skill_file` is used | Yes, when Quiver was named (`sql-migration-review` read `references/checklist.md`). |
+| 6 | The folder the server starts in | The working directory. With `release-notes` assigned only to a project, the project folder loaded it and another folder did not. |
+| 7 | Installed with npm | Not tested; `mcp install` gives Codex the binary itself, since the Codex app reads the same config. |
+
+`codex mcp add` replaces the whole entry, so `mcp install` passes an existing entry's `env` again. It keeps the comments and other settings of `config.toml`.
+
+### Antigravity
+
+Measured on 2026-11-01 with the Antigravity CLI `agy` 1.4.12, default model, headless, with `QUIVER=$PWD/bin/quiver spike/b01/antigravity-run.sh <dir>` and `python3 spike/b01/antigravity-analyze.py <dir>/out`. `agy` reads MCP servers only from `~/.gemini/config/mcp_config.json`, so the script adds a `quiver` entry there and removes it at the end. Headless runs deny MCP calls unless `permissions.allow` has `mcp(quiver/*)`; the script passes it with `--settings` for each run.
+
+Antigravity lists Quiver's tools directly, but writes the server's instructions to `~/.gemini/antigravity-cli/mcp/quiver/instructions.md` instead of the prompt. Asked for Quiver's skills, the model read that file and then called `get_skill(reply-style)`.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | The server starts | Yes, in the workspace folder. |
+| 2 | A fitting prompt loads the skill | **1 / 6** (`fit-k8s1`, through `search_skills`, without reading the instructions). |
+| 3 | A non-fitting prompt loads no skill | 0 / 4 loaded a skill. |
+| 4 | Always-on applies from the first reply | **0 / 10.** Named in the prompt, the model read the instructions and loaded `reply-style`. |
+| 5 | `get_skill_file` is used | Not run. |
+| 6 | The folder the server starts in | The working directory, so project skills work. |
+| 7 | Installed with npm | Not tested; `mcp install` gives Antigravity the binary itself. |
+
+Not checked: the Antigravity app, which may keep its MCP config elsewhere.
+
+### Gemini CLI
+
+Gemini CLI 0.66.0 registers servers with `gemini mcp add` into `~/.gemini/settings.json`. Not measured: signing in with a Google account fails with "This client is no longer supported for Gemini Code Assist for individuals. To continue using Gemini, please migrate to the Antigravity suite of products". `spike/b01/gemini-run.sh` runs the prompts once a login (such as an API key) works.
+
 ## Decision
 
-- **Cursor:** supported. `quiver mcp install` sets it up whenever `~/.cursor` exists.
-- **Claude Desktop:** set up only with `quiver mcp install claude-desktop`, which prints that skills are used only when the prompt asks for Quiver's skills and that always-on skills do not apply. `doctor` checks its entry only when there is one. Check again when Claude Desktop passes server `instructions` to the model.
-- **Both:** the entry runs the quiver binary itself, never the npm launcher.
+- **Every assistant `mcp install` knows is set up when it is installed** (decided 2026-11-01; until then Claude Desktop was set up only when named). Naming assistants sets up only those.
+- **Cursor:** supported.
+- **Codex, Claude Desktop and Antigravity:** `mcp install` prints that they use Quiver's skills only when the prompt asks for them. Check again when they pass server `instructions` to the model up front.
+- **Gemini CLI:** not supported until it can be measured.
+- **All but Claude Code:** the entry runs the quiver binary itself, never the npm launcher.
