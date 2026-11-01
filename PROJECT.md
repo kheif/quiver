@@ -228,10 +228,23 @@ quiver doctor                       # Check the library and fix problems
 - Interactive TUI with search
 - Background update checks with notices
 
+**Session-start delivery**
+- Always-on skills added to the context by a session-start hook, in assistants that have one; the other skills stay on the MCP server
+- `quiver install` replaces `quiver mcp install` and reports, per assistant, how always-on skills reach it
+- VS Code Copilot
+- A pointer in the rules file of assistants without hooks
+
+**Test phase** (before the enterprise track)
+- End-to-end user journeys, Windows without skipped tests, versioned data formats with migration tests
+- A benchmark of assistant behaviour, run before every release
+- Fuzzing, parallel processes, performance budgets and a security review
+
+**Enterprise**
+- To be planned after the test phase (see Direction)
+
 **Later**
 - Graphical app
 - Search and a marketplace: people can find and add skills others published
-- Team libraries with shared assignments (see Direction)
 
 ## Direction
 

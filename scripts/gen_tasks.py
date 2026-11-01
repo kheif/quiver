@@ -1089,6 +1089,440 @@ The full skill text does not go into `instructions`: Claude Code cuts them at ab
 - In Claude Code, a new session follows a global always-on caveman skill from the first message, with the caveman plugin disabled (checked in TASK18).
 """)
 
+# ---------------------------------------------------------------- Phase 6
+phase("Phase 6: Session-start delivery")
+
+task("TASKF1", "Spike: session-start hooks per assistant", "TASK38", """
+Always-on skills reach the model through the MCP server's `instructions` (TASKA1). Only some assistants put those into the prompt: Claude Code and Cursor do; Codex loads them only after the model searches for Quiver's tools, Antigravity writes them to a file the model rarely reads, and Claude Desktop drops them (docs/spike-mcp-clients.md). In those three, always-on skills applied in 0 of 10 prompts.
+
+A session-start hook solves this where an assistant has one: the assistant runs a command when a session starts and adds its output to the model's context, so the skill text is there without the model deciding to load it. This spike finds out, per assistant, whether such a hook exists and how it behaves. TASKF2 and TASKF4 are built on its results.
+
+**Delivery levels.** Each assistant gets one:
+- **hook:** the always-on skills' text is added at session start (TASKF2).
+- **instructions:** the model gets Quiver's `instructions` up front and loads the always-on skills itself (Cursor, 10 of 10 in TASKD4).
+- **rules file:** a pointer in a file the assistant always loads makes the model load Quiver (TASKF6).
+- **on request:** skills load only when the prompt asks for them (Claude Desktop).
+
+**How to run.** Use the B01 fixture skills and prompts: `spike/b01/gui-setup.sh` builds a throwaway Quiver home whose always-on skill `reply-style` ends every reply with `[always-on]`, and the fitting skills end their answer with `[used:<id>]`; `spike/b01/prompts.txt` has 6 fitting and 4 other prompts. Put hooks into a throwaway workspace's project config where the assistant reads one, or into a throwaway config folder; never change the user's own config. The existing runners (`codex-run.sh`, `cursor-run.sh`, `antigravity-run.sh`, `run-real.sh`) show how each assistant is run headless.
+
+**Output.** `docs/spike-hooks.md`, in the style of docs/spike-mcp-clients.md: one section per assistant with the version, the setup, the counts (always-on in n of 10, fitting skills in n of 6, other skills loaded in n of 4), and one summary table with a row per assistant and these columns: hook event, user and managed config file, input on stdin, output format, output reaches the model, size limit, after compaction, sub-agents, trust or approval prompt, command form on Windows, global rules file, delivery level.
+
+**Done when:** every subtask is done and `docs/spike-hooks.md` gives each assistant a delivery level.
+""")
+
+task("TASKF1.1", "Claude Code hooks", "TASK38", """
+Facts to confirm against the current Claude Code docs before measuring:
+- Hooks are set in settings files: `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`) for the user, `.claude/settings.json` in a project, and a managed settings file for companies.
+- The entry has this shape:
+  ```json
+  {"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "/path/to/quiver hook session-start claude-code"}]}]}}
+  ```
+- The hook gets JSON on stdin with `session_id`, `cwd`, `hook_event_name` and `source` (`startup`, `resume`, `clear` or `compact`). For `SessionStart`, its stdout is added to the context, or the JSON `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`.
+
+Steps, in a throwaway workspace with the hook in its `.claude/settings.json`:
+1. The hook prints `reply-style` in full. Run the 10 prompts with `claude -p` and count `[always-on]` and `get_skill` calls for `reply-style` (expected: none).
+2. Compare plain stdout with `additionalContext`. Find the size limit: print 5, 10, 20 and 50 KB and check whether the end of the text still reaches the model.
+3. Check each `source`: is the text there after `/compact`, after `/clear`, and in a resumed session?
+4. Sub-agents: does a sub-agent started with the Task tool see the text? Is there an event that can add context to a sub-agent?
+5. Managed settings: find the file's path on macOS, Linux and Windows, whether its hooks run next to the user's, and whether a user can turn them off.
+6. Time: how long may the hook run before Claude Code gives up, and does a slow hook delay the first reply?
+
+**Done when:** the results are in `docs/spike-hooks.md`.
+""")
+
+task("TASKF1.2", "Codex hooks", "TASK38", """
+Facts seen on 2026-11-01 with Codex 0.166:
+- Hooks are read from `~/.codex/hooks.json` (or `$CODEX_HOME/hooks.json`), in the same shape as Claude Code's (`{"hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "...", "timeout": 10}]}]}}`).
+- The binary has the events `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `PostCompact`, `SubagentStart` and `SubagentStop`, the output field `additionalContext`, a setting `additionalContextLimit`, and a managed hook folder (`managedDir`).
+- Hooks need trust: `config.toml` keeps a `[hooks.state."<file>:<event>:<i>:<j>"]` table with `enabled` and a `trusted_hash` for each hook. `codex exec` has `--dangerously-bypass-hook-trust`.
+
+Steps:
+1. Use a throwaway `CODEX_HOME` with its own login (`codex login`); never copy or change `~/.codex`.
+2. Run the checks of TASKF1.1 with `codex exec --json` and once in the interactive CLI.
+3. Trust: what does the user see for a new hook, in the CLI and in the Codex app? Can `quiver install` make a hook trusted without editing `config.toml` by hand, for example through a `codex` command? What changes when the hook's command changes (a moved binary)?
+4. Record the default and maximum of `additionalContextLimit`, and the path and rules of the managed hook folder.
+5. Find out whether a project can have its own `hooks.json`.
+
+**Done when:** the results are in `docs/spike-hooks.md`.
+""")
+
+task("TASKF1.3", "VS Code Copilot", "TASK38", """
+Facts seen on 2026-11-01 with VS Code 1.143:
+- MCP servers are read from the user's `mcp.json` (`~/Library/Application Support/Code/User/mcp.json` on macOS) and a workspace's `.vscode/mcp.json`. The servers sit under `servers`, not `mcpServers`, and each has `"type": "stdio"`.
+- `code --add-mcp '<json>'` adds a server to the user profile; there is no remove command.
+- `code chat -m agent "<prompt>"` opens a chat with a prompt. VS Code has no headless mode, so the answers are read from the chat window or from the chat session files in the workspace storage.
+- TASK38 did not measure Copilot.
+
+Steps, with the fixture server in a throwaway workspace's `.vscode/mcp.json`:
+1. Run the 10 prompts in Copilot Chat's agent mode, one new chat each. Does the model get `instructions` (always-on count), does a fitting prompt load the skill?
+2. With the server in the user's `mcp.json` instead: which folder does it start in? If not the workspace folder, does `"cwd": "${workspaceFolder}"` fix it?
+3. Does Copilot in VS Code have a session-start hook whose output reaches the model?
+4. Does VS Code load a user-level instructions file in every workspace (for example an `.instructions.md` file in the user's prompts folder with `applyTo: "**"`)? Does a pointer there make the model load Quiver?
+5. Where is the `mcp.json` on Windows and Linux, and for VS Code Insiders?
+
+**Done when:** the results are in `docs/spike-hooks.md`.
+""")
+
+task("TASKF1.4", "Cursor, Antigravity and global rules files", "TASK38", """
+Facts: in a workspace test on 2026-11-01, a one-line `AGENTS.md` telling the model to load Quiver's tools before the first reply raised always-on from 0 to 10 of 10 prompts in Codex and from 0 to 9 of 10 in Antigravity, and fitting skills from 0 and 1 to 6 of 6. That test put the file in the workspace only.
+
+Steps:
+1. Cursor: does it have a hooks file with an event at session start or before the first prompt whose output reaches the model? Cursor already gets `instructions`, so a hook only matters if it is more reliable.
+2. Antigravity CLI (`agy` 1.4): does it have hooks, for example in its plugins (`agy plugin`)? Where does the Antigravity app, as opposed to the CLI, keep its MCP config?
+3. Global rules files: does Codex load `~/.codex/AGENTS.md` (or `$CODEX_HOME/AGENTS.md`) in every project, and Antigravity `~/.gemini/GEMINI.md`? Repeat the workspace test with only the global file.
+4. Does a project's own `AGENTS.md` add to the global one or replace it?
+
+**Done when:** the results are in `docs/spike-hooks.md`.
+""")
+
+task("TASKF2", "`quiver hook session-start`", "TASKF1, TASKA1", """
+A command that a session-start hook runs: it prints the always-on skills of the folder the session starts in, in the format the assistant expects. Installing the hook is TASKF4.
+
+1. **Command.** `quiver hook session-start <assistant>` in a new `internal/cli/hook.go`. `<assistant>` is a name from `quiver install` (such as `claude-code`, `codex`) and selects the input and output format found in TASKF1. It is listed in the help like `quiver mcp`, with a Long text that says assistants run it.
+2. **Project.** Read the hook's JSON from stdin and take its `cwd`. Resolve the project as the MCP server does (`server.Resolve` in `internal/server/resolve.go`): `QUIVER_PROJECT` first, then that folder. A folder outside any project gets only the global skills.
+3. **Skills.** The IDs come from `Registry.AlwaysOnServed` (`internal/registry/assign.go`): global ones first, then the project's, each in the order it was marked, each ID once. IDs no longer in the library are left out, as in the catalog. The text of each skill is what `get_skill` returns: move the code that builds it (`skillText` in `internal/server/skills.go`) where both can use it.
+4. **Block.** Print one marked block, so the MCP server's pointer (TASKF3) can refer to it:
+   ```
+   <quiver-always-on>
+   Always-on skills from Quiver. Follow each one for the whole conversation.
+
+   ## caveman/caveman
+   <the skill's SKILL.md body>
+
+   ## reply-style
+   <...>
+
+   Extra files of these skills are loaded with the get_skill_file tool of the quiver MCP server.
+   </quiver-always-on>
+   ```
+5. **Size.** Keep the whole block under the assistant's limit (TASKF1). If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
+6. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASKG6.3.
+
+**Out of scope:** installing the hook (TASKF4), per-prompt hooks.
+
+**Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line) and each output format.
+""")
+
+task("TASKF3", "Always-on pointer becomes the fallback", "TASKF2", """
+With the hook installed, the pointer in `instructions` (TASKA1) would make the model load each always-on skill a second time with `get_skill`. Without the hook it is still needed.
+
+1. Change `pointer` in `internal/server/catalog.go` to:
+   ```
+   Always-on skills: <ids>. If the conversation already has a <quiver-always-on> block, these skills are loaded: follow them. Otherwise call the get_skill tool of this server for each before your first reply and follow it for the whole conversation.
+   ```
+2. The catalog and its budget (`maxInstructions`) stay as they are; check that the longer pointer still leaves room for the catalog.
+
+**Done when:** the server tests check the new pointer, and a Claude Code session with the hook (TASKF4.2, or a hook set by hand) follows `reply-style` in 10 of 10 B01 prompts with no `get_skill` call for it. Record the counts in the task notes.
+""")
+
+task("TASKF4", "`quiver install`", "TASKF2, TASK38", """
+Quiver now sets up more than an MCP server, so `quiver install` replaces `quiver mcp install`. Per assistant it sets up the MCP server and, where the assistant has one (TASKF1), the session-start hook, and it reports how always-on skills reach each assistant. `quiver mcp` stays: it is the command assistants run. `quiver mcp config` stays too.
+
+The current code is in `internal/cli/mcp.go` (`mcpTargets`, `mcpInstall`, `mcpUninstall`, `installClaude`, `installCodex`, `installJSON`), `internal/assistant` (Claude Code and Codex through their commands, the JSON assistants through `jsonconfig.go`) and `internal/cli/doctor.go` (`checkMCP` and the checks after it).
+
+**Done when:** every subtask is done.
+""")
+
+task("TASKF4.1", "Rename to `quiver install` and `quiver uninstall`", "TASK38", """
+1. Move the commands from `internal/cli/mcp.go` to `internal/cli/install.go` as `quiver install [assistant...]` and `quiver uninstall [assistant...]`, with the same names, completion and output. Remove `quiver mcp install`, `quiver mcp uninstall` and the deprecated `--print`; keep no alias.
+2. Update every caller and message: `guidedSetup` in `internal/cli/init.go`, the fix hints of `doctor` ("run: quiver mcp install ..."), the npm note in `mcpInstall`, and any other output a search for `mcp install` finds.
+3. Update the docs: README (command table and the MCP server section), PROJECT.md (CLI and How It Works), CONTRIBUTING.md if it names the command, and the First Milestone of `tasks/README.md` in `scripts/gen_tasks.py`. The website is updated by the maintainer.
+4. The GitHub release notes of the next release say that the command changed.
+
+**Done when:** the tests and completion use the new commands, and a search for `mcp install` finds nothing outside the files of finished tasks.
+""")
+
+task("TASKF4.2", "Claude Code hook", "TASKF1.1, TASKF2, TASKF4.1", """
+1. **Where.** The user's Claude Code settings file found in TASKF1.1 (`~/.claude/settings.json`, or `$CLAUDE_CONFIG_DIR/settings.json`).
+2. **What.** A `SessionStart` entry whose command is `<quiver> hook session-start claude-code`, `<quiver>` being the path `command()` in `internal/cli/mcp.go` returns (Claude Code has the shell's `PATH`, so the npm launcher works), quoted with `assistant.ShellQuote`.
+3. **How.** Generalize `internal/assistant/jsonconfig.go`: today `change` edits the `mcpServers` object; the hook lives in `hooks.SessionStart`, an array of groups that each hold a `hooks` array. Keep every other key, group and hook, the key order, the indentation and the file mode; save `<file>.quiver-backup` first; write atomically (`fsutil.WriteFileAtomic`); never write a file that is not valid JSON.
+4. **Recognize Quiver's hook** by its command: one whose arguments end with `hook session-start claude-code` and whose program is named `quiver` (or `quiver.exe`). `install` points it to the current binary (reported as updated), adds it if missing, and leaves it alone if it is current; `uninstall` removes only it, and the group if it is then empty.
+5. Set the hook's timeout to the value found in TASKF1.1.
+
+**Done when:** tests in `internal/assistant` cover a missing file, a file with other settings and hooks, an update after a move, removal, and a file that is not valid JSON; tests in `internal/cli` cover install and uninstall; and a new Claude Code session follows an always-on fixture skill from the hook.
+""")
+
+task("TASKF4.3", "Codex hook", "TASKF1.2, TASKF2, TASKF4.1", """
+1. **Where.** Codex's `hooks.json` (`~/.codex/hooks.json`, or `$CODEX_HOME/hooks.json`). The Codex CLI and app share it.
+2. **What.** A `SessionStart` entry whose command is `<quiver> hook session-start codex`, `<quiver>` being the binary itself (`appCommand()`), since the Codex app has no shell `PATH`.
+3. **How.** The JSON editing of TASKF4.2, with the same rules for other hooks, backups and recognition.
+4. **Trust.** Apply the trust step found in TASKF1.2. If a new hook cannot be trusted without the user, `install` says what the user must do and `doctor` reports the hook as not trusted.
+5. **Tests.** The fake codex (`assistanttest.InstallCodex`) covers the `codex` calls in `internal/cli`; a test like `TestRealCodex` in `internal/assistant/codex_test.go` checks the real codex in a throwaway `CODEX_HOME` when it is installed.
+
+**Done when:** the tests pass, and a new Codex session follows an always-on fixture skill with no `get_skill` call for it.
+""")
+
+task("TASKF4.4", "Delivery report, doctor and status", "TASKF4.2", """
+Users must see which assistants load always-on skills by themselves, so they do not take those skills for optional ones where they are not.
+
+1. **Model.** Replace `JSONAssistant.OnRequest` with a delivery level on every assistant (the levels of TASKF1: hook, instructions, rules file, on request), set from `docs/spike-hooks.md`.
+2. **Install report.** After the per-assistant lines, print one line per assistant with its level. For every assistant without a hook, say that loading skills there is up to the model, and when always-on skills are assigned, name them:
+   ```
+   Cursor: no session-start hook. Quiver's skills are loaded when the model decides to.
+     These always-on skills do not load by themselves there: security-review, reply-style.
+   ```
+   The names come from the global always-on skills and those of the project in the current folder.
+3. **doctor.** For each hook: present, runs this binary, file readable, trusted (Codex). For each assistant without a hook while always-on skills are assigned: a warning that names them.
+4. **status.** A short section that lists each installed assistant and its level.
+
+**Done when:** tests cover every level, the warning with and without always-on skills, and the doctor checks.
+""")
+
+task("TASKF5", "VS Code Copilot", "TASKF1.3, TASKF4.1", """
+Add VS Code to `quiver install` with the delivery level found in TASKF1.3.
+
+1. **MCP.** Add `quiver` to `servers` in VS Code's user `mcp.json`: `~/Library/Application Support/Code/User/mcp.json` on macOS, `%APPDATA%\\Code\\User\\mcp.json` on Windows, `~/.config/Code/User/mcp.json` on Linux. The entry has `"type": "stdio"` and, if TASKF1.3 found it needed, `"cwd": "${workspaceFolder}"`. Extend `JSONAssistant` with the name of the servers key (today always `mcpServers`) and the extra fields of an entry. Use `code --add-mcp` only if TASKF1.3 shows it is better; it cannot remove an entry.
+2. **Delivery.** Add the hook or the rules-file pointer if TASKF1.3 found one; otherwise VS Code is at the instructions or on-request level.
+3. **Installed** means its user folder exists. VS Code Insiders is included if TASKF1.3 found its paths.
+4. The command is the binary itself (`appCommand()`), as for the other desktop apps.
+
+**Done when:** install, update, uninstall and doctor are tested for VS Code, and a Copilot agent session uses the fixture skills at the measured level.
+""")
+
+task("TASKF6", "Rules-file pointer for assistants without hooks", "TASKF1.4, TASKF4.4", """
+For an assistant without a usable hook that always loads a rules file, `quiver install` adds a short pointer to that file. In the 2026-11-01 workspace test this raised always-on from 0 to 10 of 10 prompts in Codex and to 9 of 10 in Antigravity.
+
+1. **Block.** Between marker comments, so nothing else in the file changes:
+   ```
+   <!-- quiver:start -->
+   Skills on this machine are served by the MCP server named quiver. Before your first reply in every conversation, load the quiver tools (search for them if they are not loaded) and follow the quiver server's instructions.
+   <!-- quiver:end -->
+   ```
+2. **Global file first.** Use the assistant's global rules file found in TASKF1.4, such as `~/.gemini/GEMINI.md`, so no project changes. Only assistants whose level is rules file get it.
+3. **Project files, opt in.** For an assistant without a global file, write the block into the project's rules file only when the user turned this on once (`"projectRulesFile": true` in `config.json`). Write it when a project is registered and when the MCP server starts in a registered project whose file lacks it; the first session in a new project may miss it. If Quiver creates the file, add it to the repository's `.git/info/exclude`, as TASKB1 does for generated skills. The install report names every file it changed.
+4. `uninstall` removes the block, and the file if Quiver created it and nothing else is in it. `doctor` checks the block is there and current.
+
+**Done when:** tests cover a new file, an existing file, an update of the block, removal, the setting and `.git/info/exclude`.
+""")
+
+# ---------------------------------------------------------------- Phase 7
+phase("Phase 7: Test phase")
+
+task("TASKG1", "Coverage baseline", "TASKF6", """
+Package coverage today undercounts code that other packages' tests run: `internal/library` shows 39% and `internal/git` 41% because most of their code runs from `internal/cli`, and `internal/homesync` has no tests of its own. The e2e suite runs the built binary, whose coverage is not measured at all.
+
+1. Measure all code together: unit tests with `-coverpkg=./...`, and the e2e binary built with `go build -cover` and run with `GOCOVERDIR`, merged with `go tool covdata`. Add a CI step that produces the merged report and keeps it as an artifact.
+2. List the user-facing paths no test reaches, such as error branches of `install`, sync conflicts and update failures, in this task's notes.
+3. Add tests for them, starting with `internal/homesync`.
+4. Record the total in decisions.md as the baseline. CI fails when a change lowers it by more than 0.5 points.
+
+**Done when:** the merged report is in CI and CI enforces the baseline.
+""")
+
+task("TASKG2", "End-to-end user journeys", "TASKF6, TASK29", """
+The e2e suite (`e2e/`) builds the binary once (`buildAndRun` in `e2e/harness_test.go`) and covers six flows: new, add and remove; `create_skill`; import; source update; move, copy and split; `doctor --fix`. Its helpers run quiver and git in a throwaway home (`newEnv`, `run`, `quiver`, `git`), open an MCP session (`mcp`, `call`) and write files (`write`, `skillMD`).
+
+The journeys below run whole user stories with the real binary, the fake assistants of `internal/assistant/assistanttest` on `PATH`, and local bare git repositories as remotes, without network. Each journey is one test in `e2e/journeys_test.go`; each step checks its output, not only its exit code.
+
+**Done when:** every subtask is done and the journeys run on Linux, macOS and Windows.
+""")
+
+task("TASKG2.1", "Journey: setup and delivery", "TASKF6, TASK29", """
+1. A fresh home: `quiver init` with its questions answered on stdin.
+2. `quiver source add` of a local bare repository; `quiver add <id> --global --always`, and in a project folder `quiver add <id> --always`.
+3. `quiver install` with fake Claude Code and Codex: both report the hook level; a JSON assistant without a hook reports its level and names the always-on skills.
+4. `quiver hook session-start claude-code` with the project folder on stdin prints both skills, global first; with another folder only the global one.
+5. An MCP session in the project: `instructions` has the fallback pointer and the catalog; `list_skills` and `get_skill` agree with the hook.
+6. `quiver uninstall`: no Quiver entry, hook or rules-file block is left, and every other entry is.
+
+**Done when:** the journey passes on all three systems.
+""")
+
+task("TASKG2.2", "Journey: library lifecycle", "TASKF6, TASK29", """
+1. `source add`, then a new commit in the remote that changes an always-on skill and a script.
+2. `quiver update`: the preview marks the always-on skill and flags the script; answering no changes nothing, answering yes applies.
+3. `pin` the skill, change the remote again, `update` leaves it; `unpin`, `update` takes the change.
+4. `fork` the skill, `edit` the copy; the copy replaces the original wherever it was assigned or always-on.
+5. `source remove` is refused while a skill is assigned, then works with `--force`.
+
+After each step, `quiver status`, the hook's output and the MCP server's `get_skill` agree.
+
+**Done when:** the journey passes on all three systems.
+""")
+
+task("TASKG2.3", "Journey: two machines", "TASKF6, TASK29", """
+Two homes (machine A and B) and one bare remote:
+1. `quiver sync init <remote>` on both.
+2. A adds a local skill and marks it always-on; B, after `quiver sync`, has the skill, and B's hook prints it.
+3. A and B change assignments of the same project apart from each other; after both sync, both changes are kept (the three-way merge of `internal/jsonmerge`).
+4. A adds a source; B's next `sync` clones it.
+5. A removes a skill B still has assigned: B's `doctor` reports it.
+
+**Done when:** the journey passes on all three systems.
+""")
+
+task("TASKG2.4", "Journey: failures", "TASKF6, TASK29", """
+Each case ends with a clear message, no half-written file, and a `doctor` report that names the fix:
+- an unreachable remote: `source add`, `update` and `sync` time out (the git timeouts) and say so;
+- an assistant config that is not valid JSON, and a Codex `config.toml` the codex command rejects: `install` skips that assistant, sets up the others, and exits with an error;
+- a `registry.json` that is not valid JSON, and one with a newer version: commands refuse it, and the hook prints nothing and exits 0;
+- a skill folder deleted by hand;
+- a read-only Quiver home;
+- a quiver process killed in the middle of a write (the file is the old or the new one, never a mix);
+- the lock held by another process: the command waits, then fails with a message that names the lock file.
+
+**Done when:** every case passes on all three systems.
+""")
+
+task("TASKG3", "Windows", "TASKF6", """
+CI runs the tests on Windows (without `-race`, which needs cgo). Six tests skip there because the fake `claude` and `codex` in `internal/assistant/assistanttest/fake.go` are shell scripts. The hook commands of TASKF4 add new Windows cases: quoting, paths and the shell each assistant uses. The Release workflow installs a release with `install.ps1` and npm on Windows, but only when a tag is pushed.
+
+**Done when:** every subtask is done, and no test skips on Windows for lack of a fake.
+""")
+
+task("TASKG3.1", "Fake assistants in Go", "TASKF6", """
+1. Write the fakes as one Go program (for example `internal/assistant/assistanttest/fakecmd`) that acts as `claude` or `codex` depending on the name it is run as, and keeps its state and call log in files next to it, as the scripts do now.
+2. `Install` and `InstallCodex` build it once per test binary (in a temp folder, named `claude.exe` and `codex.exe` on Windows) and put it first on `PATH`.
+3. Keep the `Fake` API (`SetUser`, `SetLocal`, `SetCodex`, `User`, `Calls`), so the tests do not change.
+4. Remove the Windows skips that were only there for the fakes.
+
+**Done when:** the six tests run and pass on the Windows runner.
+""")
+
+task("TASKG3.2", "Hooks and paths on Windows", "TASKG3.1", """
+1. Quote hook commands for the shell each assistant runs them in on Windows (TASKF1). `assistant.ShellQuote` quotes for a POSIX shell only; add the Windows form.
+2. Paths with spaces and non-ASCII user names, in the Quiver home, the binary's path and the project path.
+3. The `%APPDATA%` locations of every assistant config.
+4. CRLF line endings in skill files and rules files: parsing and the rules-file markers still work.
+
+**Done when:** tests cover each point and pass on the Windows runner.
+""")
+
+task("TASKG3.3", "Installed binary runs the hook", "TASKG3.1", """
+The release checks install the binary but do not run it with an assistant.
+
+1. In the Release workflow, after each install (`install.sh`, `install.ps1`, npm), run `quiver install` with the fake assistants and run the installed hook command as the assistant would, from a project folder.
+2. Add the same check to the `release-dry-run` job of CI, so it runs on every push and not only on a tag.
+
+**Done when:** the checks pass on Linux, macOS and Windows.
+""")
+
+task("TASKG4", "Versioned data formats and migration", "TASKF6", """
+Facts: `registry.json` is at version 2 and `registry.Load` upgrades version 1 (`internal/registry/registry.go`); the state file is at version 1 and a newer one is refused; `config.json` is at version 1; `.quiver.json` holds only `id`; the hook's block (TASKF2) has no version.
+
+1. Every file Quiver writes in the Quiver home has a version, and a file from a newer Quiver is refused with a message that names the version needed, as the state file does.
+2. `.quiver.json` is committed in users' repositories, so it gets a version only when its format changes; a file without one is version 1.
+3. **Golden homes.** Keep a Quiver home as written by v1.0.0, v1.1.0, v1.2.0 and every later release under `testdata/formats/<version>/`, made by running that release's binary through the same script of commands (init, source add, add, add --always, a project). A test copies each, runs the current code on it, and checks the upgraded files and a clean `doctor`.
+4. Describe each format version in data-model.md.
+5. Add "add the release's golden home" to docs/releasing.md.
+
+**Done when:** every golden home upgrades in the tests, and every file from a newer version is refused clearly.
+""")
+
+task("TASKG5", "Assistant behaviour benchmark", "TASKF6", """
+Whether assistants load fitting skills and follow always-on skills was measured by hand, once per assistant (docs/spike-b01-results.md, docs/spike-mcp-clients.md, docs/spike-hooks.md). A new model or assistant version can change it without notice. The spike runners in `spike/b01` (`run-real.sh` and `analyze.py` for Claude Code, `cursor-run.sh`, `codex-run.sh`, `antigravity-run.sh`, `gemini-run.sh` and their analyzers) become one benchmark, run before every release and after an assistant update.
+
+Each run calls paid models, so it runs by hand or on a schedule, not on every push.
+
+**Done when:** every subtask is done, and a baseline run is committed.
+""")
+
+task("TASKG5.1", "Benchmark runner", "TASKF6", """
+1. **Decide first:** Go (one toolchain, reuses Quiver's code) or Python (what the analyzers use now).
+2. One tool in `bench/` that prepares the fixture home (as `spike/b01/gui-setup.sh` does), runs a prompt set through an adapter (TASKG5.2), and writes one JSON result per run: assistant and version, model, date, Quiver version, and per prompt the Quiver tool calls in order, the skill markers, the always-on marker and any error.
+3. It replaces the runners and analyzers in `spike/b01`; `docs/spike-*.md` point to it.
+
+**Done when:** the runner reproduces the Codex numbers in docs/spike-mcp-clients.md within one prompt.
+""")
+
+task("TASKG5.2", "Assistant adapters", "TASKG5.1", """
+One adapter per assistant with a headless mode: Claude Code (`claude -p`), Codex (`codex exec --json`), Cursor (`cursor-agent -p`), Antigravity (`agy -p`), and Gemini CLI once its login works (its Google sign-in was refused on 2026-11-01).
+
+Each adapter sets Quiver up only for the run and never changes the user's own config: a throwaway workspace with project config (Claude Code, Cursor), per-run flags (Codex `-c mcp_servers...`), or, where neither exists (Antigravity reads only `~/.gemini/config/mcp_config.json`), an entry added and removed by the run, as `antigravity-run.sh` does. Tool permissions are given per run, never with a flag that skips every permission.
+
+**Done when:** each adapter runs the B01 prompt set and its result matches the last hand measurement.
+""")
+
+task("TASKG5.3", "Benchmark cases", "TASKG5.2", """
+Prompt sets, each with the expected result:
+- fitting and non-fitting prompts (B01);
+- always-on through the hook, and through the MCP fallback with the hook removed;
+- a project skill inside and outside its project;
+- a catalog longer than the `instructions` limit (`FILLER` in `run-real.sh`);
+- after compaction, where the assistant supports it;
+- a sub-agent task.
+
+**Done when:** every case runs on every adapter that supports it.
+""")
+
+task("TASKG5.4", "Baselines and reports", "TASKG5.3", """
+1. A report prints, per assistant and case, the rates (fitting skill loaded, always-on followed, wrong skill loaded) and compares them with the last committed baseline. It fails when a rate drops by more than a threshold set per case.
+2. Results are kept as `docs/bench/<date>-<assistant>.json`, and a short table in `docs/bench/README.md`.
+3. docs/releasing.md requires a run before a release.
+
+**Done when:** a baseline for every supported assistant is committed.
+""")
+
+task("TASKG6", "Robustness", "TASKF6", """
+Hostile input, processes running at the same time, and large libraries.
+
+**Done when:** every subtask is done.
+""")
+
+task("TASKG6.1", "Fuzzing", "TASKF6", """
+CI fuzzes `skill.Parse` for 30 seconds (`fuzz` job in `.github/workflows/ci.yml`). Add fuzz targets for:
+- the JSON config editor (`parseObject` and `change` in `internal/assistant/jsonconfig.go`), and the hooks editing of TASKF4.2: other content must come back unchanged;
+- reading `registry.json`, the state file and `config.json`;
+- the three-way merge in `internal/jsonmerge`;
+- the hook's stdin (TASKF2);
+- the rules-file block (TASKF6).
+
+Run each in the CI fuzz job.
+
+**Done when:** every target runs in CI, and each crash found is fixed with a regression test.
+""")
+
+task("TASKG6.2", "Parallel processes", "TASKF6", """
+The MCP server, CLI commands and the hook run at the same time: two sessions start while `quiver update` writes the registry. Writers take the lock (`fsutil.WithLock`, a flock on `~/.quiver/.lock`) and replace files atomically (`fsutil.WriteFileAtomic`); readers such as the hook take no lock.
+
+1. Tests start real quiver processes in parallel: a writer loop (`add`, `remove`, `update`) and reader loops (`hook session-start`, `status`, an MCP session calling `list_skills`).
+2. Check that no reader ever fails to parse a file or sees a mix of two versions, and that no write is lost.
+
+**Done when:** the tests pass with `-race` on Linux and macOS and without it on Windows.
+""")
+
+task("TASKG6.3", "Performance budgets", "TASKF6", """
+1. A generator in `testdata` (or a test helper) builds a library of 1000 skills, 50 of them always-on in various projects, and 200 projects.
+2. Measure on it: the hook's output, MCP server start up to `instructions`, `quiver status` and `quiver list`.
+3. Set budgets from the measurements, with room for slower machines. A starting point: the hook under 100 ms, the MCP server start under 300 ms. The hook's budget matters most: it delays every session start.
+4. Write the budgets in decisions.md; a test fails when one is exceeded by more than 50%, so CI noise does not fail it.
+
+**Done when:** the budgets are recorded and tested.
+""")
+
+task("TASKG7", "Security review", "TASKF6", """
+A review of everything that can reach a session or run on the machine, written as a threat model in `docs/security.md`: for each risk, what can go wrong, the mitigation, and the test that shows it.
+- Remote skill text that the hook puts into every session. Mitigations today: the update preview (TASK36) marks always-on skills and flags scripts, and pins (TASK35) keep a reviewed commit.
+- The hook command that runs at every session start: which binary, from which path, and what happens if that path becomes writable by others.
+- Scripts inside skills.
+- Path traversal and symlinks in `get_skill_file`, in skill folders and in source repositories.
+- File modes of the configs Quiver writes, of their backups and of the logs.
+- Secrets in logs and in the hook's log line.
+- The rules-file block and hooks written into other tools' files.
+
+**Done when:** `docs/security.md` lists each risk with its mitigation and test, and none is open.
+""")
+
+task("TASKG8", "Test phase review", "TASKG1, TASKG2, TASKG3, TASKG4, TASKG5, TASKG6, TASKG7", """
+The test phase ends when:
+- every task of this phase is done;
+- CI passes on Linux, macOS and Windows, with no test skipped for lack of a fake;
+- coverage is at or above the baseline of TASKG1;
+- a benchmark run (TASKG5) is committed for every supported assistant and meets its thresholds;
+- `docs/security.md` has no open item.
+
+Record the result in this task's notes. The enterprise phase starts after it.
+
+**Done when:** every point above holds.
+""")
+
+# ---------------------------------------------------------------- Phase 8
+phase("Phase 8: Enterprise")
+
+task("TASKH1", "Enterprise", "TASKG8", """
+Central skill management for organizations, as described in PROJECT.md (Direction). To be planned in detail after the test phase; this task only holds its place.
+""")
+
 # ---------------------------------------------------------------- renumber
 ORDER = [
     ("Phase 0 — Foundation", ["TASK01", "TASK02", "TASK03", "TASK04", "TASK05", "TASK06", "TASK07"]),
@@ -1099,12 +1533,19 @@ ORDER = [
     ("Phase 4b — v1.1", ["TASKC1"]),
     ("Phase 4c — v1.2", ["TASKD1", "TASKD2", "TASKD3", "TASKD4", "TASKD5", "TASKD6", "TASKD7", "TASKD8"]),
     ("Phase 5 — v2", ["TASKE1", "TASKE2", "TASK32", "TASK33", "TASK34", "TASK35", "TASK36", "TASK37", "TASK38", "TASK39", "TASK40", "TASKB1"]),
+    ("Phase 6: Session-start delivery", ["TASKF1", "TASKF1.1", "TASKF1.2", "TASKF1.3", "TASKF1.4", "TASKF2", "TASKF3", "TASKF4", "TASKF4.1", "TASKF4.2", "TASKF4.3", "TASKF4.4", "TASKF5", "TASKF6"]),
+    ("Phase 7: Test phase", ["TASKG1", "TASKG2", "TASKG2.1", "TASKG2.2", "TASKG2.3", "TASKG2.4", "TASKG3", "TASKG3.1", "TASKG3.2", "TASKG3.3", "TASKG4", "TASKG5", "TASKG5.1", "TASKG5.2", "TASKG5.3", "TASKG5.4", "TASKG6", "TASKG6.1", "TASKG6.2", "TASKG6.3", "TASKG7", "TASKG8"]),
+    ("Phase 8: Enterprise", ["TASKH1"]),
 ]
 ALL = {t[0]: t for _, ts in PHASES for t in ts}
 flat = [tid for _, ids in ORDER for tid in ids]
 assert sorted(flat) == sorted(ALL), set(ALL) ^ set(flat)
-REMAP = {old: f"TASK{i:02d}" for i, old in enumerate(flat, 1)}
-remap = lambda s: re.sub(r"TASK(?:\d\d|A1|B1|C1|D\d|E\d)", lambda m: REMAP[m.group(0)], s)
+# A subtask (TASKF1.2) takes its parent's final number (TASK54.2).
+REMAP = {}
+for old in flat:
+    parent, dot, sub = old.partition(".")
+    REMAP[old] = REMAP[parent] + dot + sub if dot else f"TASK{sum('.' not in t for t in REMAP) + 1:02d}"
+remap = lambda s: re.sub(r"TASK(?:\d\d|[A-H]\d)(?:\.\d+)?", lambda m: REMAP.get(m.group(0)) or REMAP[m.group(0).split(".")[0]] + m.group(0)[len(m.group(0).split(".")[0]):], s)
 MARK = {"x": "✅", "~": "🚧"}
 STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
@@ -1118,14 +1559,38 @@ def slug(s):
     s = s.replace("`", "")
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
+FNAME = {tid: f"{tid}-{slug(title)}.md" for _, tasks in PHASES for tid, title, _, _ in tasks}
+TITLE = {tid: title for _, tasks in PHASES for tid, title, _, _ in tasks}
+CHILDREN = {}
+for tid in FNAME:
+    if "." in tid:
+        CHILDREN.setdefault(tid.split(".")[0], []).append(tid)
+
+def status_of(tid):
+    """A parent is done when all its subtasks are, in progress when one is."""
+    if tid not in CHILDREN:
+        return STATUS.get(tid)
+    sts = [status_of(c) for c in CHILDREN[tid]]
+    if all(s == "x" for s in sts):
+        return "x"
+    return "~" if any(sts) else None
+
 index = []
 for ptitle, tasks in PHASES:
     rows = []
     for tid, title, dep, body in tasks:
-        fname = f"{tid}-{slug(title)}.md"
-        status = {"x": "✅ Done", "~": "🚧 In progress"}.get(STATUS.get(tid), "Todo")
-        (OUT / fname).write_text(f"# {tid} — {title}\n\n**Phase:** {ptitle}\n\n**Status:** {status}\n\n**Depends on:** {dep}\n\n{body}\n")
-        rows.append(f"| {MARK.get(STATUS.get(tid), '')} | [{tid}]({fname}) | {title.replace('|', chr(92) + '|')} | {dep} |")
+        fname = FNAME[tid]
+        st = status_of(tid)
+        status = {"x": "✅ Done", "~": "🚧 In progress"}.get(st, "Todo")
+        parent = tid.split(".")[0]
+        part = f"**Part of:** [{parent}]({FNAME[parent]}): {TITLE[parent]}\n\n" if "." in tid else ""
+        # Phases up to 5 keep their em dash; later ones use a colon.
+        sep = " — " if " — " in ptitle else ": "
+        subs = "".join(f"- [{c}]({FNAME[c]}): {TITLE[c]}\n" for c in CHILDREN.get(tid, []))
+        subs = f"\n**Subtasks:**\n{subs}" if subs else ""
+        (OUT / fname).write_text(f"# {tid}{sep}{title}\n\n**Phase:** {ptitle}\n\n{part}**Status:** {status}\n\n**Depends on:** {dep}\n\n{body}\n{subs}")
+        link = f"↳ [{tid}]({fname})" if "." in tid else f"[{tid}]({fname})"
+        rows.append(f"| {MARK.get(st, '')} | {link} | {title.replace('|', chr(92) + '|')} | {dep} |")
     index.append(f"### {ptitle}\n\n| Status | Task | Title | Depends on |\n|---|---|---|---|\n" + "\n".join(rows))
 
 readme = """# Quiver — Implementation Tasks
@@ -1141,6 +1606,7 @@ This folder breaks [PROJECT.md](../PROJECT.md) into ordered tasks, one file per 
 
 - **Status** is set in `scripts/gen_tasks.py` (`STATUS`) and shown in the index below and at the top of each task: ✅ done, 🚧 in progress, empty for todo.
 - **Depends on:** tasks that must be finished first.
+- **Subtasks:** a large task is split into subtasks (TASK54.1, TASK54.2, …), one file each, listed under their parent in the index. Each subtask is finished and committed on its own; the parent is done when all its subtasks are.
 - **Done when:** acceptance criteria. A task is not done until every item passes and has a test.
 - Every command needs unit tests. Every user-facing flow also needs an end-to-end test (see TASK30).
 - MCP tasks are tested through the in-memory harness from TASK16.
@@ -1164,7 +1630,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 ## Later (not yet planned in detail)
 
 - Graphical app with the same features as the TUI.
-- Team libraries with shared assignments.
 """
 (OUT / "README.md").write_text(readme)
-print(sum(len(t) for _, t in PHASES), "tasks")
+n = sum(len(t) for _, t in PHASES)
+print(n - sum(map(len, CHILDREN.values())), "tasks,", sum(map(len, CHILDREN.values())), "subtasks")

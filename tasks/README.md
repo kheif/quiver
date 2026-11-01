@@ -11,6 +11,7 @@ This folder breaks [PROJECT.md](../PROJECT.md) into ordered tasks, one file per 
 
 - **Status** is set in `scripts/gen_tasks.py` (`STATUS`) and shown in the index below and at the top of each task: ✅ done, 🚧 in progress, empty for todo.
 - **Depends on:** tasks that must be finished first.
+- **Subtasks:** a large task is split into subtasks (TASK54.1, TASK54.2, …), one file each, listed under their parent in the index. Each subtask is finished and committed on its own; the parent is done when all its subtasks are.
 - **Done when:** acceptance criteria. A task is not done until every item passes and has a test.
 - Every command needs unit tests. Every user-facing flow also needs an end-to-end test (see TASK30).
 - MCP tasks are tested through the in-memory harness from TASK16.
@@ -122,7 +123,58 @@ and every new assistant session follows caveman from the first message. Use Quiv
 |  | [TASK52](TASK52-background-update-checks.md) | Background update checks | TASK51, TASK15 |
 |  | [TASK53](TASK53-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20 |
 
+### Phase 6: Session-start delivery
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+|  | [TASK54](TASK54-spike-session-start-hooks-per-assistant.md) | Spike: session-start hooks per assistant | TASK50 |
+|  | ↳ [TASK54.1](TASK54.1-claude-code-hooks.md) | Claude Code hooks | TASK50 |
+|  | ↳ [TASK54.2](TASK54.2-codex-hooks.md) | Codex hooks | TASK50 |
+|  | ↳ [TASK54.3](TASK54.3-vs-code-copilot.md) | VS Code Copilot | TASK50 |
+|  | ↳ [TASK54.4](TASK54.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
+|  | [TASK55](TASK55-quiver-hook-session-start.md) | `quiver hook session-start` | TASK54, TASK19 |
+|  | [TASK56](TASK56-always-on-pointer-becomes-the-fallback.md) | Always-on pointer becomes the fallback | TASK55 |
+|  | [TASK57](TASK57-quiver-install.md) | `quiver install` | TASK55, TASK50 |
+|  | ↳ [TASK57.1](TASK57.1-rename-to-quiver-install-and-quiver-uninstall.md) | Rename to `quiver install` and `quiver uninstall` | TASK50 |
+|  | ↳ [TASK57.2](TASK57.2-claude-code-hook.md) | Claude Code hook | TASK54.1, TASK55, TASK57.1 |
+|  | ↳ [TASK57.3](TASK57.3-codex-hook.md) | Codex hook | TASK54.2, TASK55, TASK57.1 |
+|  | ↳ [TASK57.4](TASK57.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK57.2 |
+|  | [TASK58](TASK58-vs-code-copilot.md) | VS Code Copilot | TASK54.3, TASK57.1 |
+|  | [TASK59](TASK59-rules-file-pointer-for-assistants-without-hooks.md) | Rules-file pointer for assistants without hooks | TASK54.4, TASK57.4 |
+
+### Phase 7: Test phase
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+|  | [TASK60](TASK60-coverage-baseline.md) | Coverage baseline | TASK59 |
+|  | [TASK61](TASK61-end-to-end-user-journeys.md) | End-to-end user journeys | TASK59, TASK30 |
+|  | ↳ [TASK61.1](TASK61.1-journey-setup-and-delivery.md) | Journey: setup and delivery | TASK59, TASK30 |
+|  | ↳ [TASK61.2](TASK61.2-journey-library-lifecycle.md) | Journey: library lifecycle | TASK59, TASK30 |
+|  | ↳ [TASK61.3](TASK61.3-journey-two-machines.md) | Journey: two machines | TASK59, TASK30 |
+|  | ↳ [TASK61.4](TASK61.4-journey-failures.md) | Journey: failures | TASK59, TASK30 |
+|  | [TASK62](TASK62-windows.md) | Windows | TASK59 |
+|  | ↳ [TASK62.1](TASK62.1-fake-assistants-in-go.md) | Fake assistants in Go | TASK59 |
+|  | ↳ [TASK62.2](TASK62.2-hooks-and-paths-on-windows.md) | Hooks and paths on Windows | TASK62.1 |
+|  | ↳ [TASK62.3](TASK62.3-installed-binary-runs-the-hook.md) | Installed binary runs the hook | TASK62.1 |
+|  | [TASK63](TASK63-versioned-data-formats-and-migration.md) | Versioned data formats and migration | TASK59 |
+|  | [TASK64](TASK64-assistant-behaviour-benchmark.md) | Assistant behaviour benchmark | TASK59 |
+|  | ↳ [TASK64.1](TASK64.1-benchmark-runner.md) | Benchmark runner | TASK59 |
+|  | ↳ [TASK64.2](TASK64.2-assistant-adapters.md) | Assistant adapters | TASK64.1 |
+|  | ↳ [TASK64.3](TASK64.3-benchmark-cases.md) | Benchmark cases | TASK64.2 |
+|  | ↳ [TASK64.4](TASK64.4-baselines-and-reports.md) | Baselines and reports | TASK64.3 |
+|  | [TASK65](TASK65-robustness.md) | Robustness | TASK59 |
+|  | ↳ [TASK65.1](TASK65.1-fuzzing.md) | Fuzzing | TASK59 |
+|  | ↳ [TASK65.2](TASK65.2-parallel-processes.md) | Parallel processes | TASK59 |
+|  | ↳ [TASK65.3](TASK65.3-performance-budgets.md) | Performance budgets | TASK59 |
+|  | [TASK66](TASK66-security-review.md) | Security review | TASK59 |
+|  | [TASK67](TASK67-test-phase-review.md) | Test phase review | TASK60, TASK61, TASK62, TASK63, TASK64, TASK65, TASK66 |
+
+### Phase 8: Enterprise
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+|  | [TASK68](TASK68-enterprise.md) | Enterprise | TASK67 |
+
 ## Later (not yet planned in detail)
 
 - Graphical app with the same features as the TUI.
-- Team libraries with shared assignments.
