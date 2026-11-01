@@ -6,11 +6,11 @@
 
 **Depends on:** TASK37
 
-TASK37 added Cursor and Claude Desktop, the shared JSON installer and `--for`.
+TASK37 added Cursor and Claude Desktop and the shared JSON installer. `mcp install` and `mcp uninstall` take assistant names as arguments.
 
 1. Find out how Codex, Gemini CLI, VS Code and others register stdio MCP servers (config file path and format, or a CLI command). Codex uses TOML.
 2. Run the TASK37 spike for each: does it pass the MCP `instructions` to the model?
-3. Add each one that does to `mcp install --for <name>`.
+3. Add each one that does as a name for `mcp install <name>`.
 4. Confirm that each assistant passes the project folder (roots or working directory) correctly. Record any assistant that needs `QUIVER_PROJECT`.
 
 **Done when:** Install and uninstall work for each supported assistant, and each one sees the correct project's skills.

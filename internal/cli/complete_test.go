@@ -53,6 +53,8 @@ func TestCompletion(t *testing.T) {
 		{[]string{"add", ""}, "acme/deploy\tTest skill.|acme/review\tTest skill.|notes\tKeep notes.|pdf\tFill in and read PDF forms.|tdd\tWrite the test first. Then write the code that makes it pas…"},
 		{[]string{"add", "pdf", "a"}, "acme/deploy\tTest skill.|acme/review\tTest skill."},
 		{[]string{"where", "pdf", ""}, ""},
+		{[]string{"mcp", "install", ""}, "claude-code|cursor|claude-desktop"},
+		{[]string{"mcp", "uninstall", "cursor", "c"}, "claude-code|claude-desktop"},
 		{[]string{"edit", ""}, "notes\tKeep notes.|pdf\tFill in and read PDF forms.|tdd\tWrite the test first. Then write the code that makes it pas…"},
 		{[]string{"remove", ""}, "acme/review|tdd"},
 		{[]string{"remove", "--global", ""}, "acme/review|pdf"},

@@ -80,5 +80,5 @@ The Code tab of Claude Desktop is Claude Code and uses Claude Code's own MCP con
 ## Decision
 
 - **Cursor:** supported. `quiver mcp install` sets it up whenever `~/.cursor` exists.
-- **Claude Desktop:** set up only with `quiver mcp install --for claude-desktop`, which prints that skills are used only when the prompt asks for Quiver's skills and that always-on skills do not apply. `doctor` checks its entry only when there is one. Check again when Claude Desktop passes server `instructions` to the model.
+- **Claude Desktop:** set up only with `quiver mcp install claude-desktop`, which prints that skills are used only when the prompt asks for Quiver's skills and that always-on skills do not apply. `doctor` checks its entry only when there is one. Check again when Claude Desktop passes server `instructions` to the model.
 - **Both:** the entry runs the quiver binary itself, never the npm launcher.

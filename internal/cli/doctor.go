@@ -610,7 +610,7 @@ func (d *doc) checkClaudeCode(bin string, knowBin, others bool) {
 }
 
 func (d *doc) checkJSONAssistant(a *assistant.JSONAssistant, bin string, knowBin bool) {
-	fix := "run: quiver mcp install --for " + a.ID
+	fix := "run: quiver mcp install " + a.ID
 	reg, err := a.Get()
 	switch {
 	case err != nil:

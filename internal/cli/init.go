@@ -78,7 +78,7 @@ func guidedSetup(in *bufio.Reader, out io.Writer) error {
 	var errs []error
 	fmt.Fprintln(out)
 	if confirmYes(in, out, "Register the MCP server with your assistants?") {
-		if err := mcpInstall(out, ""); err != nil {
+		if err := mcpInstall(out, nil); err != nil {
 			errs = append(errs, err)
 		}
 	} else {

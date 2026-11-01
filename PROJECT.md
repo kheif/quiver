@@ -213,7 +213,7 @@ quiver doctor                       # Check the library and fix problems
 
 **v1.2**
 - `show`, `search`, every skill in the catalog: through `list_skills` when it does not fit in `instructions`
-- `mcp install` for Cursor, and for Claude Desktop with `--for` (it drops `instructions`)
+- `mcp install` for Cursor, and for Claude Desktop when named (it drops `instructions`)
 - Import removes originals; `doctor` and `status` find native copies of served skills
 - Guided first run, notice of a new Quiver version, `install.ps1` for Windows
 - Git timeouts, dependency and vulnerability checks

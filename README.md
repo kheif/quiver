@@ -107,8 +107,8 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
-| `quiver mcp install` | Register the MCP server with every installed assistant: Claude Code and Cursor (`--for <assistant>` for one, such as `claude-desktop`). |
-| `quiver mcp uninstall` | Remove it from them (`--for <assistant>` for one). |
+| `quiver mcp install [assistant...]` | Register the MCP server with every installed assistant: Claude Code and Cursor. Name assistants, such as `claude-desktop`, to set up only those. |
+| `quiver mcp uninstall [assistant...]` | Remove it from them, or only from the assistants named. |
 | `quiver mcp config` | Print the MCP config entry for any other assistant. |
 | `quiver mcp` | Run the MCP server. Assistants start this. |
 | `quiver completion <shell>` | Print the completion script for `bash`, `zsh`, `fish` or `powershell`. |
@@ -123,17 +123,17 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 
 ## MCP server
 
-`quiver mcp install` sets up Claude Code and Cursor when it finds them, or only the assistant named with `--for`:
+`quiver mcp install` sets up Claude Code and Cursor when it finds them. `quiver mcp install cursor claude-desktop` sets up only the assistants named:
 
-| Assistant | `--for` | What it changes |
+| Assistant | Name | What it changes |
 |---|---|---|
 | Claude Code | `claude-code` | Runs `claude mcp add --scope user quiver -- <path to quiver> mcp`. |
 | Cursor | `cursor` | Adds `quiver` to `mcpServers` in `~/.cursor/mcp.json`. |
-| Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Only with `--for claude-desktop`. |
+| Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Only when named. |
 
 An assistant counts as installed when the `claude` command is on `PATH`, or when its config folder exists. In the JSON files, every other key stays as it is, including an `env` of the `quiver` entry, and the old file is saved next to it as `<file>.quiver-backup`. A file that is not valid JSON is reported and never overwritten. Restart Cursor or Claude Desktop afterwards. `quiver doctor` checks the entry of each installed assistant (of Claude Desktop only when it has one). Cursor and Claude Desktop get the path of the binary itself, never the npm launcher, because desktop apps do not see your shell's `PATH` and so cannot find `node`. Cursor passes the skill list to the model and starts the server in the workspace folder, so project skills work there.
 
-**Claude Desktop** runs Quiver's tools but does not pass the server's instructions to the model, so it never sees the skill list or the always-on skills. A skill is used only when you ask for Quiver's skills in the prompt, such as "check the quiver skills for this". That is why `quiver mcp install` sets it up only with `--for claude-desktop`. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
+**Claude Desktop** runs Quiver's tools but does not pass the server's instructions to the model, so it never sees the skill list or the always-on skills. A skill is used only when you ask for Quiver's skills in the prompt, such as "check the quiver skills for this". That is why `quiver mcp install` sets it up only with `quiver mcp install claude-desktop`. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
 
 For any other assistant, `quiver mcp config` prints the entry:
 

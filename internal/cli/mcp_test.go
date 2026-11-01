@@ -236,7 +236,7 @@ func TestMCPInstallNpm(t *testing.T) {
 	wantLines(t, out, "ok     registered with Claude Code", "ok     registered with Cursor")
 }
 
-// Without --for, mcp install sets up every installed assistant and leaves
+// Without arguments, mcp install sets up every installed assistant and leaves
 // the others alone.
 func TestMCPInstallEveryAssistant(t *testing.T) {
 	f := assistanttest.Install(t)
@@ -257,7 +257,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	if reg, err := cursor.Get(); err != nil || reg == nil || reg.Command != "/opt/bin/quiver" {
 		t.Errorf("cursor: %+v %v", reg, err)
 	}
-	// Claude Desktop drops the instructions, so only --for sets it up, and
+	// Claude Desktop drops the instructions, so it is set up only when named, and
 	// doctor does not miss it.
 	if strings.Contains(out, "Claude Desktop") {
 		t.Errorf("set up Claude Desktop:\n%s", out)
@@ -269,7 +269,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	if strings.Contains(out, "Claude Desktop") {
 		t.Errorf("doctor reports Claude Desktop:\n%s", out)
 	}
-	out, err = runIn(t, "", "mcp", "install", "--for", "claude-desktop")
+	out, err = runIn(t, "", "mcp", "install", "claude-desktop")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +290,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 
 	fakeExecutable(t, "/usr/local/bin/quiver")
 	out, _ = runIn(t, "", "doctor")
-	wantLines(t, out, "warn   Cursor runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install --for cursor")
+	wantLines(t, out, "warn   Cursor runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install cursor")
 
 	out, err = runIn(t, "", "mcp", "uninstall")
 	if err != nil {
@@ -298,18 +298,18 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	}
 	wantLines(t, out, "Removed from Claude Code.", "Removed from Cursor.", "Removed from Claude Desktop.")
 	out, _ = runIn(t, "", "doctor")
-	wantLines(t, out, "warn   Cursor is installed, but Quiver is not registered with it; run: quiver mcp install --for cursor")
-	out, err = runIn(t, "", "mcp", "uninstall", "--for", "cursor")
+	wantLines(t, out, "warn   Cursor is installed, but Quiver is not registered with it; run: quiver mcp install cursor")
+	out, err = runIn(t, "", "mcp", "uninstall", "cursor")
 	if err != nil || !strings.Contains(out, "Quiver was not registered with Cursor.") {
 		t.Errorf("second uninstall: %v\n%s", err, out)
 	}
 }
 
-func TestMCPInstallFor(t *testing.T) {
+func TestMCPInstallNamed(t *testing.T) {
 	f := assistanttest.Install(t)
-	apps := appHome(t) // --for works when the assistant's folder is missing too
+	apps := appHome(t) // naming works when the assistant's folder is missing too
 	fakeExecutable(t, "/opt/bin/quiver")
-	out, err := runIn(t, "", "mcp", "install", "--for", "cursor")
+	out, err := runIn(t, "", "mcp", "install", "cursor")
 	if err != nil || !strings.Contains(out, "Registered with Cursor") || strings.Contains(out, "Claude") {
 		t.Errorf("install: %v\n%s", err, out)
 	}
@@ -319,8 +319,21 @@ func TestMCPInstallFor(t *testing.T) {
 	if len(f.Calls()) != 0 || apps["claude-desktop"].Installed() {
 		t.Errorf("set up other assistants: %q", f.Calls())
 	}
-	if _, err := runIn(t, "", "mcp", "install", "--for", "vim"); err == nil || !strings.Contains(err.Error(), "use one of: claude-code, cursor, claude-desktop") {
+	if _, err := runIn(t, "", "mcp", "install", "cursor", "vim"); err == nil || !strings.Contains(err.Error(), "use one of: claude-code, cursor, claude-desktop") {
 		t.Errorf("unknown assistant: %v", err)
+	}
+
+	// Several names, given twice, set each one up once.
+	out, err = runIn(t, "", "mcp", "install", "claude-code", "claude-desktop", "claude-code")
+	if err != nil || strings.Count(out, "Registered with Claude Code") != 1 || !strings.Contains(out, "Registered with Claude Desktop") || strings.Contains(out, "Cursor") {
+		t.Errorf("install several: %v\n%s", err, out)
+	}
+	out, err = runIn(t, "", "mcp", "uninstall", "cursor", "claude-desktop")
+	if err != nil || !strings.Contains(out, "Removed from Cursor.") || !strings.Contains(out, "Removed from Claude Desktop.") || strings.Contains(out, "Claude Code") {
+		t.Errorf("uninstall several: %v\n%s", err, out)
+	}
+	if f.User() != "/opt/bin/quiver|mcp" {
+		t.Errorf("claude user %q", f.User())
 	}
 }
 

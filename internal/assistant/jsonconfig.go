@@ -17,7 +17,7 @@ import (
 // JSONAssistant is an assistant that reads its MCP servers from the
 // mcpServers object of a JSON file.
 type JSONAssistant struct {
-	ID   string // the value of mcp install --for
+	ID   string // the mcp install argument
 	Name string
 	Dir  string // the assistant's own folder; it exists once the assistant ran
 	Path string // the config file, inside Dir
