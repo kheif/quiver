@@ -187,13 +187,14 @@ quiver update [<source>...] [--diff] [--yes] [--reset]  # Preview, confirm, then
 quiver pin <source/skill> [<commit>]  # Keep a source skill at one commit; quiver unpin undoes it
 
 # Maintenance
+quiver sync init <git-remote>       # Keep ~/.quiver in a git remote; quiver sync syncs it
 quiver import [<dir>]               # Pull existing skills (e.g. .claude/skills) into the library
 quiver doctor                       # Check the library and fix problems
 ```
 
 ## Multiple Machines
 
-`~/.quiver/` is meant to be versioned with git. `local/` holds your skills. `config.json` and `registry.json` hold sources and assignments. Projects carry their ID in `.quiver.json`, so assignments carry over to another machine as they are. `state/` holds what differs per machine, such as the folders where each project was seen, and is not synced.
+`quiver sync init <git-remote>` turns `~/.quiver/` into a git repository, and `quiver sync` commits, pulls with rebase and pushes. `local/` holds your skills. `config.json` and `registry.json` hold sources and assignments; when both machines changed them, the changes are merged. Projects carry their ID in `.quiver.json`, so assignments carry over to another machine as they are. Sources are cloned again from `config.json`. `state/` holds what differs per machine, such as the folders where each project was seen, and is not synced.
 
 ## Roadmap
 

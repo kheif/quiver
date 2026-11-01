@@ -67,6 +67,12 @@ Machine-local data. It is never synced.
 }
 ```
 
+## Synced home (`quiver sync`)
+
+After `quiver sync init <git-remote>`, `~/.quiver` is itself a git repository with that remote as `origin`. Its `.gitignore` tracks only `.gitignore`, `local/`, `config.json` and `registry.json`; `sources/`, `state/` and `logs/` stay on each machine. `local/` has no `.git` of its own any more: commands that commit a skill commit into the home repository, and `registry.json` and `config.json` are committed by the next `quiver sync`.
+
+When both machines changed `registry.json` or `config.json`, `quiver sync` merges them as JSON against the common version: objects key by key and lists as sets, so an entry added on either machine is kept and one removed on either machine is dropped. A change on one machine wins over a removal on the other. A value changed differently on both, or a conflict in any other file, stops the sync.
+
 ## `<project>/.quiver.json`
 
 The project's identity. The project does not need git; if it uses git, commit this file.

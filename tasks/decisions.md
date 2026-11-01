@@ -16,3 +16,4 @@ These apply to every task. Change them here first if you change them at all.
 | Home directory | `~/.quiver`, overridable with `QUIVER_HOME` | The override lets tests run in an isolated temp directory. |
 | Delivery | MCP only | Skills are never copied or linked into a project. |
 | Project identity | A `.quiver.json` with only an `id` | Survives moves and renames, and works without git. |
+| Library sync | `quiver sync init` makes `~/.quiver` one git repository; `local/` becomes part of it, not a submodule, and its old history is kept as a parent of the first commit | A sync is one commit and one push to one remote. A submodule would need a second remote for `local/`, two pushes per sync, and a submodule commit after every skill edit. |

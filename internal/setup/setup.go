@@ -44,6 +44,9 @@ func Init() ([]string, error) {
 			}
 			created = append(created, c...)
 		}
+		if Synced(home) {
+			return nil
+		}
 		c, err := ensureLocalRepo(filepath.Join(home, "local"))
 		created = append(created, c...)
 		return err
@@ -59,13 +62,35 @@ func EnsureInit() error {
 	if err != nil {
 		return err
 	}
-	for _, p := range []string{"config.json", "registry.json", "sources", filepath.Join("local", ".git")} {
-		if _, err := os.Stat(filepath.Join(home, p)); err != nil {
-			_, err = Init()
-			return err
-		}
+	if len(Missing(home)) > 0 {
+		_, err = Init()
+		return err
 	}
 	return nil
+}
+
+// Missing returns the parts of the Quiver home that do not exist. local/
+// must be a git repository, unless the home itself is one (quiver sync).
+func Missing(home string) []string {
+	var out []string
+	for _, p := range []string{"", "local", "sources", "config.json", "registry.json"} {
+		if _, err := os.Stat(filepath.Join(home, p)); errors.Is(err, os.ErrNotExist) {
+			out = append(out, filepath.Join(home, p))
+		}
+	}
+	if !Synced(home) {
+		if _, err := os.Stat(filepath.Join(home, "local", ".git")); errors.Is(err, os.ErrNotExist) {
+			out = append(out, filepath.Join(home, "local", ".git"))
+		}
+	}
+	return out
+}
+
+// Synced reports whether the Quiver home is a git repository set up by
+// quiver sync init. Its local/ is then part of that repository.
+func Synced(home string) bool {
+	_, err := os.Stat(filepath.Join(home, ".git"))
+	return err == nil
 }
 
 func ensureDir(path string) ([]string, error) {

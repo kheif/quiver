@@ -102,13 +102,19 @@ func Commit(dir, msg string, paths ...string) error {
 	if _, err := run(dir, "diff", "--cached", "--quiet"); err == nil {
 		return nil // nothing staged
 	}
+	_, err := run(dir, committing(dir, "commit", "--quiet", "--no-verify", "-m", msg)...)
+	return err
+}
+
+// committing returns args for a git command that makes commits. If the
+// user has no git identity, the commits are made as "Quiver", and they are
+// never signed.
+func committing(dir string, args ...string) []string {
 	var pre []string
 	if email, _ := run(dir, "config", "user.email"); email == "" {
 		pre = []string{"-c", "user.name=Quiver", "-c", "user.email=quiver@localhost"}
 	}
-	args := append(pre, "-c", "commit.gpgsign=false", "commit", "--quiet", "--no-verify", "-m", msg)
-	_, err := run(dir, args...)
-	return err
+	return append(append(pre, "-c", "commit.gpgsign=false"), args...)
 }
 
 // Status returns the uncommitted changes in dir, one "XY path" line each

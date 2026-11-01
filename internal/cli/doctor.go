@@ -127,10 +127,8 @@ func (d *doc) skip(title, reason string) {
 func (d *doc) checkHome() {
 	const title = "Quiver home layout"
 	var missing []string
-	for _, p := range []string{"", "local", "sources", "config.json", "registry.json", filepath.Join("local", ".git")} {
-		if _, err := os.Stat(filepath.Join(d.home, p)); errors.Is(err, os.ErrNotExist) {
-			missing = append(missing, filepath.Join(d.home, p)+" is missing")
-		}
+	for _, p := range setup.Missing(d.home) {
+		missing = append(missing, p+" is missing")
 	}
 	if len(missing) > 0 {
 		d.report("error", title, missing...)
