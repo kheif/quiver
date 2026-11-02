@@ -1,0 +1,77 @@
+name: Website
+
+# Builds the website in web/ and publishes it to GitHub Pages:
+# https://kheif.github.io/quiver/. Pull requests only build and test it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - web/**
+      # The CLI reference is generated from the help text.
+      - cmd/**
+      - internal/cli/**
+      # The install commands are checked against the README.
+      - README.md
+      - .github/workflows/pages.yml
+  pull_request:
+    paths:
+      - web/**
+      - cmd/**
+      - internal/cli/**
+      - README.md
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer push waits instead of cancelling a
+# deployment that is already running.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  ASTRO_TELEMETRY_DISABLED: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      # Regenerate the CLI reference from this commit's quiver, so the site
+      # never shows other flags than the code has.
+      - run: npm run cli-reference
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: web/dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # publish to GitHub Pages
+      id-token: write # verify that the deployment comes from this workflow
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

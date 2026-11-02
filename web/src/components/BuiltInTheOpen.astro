@@ -1,0 +1,113 @@
+---
+import { links, releases, url } from '../data/site';
+---
+
+<section class="open" id="open" aria-labelledby="open-title">
+	<div class="wrap split">
+		<div class="text">
+			<h2 id="open-title" class="h2 rise">Built in the open</h2>
+			<p class="rise" style="--d:80ms">
+				Apache-2.0, one Go binary for macOS, Linux and Windows. No account: your library is a folder of git
+				repositories on your machine. The tasks and design decisions are in the repository too.
+			</p>
+			<ul class="osl stair-list rise" style="--d:160ms">
+				<li><a href={links.contributing}>Contributing guide</a><span>build, test, pull requests</span></li>
+				<li><a href={`${links.repo}/tree/main/tasks`}>Roadmap</a><span>every planned task, in the repository</span></li>
+				<li><a href={links.issues}>Issues</a><span>bugs and feature requests</span></li>
+				<li><a href={links.security}>Security policy</a><span>report vulnerabilities privately</span></li>
+			</ul>
+		</div>
+		<div class="right">
+			<div class="rel rise" data-ui>
+				<ul>
+					{
+						releases.map((r) => (
+							<li>
+								<a href={`${links.releases}/tag/${r.tag}`}>{r.tag}</a>
+								<span>{r.date}</span>
+								{r.summary && <em>{r.summary}</em>}
+							</li>
+						))
+					}
+				</ul>
+			</div>
+			<pre class="term rise" style="--d:90ms" data-ui><span class="pr">$</span> git clone {links.repo}
+<span class="pr">$</span> cd quiver && make build && make test</pre>
+			<p class="more rise" style="--d:140ms"><a href={url('/docs/project/contributing/')}>How the project works</a></p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.open {
+		padding-top: var(--q-gap);
+	}
+
+	.osl {
+		display: grid;
+		gap: 14px;
+		margin-top: 32px;
+	}
+
+	.osl li {
+		display: grid;
+		gap: 2px;
+	}
+
+	.osl a {
+		font-weight: 500;
+	}
+
+	.osl span,
+	.rel span,
+	.rel em {
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	.rel {
+		padding: 24px;
+		background: var(--q-surface);
+	}
+
+	.rel ul {
+		display: grid;
+		gap: 16px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.rel li {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		align-items: baseline;
+		gap: 4px 16px;
+	}
+
+	.rel a {
+		color: var(--q-accent);
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		text-decoration: none;
+	}
+
+	.rel span {
+		justify-self: end;
+	}
+
+	.rel em {
+		grid-column: 1 / -1;
+		color: var(--q-text);
+		font-style: normal;
+	}
+
+	.term {
+		margin-top: 8px;
+	}
+
+	.more {
+		margin-top: 16px;
+		font-size: var(--q-step-small);
+	}
+</style>

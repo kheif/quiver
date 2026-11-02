@@ -1,0 +1,162 @@
+/*
+ * Design tokens shared by the home page and the docs.
+ * Light is the design; [data-theme='dark'] is set by the theme script (the
+ * same one Starlight uses, so the choice carries across the site).
+ * tests/tokens.test.mjs checks the contrast of every text and ground pair.
+ */
+:root {
+	color-scheme: light;
+
+	--q-font-sans: 'Hanken Grotesk Variable', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		Roboto, sans-serif;
+	--q-font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+	/* Grounds */
+	--q-bg: #ffffff;
+	--q-bg-raised: #f8f8f8;
+	--q-surface: #f4f4f4;
+	--q-surface-2: #ececec;
+	--q-line: #e3e3e3;
+	--q-line-strong: #cfcfcf;
+
+	/* Text */
+	--q-text: #111111;
+	--q-text-2: #5f5f5f;
+	--q-text-3: #5f5f5f;
+
+	/* The one accent: the action, the stage and one field per page */
+	--q-accent: #1a4be0;
+	--q-accent-strong: #133bb5;
+	--q-accent-soft: rgb(26 75 224 / 0.08);
+	--q-accent-line: rgb(26 75 224 / 0.35);
+	--q-accent-ink: #ffffff;
+	--q-accent-ink-2: #e4e9ff;
+	--q-caution: #8a5a00;
+	--q-caution-soft: rgb(138 90 0 / 0.1);
+
+	/* The dark panel (teams, footer) and terminal output, in both themes */
+	--q-panel: #111111;
+	--q-panel-ink: #ffffff;
+	--q-panel-ink-2: #c9c9c9;
+	--q-term-bg: #111111;
+	--q-term-bar: #1b1b1b;
+	--q-term-line: #2a2a2a;
+	--q-term-text: #e9e9e9;
+	--q-term-dim: #a9a9a9;
+	--q-term-prompt: #8f8f8f;
+
+	/* Type: five steps */
+	--q-step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+	--q-step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+	--q-step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+	--q-step-head: clamp(2rem, 1.3rem + 3vw, 3.75rem);
+	--q-step-display: clamp(2.5rem, 5.2vw, 5rem);
+	/* The older scale, still used by the docs styles */
+	--q-text-xs: 0.75rem;
+	--q-text-sm: var(--q-step-small);
+	--q-text-base: 1rem;
+	--q-text-md: var(--q-step-body);
+	--q-text-lg: var(--q-step-lead);
+	--q-text-xl: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+	--q-text-display: var(--q-step-display);
+
+	/* Spacing */
+	--q-space-1: 0.25rem;
+	--q-space-2: 0.5rem;
+	--q-space-3: 0.75rem;
+	--q-space-4: 1rem;
+	--q-space-5: 1.5rem;
+	--q-space-6: 2rem;
+	--q-space-7: 3rem;
+	--q-space-8: 4rem;
+	--q-space-9: 6rem;
+	--q-space-10: 8rem;
+	--q-margin: clamp(16px, 2.8vw, 40px);
+	--q-gap: clamp(96px, 12vw, 180px);
+	--q-section: var(--q-gap);
+	/* One stair of the motif: the four layers, each one step in */
+	--q-stair: clamp(28px, 3.4vw, 52px);
+
+	/* Shape: square corners; the stair cut is the only decoration */
+	--q-radius-sm: 0;
+	--q-radius: 0;
+	--q-radius-lg: 0;
+	--q-shadow: none;
+
+	/* Layout */
+	--q-width: 90rem;
+	--q-width-text: 38rem;
+	--q-gutter: var(--q-margin);
+	--q-header-height: 4.5rem;
+
+	/* Motion */
+	--q-ease: cubic-bezier(0.23, 1, 0.32, 1);
+	--q-duration: 160ms;
+}
+
+:root[data-theme='dark'] {
+	color-scheme: dark;
+
+	--q-bg: #0f1012;
+	--q-bg-raised: #141518;
+	--q-surface: #1a1c1f;
+	--q-surface-2: #23262a;
+	--q-line: #2b2f34;
+	--q-line-strong: #3a3f45;
+
+	--q-text: #ededed;
+	--q-text-2: #a7acb2;
+	--q-text-3: #a7acb2;
+
+	--q-accent: #6b8cff;
+	--q-accent-strong: #8ea7ff;
+	--q-accent-soft: rgb(107 140 255 / 0.12);
+	--q-accent-line: rgb(107 140 255 / 0.4);
+	--q-accent-ink: #0b1020;
+	--q-accent-ink-2: #1c2547;
+	--q-caution: #e0b062;
+	--q-caution-soft: rgb(224 176 98 / 0.12);
+
+	--q-panel: #1d2024;
+	--q-panel-ink: #ededed;
+	--q-panel-ink-2: #b4b9bf;
+	--q-term-bg: #08090a;
+	--q-term-bar: #141518;
+	--q-term-line: #23262a;
+}
+
+/* Without JavaScript, follow the system setting. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme]) {
+		color-scheme: dark;
+		--q-bg: #0f1012;
+		--q-bg-raised: #141518;
+		--q-surface: #1a1c1f;
+		--q-surface-2: #23262a;
+		--q-line: #2b2f34;
+		--q-line-strong: #3a3f45;
+		--q-text: #ededed;
+		--q-text-2: #a7acb2;
+		--q-text-3: #a7acb2;
+		--q-accent: #6b8cff;
+		--q-accent-strong: #8ea7ff;
+		--q-accent-soft: rgb(107 140 255 / 0.12);
+		--q-accent-line: rgb(107 140 255 / 0.4);
+		--q-accent-ink: #0b1020;
+		--q-accent-ink-2: #1c2547;
+		--q-caution: #e0b062;
+		--q-caution-soft: rgb(224 176 98 / 0.12);
+		--q-panel: #1d2024;
+		--q-panel-ink: #ededed;
+		--q-panel-ink-2: #b4b9bf;
+		--q-term-bg: #08090a;
+		--q-term-bar: #141518;
+		--q-term-line: #23262a;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--q-duration: 0ms;
+	}
+}

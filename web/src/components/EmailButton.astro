@@ -1,0 +1,40 @@
+---
+// The maintainer's address, put together only when someone asks for it, so
+// it never appears in the built HTML for scrapers to read.
+import { links } from '../data/site';
+
+interface Props {
+	label?: string;
+}
+const { label = 'Email us' } = Astro.props;
+---
+
+<button class="email-reveal" type="button" data-user="aydinmehmetege" data-host="gmail.com">{label}</button>
+<noscript><a href={links.issues}>Write on GitHub</a></noscript>
+
+<script>
+	document.addEventListener('click', (event) => {
+		const button = (event.target as Element | null)?.closest<HTMLButtonElement>('.email-reveal');
+		if (!button) return;
+		const address = `${button.dataset.user}@${button.dataset.host}`;
+		const link = document.createElement('a');
+		link.className = 'email-link';
+		link.href = `mailto:${address}?subject=${encodeURIComponent('Quiver for teams')}`;
+		link.textContent = address;
+		button.replaceWith(link);
+		link.focus();
+	});
+</script>
+
+<style>
+	.email-reveal {
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+		cursor: pointer;
+	}
+</style>

@@ -1,0 +1,37 @@
+{
+	"$comment": "Install commands shown on the home page and in the docs. tests/install.test.mjs checks that each command is also in the repository README.",
+	"methods": [
+		{
+			"id": "shell",
+			"label": "macOS / Linux",
+			"command": "curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | sh",
+			"note": "Downloads the latest release, checks its checksum and installs quiver into ~/.local/bin.",
+			"source": "https://github.com/kheif/quiver/blob/main/install.sh",
+			"sourceLabel": "Read install.sh"
+		},
+		{
+			"id": "powershell",
+			"label": "Windows",
+			"command": "irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex",
+			"note": "Installs quiver.exe into %LOCALAPPDATA%\\Programs\\quiver and adds it to your user PATH, without admin rights.",
+			"source": "https://github.com/kheif/quiver/blob/main/install.ps1",
+			"sourceLabel": "Read install.ps1"
+		},
+		{
+			"id": "npm",
+			"label": "npm",
+			"command": "npm install -g @kheif/quiver",
+			"note": "Installs the binary for your platform. No install script runs.",
+			"source": "https://www.npmjs.com/package/@kheif/quiver",
+			"sourceLabel": "View on npm"
+		},
+		{
+			"id": "go",
+			"label": "Go",
+			"command": "go install github.com/kheif/quiver/cmd/quiver@latest",
+			"note": "Builds from source with your Go toolchain.",
+			"source": "https://github.com/kheif/quiver",
+			"sourceLabel": "View the source"
+		}
+	]
+}

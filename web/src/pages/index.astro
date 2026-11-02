@@ -1,0 +1,25 @@
+---
+import HomeLayout from '../layouts/HomeLayout.astro';
+import Hero from '../components/Hero.astro';
+import Why from '../components/Why.astro';
+import HowSteps from '../components/HowSteps.astro';
+import TrySession from '../components/TrySession.astro';
+import TeamsPanel from '../components/TeamsPanel.astro';
+import AssistantTiles from '../components/AssistantTiles.astro';
+import BuiltInTheOpen from '../components/BuiltInTheOpen.astro';
+import InstallSentence from '../components/InstallSentence.astro';
+---
+
+<HomeLayout
+	title="Quiver: agent skills, managed in layers"
+	description="Quiver is an open-source skill manager for AI assistants. One library of agent skills for Claude Code, Codex and Cursor, served to each folder in layers, with the skills that must always apply in the conversation before the first reply."
+>
+	<Hero />
+	<Why />
+	<HowSteps />
+	<TrySession />
+	<TeamsPanel />
+	<AssistantTiles />
+	<BuiltInTheOpen />
+	<InstallSentence />
+</HomeLayout>

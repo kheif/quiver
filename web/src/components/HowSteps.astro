@@ -1,0 +1,307 @@
+---
+// Three steps beside one panel; the panel follows the step in view. Without
+// scripts, and on narrow screens, each step is followed by its own panel.
+---
+
+<section class="how" id="how" aria-labelledby="how-title">
+	<div class="wrap howgrid">
+		<div class="steps">
+			<h2 id="how-title" class="h2">How it works</h2>
+			<div class="step active" data-state="1">
+				<h3 class="st">Keep every skill in one library</h3>
+				<p class="sub">
+					Write your own with <code>quiver new</code>, import the ones you have, or add any git repository of skills.
+				</p>
+			</div>
+			<div class="step" data-state="2">
+				<h3 class="st">Put each skill on a layer</h3>
+				<p class="sub">
+					Your own skills apply in every folder, a project's only in that project. Team and company layers come with
+					Quiver for teams. Mark a skill always on and the assistant has it from the start of the session.
+				</p>
+			</div>
+			<div class="step" data-state="3">
+				<h3 class="st">Open any assistant</h3>
+				<p class="sub">
+					<code>quiver install</code> connects Claude Code, Codex and Cursor. Each session gets the skills of its folder.
+				</p>
+			</div>
+		</div>
+		<div class="howstage" data-ui>
+			<div class="state on" data-s="1">
+				<p class="cap">~/.quiver, your library</p>
+				<pre><span class="dim">local/</span>        your skills, in git
+  release-notes/SKILL.md
+  reply-style/SKILL.md
+  k8s-debug/SKILL.md
+<span class="dim">sources/</span>      cloned, read-only
+  anthropic/  19 skills
+  acme/        6 skills</pre>
+			</div>
+			<div class="state" data-s="2">
+				<p class="cap">Where each skill applies</p>
+				<div class="stair">
+					<div class="sb b1">
+						<b>Company</b><span><i class="mk" aria-hidden="true"></i><span class="sr">always on: </span>security-review · planned</span>
+					</div>
+					<div class="sb b2"><b>Team</b><span>design-tokens · planned</span></div>
+					<div class="sb b3">
+						<b>You</b><span><i class="mk" aria-hidden="true"></i><span class="sr">always on: </span>reply-style · anthropic/pdf</span>
+					</div>
+					<div class="sb b4"><b>Project: checkout-web</b><span>release-notes</span></div>
+				</div>
+				<p class="cap"><i class="mk" aria-hidden="true"></i> always on: in the conversation from the start of the session</p>
+			</div>
+			<div class="state" data-s="3">
+				<p class="cap">Connect once, then open a session in ~/code/checkout-web</p>
+				<pre><span class="dim">$</span> quiver install
+Registered with Claude Code: quiver mcp
+Registered with Codex: quiver mcp
+Registered with Cursor: quiver mcp
+
+<span class="dim">Before the first message</span>
+  security-review, reply-style
+<span class="dim">Loaded when a task fits</span>
+  release-notes, anthropic/pdf</pre>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	const steps = [...document.querySelectorAll<HTMLElement>('.how .step')];
+	const states = [...document.querySelectorAll<HTMLElement>('.howstage .state')];
+	const io = new IntersectionObserver(
+		(entries) =>
+			entries.forEach((e) => {
+				if (!e.isIntersecting) return;
+				const n = (e.target as HTMLElement).dataset.state;
+				steps.forEach((s) => s.classList.toggle('active', s === e.target));
+				states.forEach((s) => s.classList.toggle('on', s.dataset.s === n));
+			}),
+		{ rootMargin: '-45% 0px -45% 0px' },
+	);
+	steps.forEach((s) => io.observe(s));
+</script>
+
+<style>
+	.how {
+		padding-top: var(--q-gap);
+	}
+
+	.howgrid {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+		gap: clamp(32px, 5vw, 96px);
+	}
+
+	.step {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		min-height: 58vh;
+	}
+
+	.st {
+		font-size: var(--q-step-head);
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: -0.045em;
+		transition: color 0.2s;
+	}
+
+	.sub {
+		max-width: 38ch;
+		margin-top: 16px;
+	}
+
+	/* Without scripts, every panel is shown, one under the other. */
+	.howstage {
+		display: grid;
+		gap: 8px;
+		align-self: start;
+		margin-top: 14vh;
+	}
+
+	.state {
+		min-width: 0;
+		padding: 32px;
+		background: var(--q-surface);
+	}
+
+	.cap {
+		margin: 0 0 16px;
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	.howstage pre {
+		overflow-x: auto;
+		font-size: 14px;
+		line-height: 1.75;
+		white-space: pre;
+	}
+
+	.dim {
+		color: var(--q-text-2);
+	}
+
+	/* The always-on mark: one stair, as in the hero. */
+	.mk {
+		display: inline-block;
+		width: 11px;
+		height: 11px;
+		margin-right: 6px;
+		background: var(--q-accent);
+		clip-path: polygon(0 50%, 50% 50%, 50% 0, 100% 0, 100% 100%, 0 100%);
+	}
+
+	.sb {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		margin-bottom: 6px;
+		padding: 14px 18px;
+		background: var(--q-bg);
+	}
+
+	.sb b {
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		letter-spacing: -0.02em;
+	}
+
+	.sb > span {
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	.b2 {
+		margin-left: 12%;
+	}
+
+	.b3 {
+		margin-left: 24%;
+		background: var(--q-accent);
+		color: var(--q-accent-ink);
+	}
+
+	.b3 > span {
+		color: var(--q-accent-ink-2);
+	}
+
+	.b3 .mk {
+		background: var(--q-accent-ink);
+	}
+
+	.b4 {
+		margin-left: 36%;
+		background: var(--q-panel);
+		color: var(--q-panel-ink);
+	}
+
+	.b4 > span {
+		color: var(--q-panel-ink-2);
+	}
+
+	/* With scripts on a wide screen: one sticky panel that follows the step in view. */
+	@media (min-width: 1025px) {
+		:global(.js) .st {
+			color: var(--q-text-2);
+		}
+
+		:global(.js) .step.active .st {
+			color: var(--q-text);
+		}
+
+		:global(.js) .howstage {
+			position: sticky;
+			top: 12vh;
+			display: block;
+			height: min(560px, 74vh);
+			overflow: hidden;
+			background: var(--q-surface);
+		}
+
+		:global(.js) .state {
+			position: absolute;
+			inset: 0;
+			opacity: 0;
+			transition: opacity 0.25s;
+		}
+
+		:global(.js) .state.on {
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.st,
+		:global(.js) .state {
+			transition: none;
+		}
+	}
+
+	/* Each step, then its panel. */
+	@media (max-width: 1024px) {
+		.howgrid {
+			display: flex;
+			flex-direction: column;
+			gap: 0;
+		}
+
+		.steps,
+		.howstage {
+			display: contents;
+		}
+
+		.step {
+			min-height: 0;
+			padding: 40px 0 20px;
+		}
+
+		.step[data-state='1'] {
+			order: 1;
+		}
+
+		.state[data-s='1'] {
+			order: 2;
+		}
+
+		.step[data-state='2'] {
+			order: 3;
+		}
+
+		.state[data-s='2'] {
+			order: 4;
+		}
+
+		.step[data-state='3'] {
+			order: 5;
+		}
+
+		.state[data-s='3'] {
+			order: 6;
+		}
+
+		.st {
+			font-size: clamp(28px, 4.4vw, 40px);
+		}
+	}
+
+	@media (max-width: 760px) {
+		.state {
+			padding: 20px;
+		}
+
+		.howstage pre {
+			font-size: 13px;
+		}
+	}
+
+	@media (max-width: 420px) {
+		.howstage pre {
+			font-size: 12px;
+		}
+	}
+</style>

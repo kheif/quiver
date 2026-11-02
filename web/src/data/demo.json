@@ -1,0 +1,26 @@
+{
+	"$comment": "The sample library the home page's live panels show. Not real skills.",
+	"teams": {
+		"ui": { "name": "UI team", "skill": "design-tokens", "other": "a11y-check" },
+		"backend": { "name": "Backend team", "skill": "api-conventions", "other": "db-migrations" }
+	},
+	"folders": {
+		"checkout-web": ["release-notes"],
+		"api": ["k8s-debug", "openapi-lint"],
+		"none": []
+	},
+	"company": [
+		{ "id": "security-review", "always": true },
+		{ "id": "incident-runbook", "always": false }
+	],
+	"you": [
+		{ "id": "reply-style", "always": true },
+		{ "id": "anthropic/pdf", "always": false }
+	],
+	"texts": {
+		"security-review": "Before you change code, check it for secrets,\ninjection and unsafe defaults.",
+		"reply-style": "Answer first, then the reason. No filler.",
+		"design-tokens": "Use the design tokens; never a raw colour.",
+		"api-conventions": "Every endpoint is versioned and paginated."
+	}
+}

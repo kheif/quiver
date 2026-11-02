@@ -1,0 +1,124 @@
+---
+title: Installation
+description: Install Quiver on macOS, Linux or Windows with the install script, npm, Go or a release archive, and keep it up to date.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Quiver is a single binary, `quiver`.
+
+**Requirements:** `git` on your `PATH`. Quiver keeps your skills in git repositories and clones sources with it.
+
+**Platforms:** macOS, Linux and Windows, on x86-64 (`amd64`) and ARM64. See [Supported platforms](/docs/reference/platforms/).
+
+## Install
+
+<Tabs syncKey="install">
+<TabItem label="macOS / Linux">
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | sh
+```
+
+The script downloads the latest release for your system, checks it against the release's `checksums.txt`, and installs `quiver` into `~/.local/bin`. If that folder is not on your `PATH`, it prints the line to add to your shell profile.
+
+| Variable | Effect |
+| --- | --- |
+| `QUIVER_VERSION=v1.2.0` | Install a given release instead of the latest. |
+| `QUIVER_INSTALL_DIR=/path` | Install into another folder. |
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kheif/quiver/main/install.sh | QUIVER_VERSION=v1.2.0 sh
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+In PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex
+```
+
+The script does the same steps: it installs `quiver.exe` into `%LOCALAPPDATA%\Programs\quiver` and adds that folder to your user `PATH`, without admin rights. Open a new terminal afterwards.
+
+`QUIVER_VERSION` and `QUIVER_INSTALL_DIR` work the same way. Set them before the line:
+
+```powershell
+$env:QUIVER_VERSION = 'v1.2.0'
+irm https://raw.githubusercontent.com/kheif/quiver/main/install.ps1 | iex
+```
+
+</TabItem>
+<TabItem label="npm">
+
+```sh
+npm install -g @kheif/quiver
+```
+
+npm installs the binary for your platform from a platform package. No install script runs. Node.js 18 or later is needed.
+
+<Aside type="caution" title="Node version managers">
+If you switch Node versions with nvm, fnm or volta, the path of `quiver` changes with the Node version. Run `quiver install` again after you switch, so your assistants start the right binary.
+</Aside>
+
+</TabItem>
+<TabItem label="Go">
+
+```sh
+go install github.com/kheif/quiver/cmd/quiver@latest
+```
+
+This builds Quiver with your Go toolchain into `$(go env GOPATH)/bin`. It needs the Go version in [`go.mod`](https://github.com/kheif/quiver/blob/main/go.mod) or later.
+
+</TabItem>
+<TabItem label="Archive">
+
+Download the archive for your system from the [releases page](https://github.com/kheif/quiver/releases): `quiver_<os>_<arch>.tar.gz`, or `.zip` for Windows. Check it against `checksums.txt`, unpack it, and put `quiver` in a folder on your `PATH`.
+
+To build from a clone instead:
+
+```sh
+git clone https://github.com/kheif/quiver
+cd quiver
+make build   # writes bin/quiver
+```
+
+</TabItem>
+</Tabs>
+
+<Aside type="caution" title="Read a script before you pipe it into a shell">
+The install scripts run with your user's rights. Read them first: [`install.sh`](https://github.com/kheif/quiver/blob/main/install.sh) and [`install.ps1`](https://github.com/kheif/quiver/blob/main/install.ps1). Both only download a release archive from GitHub, check its checksum and place one binary. If you prefer not to run a script, use npm, Go or an archive.
+</Aside>
+
+## Check the installation
+
+```sh
+quiver --version
+```
+
+Then set Quiver up with `quiver init`, as the [quickstart](/docs/quickstart/) shows.
+
+## Updates
+
+Once a day, a command run in a terminal asks GitHub for the latest release and remembers the answer in `~/.quiver/state/version-check.json`. When a newer version is out, the command ends with one line on stderr with the update command that matches how you installed Quiver. Nothing is shown for `quiver mcp`, with `--json`, outside a terminal or for development builds, and a failed check is silent. `quiver doctor` shows the latest version too.
+
+To turn the check off, set `QUIVER_NO_UPDATE_CHECK=1`.
+
+To update, run the install command again: the install scripts, `npm install -g @kheif/quiver` or `go install …@latest`.
+
+## Uninstall
+
+<Aside type="danger" title="This deletes your own skills">
+The last command below deletes `~/.quiver`, including your own skills. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
+</Aside>
+
+```sh
+quiver uninstall          # remove the MCP server from every assistant
+rm "$(command -v quiver)" # remove the binary; with npm: npm uninstall -g @kheif/quiver
+rm -rf ~/.quiver          # delete the library
+```
+
+On Windows, after `quiver uninstall`, delete `%LOCALAPPDATA%\Programs\quiver` and `%USERPROFILE%\.quiver`, and remove the folder from your user `PATH` in the environment variables settings.
+
+Projects keep their `.quiver.json`. Delete it there if you no longer need it.

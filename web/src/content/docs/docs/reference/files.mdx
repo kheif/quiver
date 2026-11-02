@@ -1,0 +1,107 @@
+---
+title: Configuration and file layout
+description: Every file Quiver writes, in the Quiver home and in projects.
+---
+
+import { FileTree } from '@astrojs/starlight/components';
+
+Quiver writes to two places: the Quiver home, `~/.quiver` (or `$QUIVER_HOME`), and one `.quiver.json` per project. It changes assistant config files only when you run `quiver install` or `quiver uninstall`.
+
+## The Quiver home
+
+<FileTree>
+
+- ~/.quiver/
+  - config.json sources and settings
+  - registry.json global skills, projects and their skills
+  - state/ machine-local
+    - projects.json the folders where each project was seen
+    - version-check.json the latest release, checked once a day
+  - logs/
+    - mcp.log the MCP server's log
+  - local/ your own skills, a git repository
+    - release-notes/
+      - SKILL.md
+    - k8s-debug/
+      - SKILL.md
+      - references/
+        - checklist.md
+  - sources/ cloned skill repositories
+    - anthropic/
+    - .pins/ checked-out commits of pinned skills
+
+</FileTree>
+
+Edit these files through `quiver` commands, not by hand. `quiver doctor` checks them.
+
+### config.json
+
+The sources, with their repository and the folder of each skill ID:
+
+```json
+{
+  "version": 1,
+  "sources": {
+    "anthropic": {
+      "repo": "https://github.com/anthropics/skills.git",
+      "ids": { "pdf": "skills/pdf", "docx": "skills/docx" }
+    }
+  }
+}
+```
+
+### registry.json
+
+The assignments: global skills, always-on skills, and each project's skills by project ID.
+
+```json
+{
+  "version": 2,
+  "global": ["anthropic/pdf"],
+  "alwaysOn": [],
+  "projects": {
+    "app-6ts23a": { "name": "app", "skills": ["release-notes"] }
+  }
+}
+```
+
+Project folders are not in `registry.json`. They are machine-local, in `state/projects.json`, so [`quiver sync`](/docs/guides/multiple-machines/) can share the registry between machines.
+
+## In a project
+
+```json title=".quiver.json"
+{ "id": "app-6ts23a" }
+```
+
+The project's ID, and nothing else. Commit it. See [Projects](/docs/concepts/projects/).
+
+## In assistant configs
+
+| Assistant | File | Entry |
+| --- | --- | --- |
+| Claude Code | managed by `claude mcp` | `quiver`, user scope |
+| Codex | managed by `codex mcp`, in `~/.codex/config.toml` | `mcp_servers.quiver` |
+| Cursor | `~/.cursor/mcp.json` | `mcpServers.quiver` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS), `%APPDATA%\Claude\claude_desktop_config.json` (Windows) | `mcpServers.quiver` |
+| Antigravity | `~/.gemini/config/mcp_config.json` | `mcpServers.quiver` |
+
+Before Quiver changes a JSON file, it saves the old one as `<file>.quiver-backup`.
+
+## Skill files
+
+```markdown title="SKILL.md"
+---
+name: release-notes
+description: Write release notes from the commits since the last tag.
+---
+
+Instructions for the assistant.
+```
+
+| Field | Required | Rules |
+| --- | --- | --- |
+| `name` | Yes | Lowercase letters, digits and dashes, starting with a letter or digit. Up to 64 characters. |
+| `description` | Yes | When the assistant should use the skill. Up to 1024 characters. |
+| `forkedFrom` | No | Written by `quiver fork`: `<id>@<commit>`. |
+
+Other fields are kept as they are.

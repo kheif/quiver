@@ -1,0 +1,101 @@
+---
+import EmailButton from './EmailButton.astro';
+import { url } from '../data/site';
+---
+
+<section class="teams" id="teams" aria-labelledby="teams-title">
+	<div class="tpanel panel-ground">
+		<div class="tl">
+			<h2 id="teams-title" class="rise">Quiver for teams</h2>
+			<p class="rise" style="--d:80ms">
+				The same library, run for a whole company, with team and company layers managed in one place. Free and open
+				source like the rest, to run on your own servers; hosting by us is coming soon.
+			</p>
+			<p class="status rise" style="--d:140ms">
+				<b>On the roadmap,</b> after a test phase on more assistants and on Windows.
+			</p>
+			<p class="links rise" style="--d:200ms">
+				<a class="btn light" href={url('/teams/')}>How it will work</a>
+				<EmailButton />
+			</p>
+		</div>
+		<ul class="points stair-list">
+			<li class="rise">The company's skills live in one library and change through review, like code.</li>
+			<li class="rise" style="--d:80ms">
+				Each team gets its own skills on top of the company's, and none from the teams next door.
+			</li>
+			<li class="rise" style="--d:160ms">
+				The always-on skills you choose load in every developer's sessions, and you can see which sessions they
+				reached.
+			</li>
+		</ul>
+	</div>
+</section>
+
+<style>
+	.teams {
+		padding-top: var(--q-gap);
+	}
+
+	.tpanel {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+		gap: clamp(32px, 5vw, 96px);
+		margin: 0 20px;
+		padding: clamp(48px, 6vw, 96px);
+		background: var(--q-panel);
+		color: var(--q-panel-ink-2);
+	}
+
+	h2 {
+		color: var(--q-panel-ink);
+		font-size: var(--q-step-head);
+		line-height: 0.95;
+		letter-spacing: -0.045em;
+	}
+
+	.tl p {
+		max-width: 42ch;
+		margin-top: 20px;
+	}
+
+	.status b {
+		color: var(--q-panel-ink);
+		font-weight: 500;
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 22px;
+	}
+
+	.links :global(.email-reveal),
+	.links :global(.email-link) {
+		color: var(--q-panel-ink);
+		font-weight: 500;
+	}
+
+	.points {
+		display: grid;
+		gap: 28px;
+		align-self: center;
+	}
+
+	.points li {
+		font-size: var(--q-step-lead);
+		line-height: 1.35;
+		letter-spacing: -0.015em;
+	}
+
+	
+
+	@media (max-width: 1024px) {
+		.tpanel {
+			grid-template-columns: minmax(0, 1fr);
+			margin: 0 10px;
+			padding: 32px 24px;
+		}
+	}
+</style>

@@ -1,0 +1,56 @@
+---
+import CopyButton from './CopyButton.astro';
+import install from '../data/install.json';
+import { url } from '../data/site';
+
+const npm = install.methods.find((m) => m.id === 'npm')!.command;
+---
+
+<section class="install" id="install" aria-labelledby="install-title">
+	<div class="wrap">
+		<span id="install-words" hidden>Install it with {npm}</span>
+		<h2 id="install-title" class="sentence rise" aria-labelledby="install-words">
+			Install it with <span class="blank"><code>{npm.split(' ').map((t, i) => <>{i > 0 && ' '}<span class="tok">{t}</span></>)}</code><CopyButton text={npm} label="Copy the install command" /></span>
+		</h2>
+		<p class="after rise" style="--d:90ms">
+			Then run <code>quiver init</code>: it creates your library and offers to connect your assistants. There is also
+			an install script, for Windows too, and <code>go install</code>: <a href={url('/docs/installation/')}>installation guide</a>.
+		</p>
+	</div>
+</section>
+
+<style>
+	.install {
+		padding: var(--q-gap) 0 clamp(96px, 10vw, 160px);
+	}
+
+	.sentence {
+		font-size: var(--q-step-display);
+		line-height: 1;
+		letter-spacing: -0.05em;
+	}
+
+	.blank {
+		display: inline-flex;
+		align-items: center;
+		max-width: 100%;
+		margin-top: 0.12em;
+		background: var(--q-surface);
+		vertical-align: baseline;
+	}
+
+	.blank code {
+		padding: 0 0.3em;
+		font-size: 0.5em;
+		letter-spacing: -0.02em;
+	}
+
+	.after {
+		margin-top: 24px;
+		color: var(--q-text-2);
+	}
+
+	.after a {
+		color: var(--q-text);
+	}
+</style>

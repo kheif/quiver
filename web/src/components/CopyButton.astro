@@ -1,0 +1,93 @@
+---
+// A button that copies `text` and says so, visibly and to screen readers.
+import Icon from './Icon.astro';
+
+interface Props {
+	text: string;
+	label?: string;
+}
+const { text, label = 'Copy command' } = Astro.props;
+---
+
+<button class="copy" type="button" data-copy={text} aria-label={label}>
+	<Icon name="copy" class="copy-icon" />
+	<Icon name="check" class="check-icon" />
+	<span class="copy-status" role="status" aria-live="polite"></span>
+</button>
+
+<script>
+	async function copy(text: string) {
+		try {
+			await navigator.clipboard.writeText(text);
+			return true;
+		} catch {
+			// Older browsers and non-secure contexts: copy through a hidden field.
+			const field = document.createElement('textarea');
+			field.value = text;
+			field.setAttribute('readonly', '');
+			field.style.position = 'fixed';
+			field.style.opacity = '0';
+			document.body.append(field);
+			field.select();
+			const ok = document.execCommand('copy');
+			field.remove();
+			return ok;
+		}
+	}
+
+	document.addEventListener('click', async (event) => {
+		const button = (event.target as Element | null)?.closest<HTMLButtonElement>('button[data-copy]');
+		if (!button) return;
+		const status = button.querySelector('.copy-status');
+		const ok = await copy(button.dataset.copy ?? '');
+		button.dataset.state = ok ? 'copied' : 'failed';
+		if (status) status.textContent = ok ? 'Copied to clipboard' : 'Copy failed; select the text instead';
+		window.setTimeout(() => {
+			delete button.dataset.state;
+			if (status) status.textContent = '';
+		}, 2000);
+	});
+</script>
+
+<style>
+	.copy {
+		position: relative;
+		display: inline-grid;
+		place-items: center;
+		flex: none;
+		width: 2.75rem;
+		height: 2.75rem;
+		border: 0;
+		border-radius: var(--q-radius);
+		background: transparent;
+		color: var(--q-term-dim);
+		cursor: pointer;
+		transition: color var(--q-duration) var(--q-ease);
+	}
+	.copy:hover {
+		color: var(--q-term-text);
+	}
+	.copy :global(svg) {
+		grid-area: 1 / 1;
+		width: 1.05rem;
+		height: 1.05rem;
+	}
+	.copy :global(.check-icon) {
+		opacity: 0;
+		color: var(--q-term-prompt);
+	}
+	.copy[data-state='copied'] :global(.copy-icon) {
+		opacity: 0;
+	}
+	.copy[data-state='copied'] :global(.check-icon) {
+		opacity: 1;
+	}
+	.copy-status {
+		position: absolute;
+		width: 1px;
+		height: 1px; /* taste-skill-ignore: visually hidden status text */
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+</style>

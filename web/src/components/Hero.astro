@@ -1,0 +1,195 @@
+---
+import CopyButton from './CopyButton.astro';
+import LayerPicker from './LayerPicker.astro';
+import install from '../data/install.json';
+import { url } from '../data/site';
+
+const npm = install.methods.find((m) => m.id === 'npm')!.command;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+	<div class="hero-text">
+		<h1 id="hero-title" class="rise">Agent skills, managed in layers</h1>
+		<p class="lede rise" style="--d:90ms">
+			Quiver keeps one library of agent skills for Claude Code, Codex and Cursor, and gives each folder the skills it
+			needs, in layers: you and the project today, your team and your company next.
+		</p>
+		<div class="actions rise" style="--d:180ms">
+			<div class="cmdline">
+				<code>{npm}</code>
+				<CopyButton text={npm} label="Copy the install command" />
+			</div>
+			<a class="docs" href={url('/docs/introduction/')}>Read the docs</a>
+		</div>
+		<p class="facts rise" style="--d:240ms">
+			Apache-2.0 · one Go binary for macOS, Linux and Windows · also with
+			{' '}<a href={url('/docs/installation/')}>an install script or <code>go install</code></a>
+		</p>
+	</div>
+	<div class="stage-wrap shut" id="stage">
+		<div class="stage">
+			<div class="steps" aria-hidden="true"></div>
+			<div class="landing">
+				<LayerPicker />
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	// The stage opens once, from the right, as the page loads.
+	const stage = document.getElementById('stage');
+	requestAnimationFrame(() =>
+		requestAnimationFrame(() => {
+			stage?.classList.add('open');
+			stage?.classList.remove('shut');
+		}),
+	);
+</script>
+
+<style>
+	/* Text on the left, the stage on the right; the stage is in the flow, so its panel is never cut. */
+	.hero {
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+		/* The first screen below the header (28px and a 2.5rem row). */
+		min-height: min(980px, calc(100svh - 28px - 2.5rem));
+		padding-left: var(--q-margin);
+		overflow: hidden;
+	}
+
+	.hero-text {
+		position: relative;
+		z-index: 2;
+		padding: clamp(48px, 5vw, 96px) 0 48px;
+	}
+
+	h1 {
+		max-width: 9.4em;
+		font-size: var(--q-step-display);
+		line-height: 0.92;
+		letter-spacing: -0.05em;
+	}
+
+	.lede {
+		max-width: 36ch;
+		margin-top: 36px;
+	}
+
+	.actions {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+		margin-top: 36px;
+	}
+
+	.cmdline {
+		display: flex;
+		align-items: center;
+		background: var(--q-surface);
+	}
+
+	.cmdline code {
+		padding: 0 6px 0 18px;
+		font-size: var(--q-step-body);
+	}
+
+	.docs {
+		font-weight: 500;
+	}
+
+	.facts {
+		max-width: 44ch;
+		margin-top: 22px;
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	/* The stage: the four layers as one staircase, rising to the right. The stage fills the first screen;
+	   the steps take whatever height the panel leaves, so the panel always shows whole. */
+	.stage-wrap {
+		position: relative;
+	}
+
+	.stage {
+		--top: clamp(8px, 3svh, 40px);
+		--rise: clamp(28px, 5svh, 56px);
+		--gap: 24px;
+		--in: 40px;
+		--bottom: clamp(20px, 5svh, 56px);
+		display: grid;
+		grid-template-rows: minmax(calc(var(--rise) * 3), 1fr) auto;
+		height: 100%;
+		padding-top: var(--top);
+	}
+
+	.steps {
+		margin-bottom: -1px;
+		background: var(--q-accent);
+		clip-path: polygon(25% 100%, 25% 66.667%, 50% 66.667%, 50% 33.333%, 75% 33.333%, 75% 0, 100% 0, 100% 100%);
+	}
+
+	.landing {
+		padding: var(--gap) var(--in) var(--bottom);
+		background: var(--q-accent);
+	}
+
+	:global(.js) .stage-wrap.shut {
+		clip-path: inset(0 0 0 100%);
+	}
+
+	.stage-wrap.open {
+		clip-path: inset(0 0 0 0);
+		transition: clip-path 1.1s var(--q-ease);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.js) .stage-wrap.shut {
+			clip-path: none;
+		}
+
+		.stage-wrap.open {
+			transition: none;
+		}
+	}
+
+	/* Below 1100px the stage sits under the text. */
+	@media (max-width: 1100px) {
+		.hero {
+			display: block;
+			min-height: 0;
+			padding-right: var(--q-margin);
+		}
+
+		.stage-wrap {
+			margin: 0 calc(var(--q-margin) * -1);
+		}
+
+		.stage {
+			--top: 0px;
+			--rise: 32px;
+			--in: var(--q-margin);
+			--bottom: var(--q-margin);
+		}
+	}
+
+	@media (max-width: 760px) {
+		.hero-text {
+			padding-top: 48px;
+		}
+
+		h1 {
+			font-size: 10vw;
+		}
+
+		.cmdline code {
+			padding-left: 12px;
+			font-size: 15px;
+		}
+
+		.stage {
+			--rise: 24px;
+		}
+	}
+</style>

@@ -1,0 +1,87 @@
+---
+import assistants from '../data/assistants.json';
+import { latestRelease, unreleased, url } from '../data/site';
+---
+
+<section class="assistants" id="assistants" aria-labelledby="assistants-title">
+	<div class="wrap tiles">
+		<div class="head accent-ground rise">
+			<h2 id="assistants-title">Works with your assistants</h2>
+			<p>Any other MCP client: <code>quiver mcp config</code> prints the entry. <a href={url('/docs/assistants/')}>What works where</a></p>
+		</div>
+		{
+			assistants.map((a, i) => (
+				<div class="tile rise" data-assistant={a.id} style={`--d:${(i % 4) * 60 + 60}ms`}>
+					<span class="name">{a.name}</span>
+					<span class="lvl">{a.label}</span>
+					{unreleased.has(a.id) && <span class="tag-next">Next release, after {latestRelease}</span>}
+				</div>
+			))
+		}
+	</div>
+</section>
+
+<style>
+	.assistants {
+		padding-top: var(--q-gap);
+	}
+
+	.tiles {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
+	}
+
+	.tile,
+	.head {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 24px;
+		background: var(--q-surface);
+	}
+
+	.tile {
+		aspect-ratio: 3 / 2;
+	}
+
+	.head {
+		grid-column: span 2;
+		justify-content: space-between;
+		background: var(--q-accent);
+		color: var(--q-accent-ink);
+	}
+
+	h2 {
+		max-width: 12ch;
+		font-size: var(--q-step-head);
+		line-height: 0.95;
+		letter-spacing: -0.045em;
+	}
+
+	.head p {
+		color: var(--q-accent-ink-2);
+	}
+
+	.name {
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		line-height: 1;
+		letter-spacing: -0.03em;
+	}
+
+	.lvl {
+		color: var(--q-text-2);
+	}
+
+	@media (max-width: 760px) {
+		.tiles {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 6px;
+		}
+
+		.tile {
+			aspect-ratio: auto;
+		}
+	}
+</style>

@@ -1,0 +1,155 @@
+---
+import Mark from './Mark.astro';
+import Icon from './Icon.astro';
+import { latestRelease, links, url } from '../data/site';
+---
+
+<header class="site-header">
+	<div class="brandrow">
+		<a class="brand" href={url('/')} aria-label="Quiver home">
+			<Mark />
+			<span>quiver</span>
+		</a>
+		<a class="ver" href={links.releases}>{latestRelease}</a>
+	</div>
+	<nav aria-label="Main">
+		<ul>
+			<li><a href={url('/docs/introduction/')}>Docs</a></li>
+			<li class="hide-sm"><a href={url('/docs/reference/cli/')}>CLI reference</a></li>
+			<li><a href={url('/teams/')}>Teams</a></li>
+			<li class="hide-sm"><a href={links.releases}>Releases</a></li>
+			<li><a class="btn small" href={links.repo}>GitHub</a></li>
+			<li>
+				<button class="theme-toggle" type="button" aria-label="Switch to dark theme">
+					<Icon name="sun" class="icon-sun" />
+					<Icon name="moon" class="icon-moon" />
+				</button>
+			</li>
+		</ul>
+	</nav>
+</header>
+
+<script>
+	const button = document.querySelector<HTMLButtonElement>('.theme-toggle');
+	const root = document.documentElement;
+	const label = () => {
+		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		button?.setAttribute('aria-label', `Switch to ${next} theme`);
+	};
+	label();
+	button?.addEventListener('click', () => {
+		const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		root.dataset.theme = next;
+		try {
+			localStorage.setItem('starlight-theme', next);
+		} catch {}
+		label();
+	});
+</script>
+
+<style>
+	.site-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 16px;
+		padding: 28px var(--q-margin) 0;
+	}
+
+	.brandrow {
+		display: flex;
+		align-items: baseline;
+		gap: 12px;
+	}
+
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		letter-spacing: -0.03em;
+		text-decoration: none;
+	}
+
+	.brand :global(.mark) {
+		align-self: center;
+	}
+
+	.ver {
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+		text-decoration: none;
+	}
+
+	.ver:hover {
+		color: var(--q-accent);
+	}
+
+	ul {
+		display: flex;
+		align-items: center;
+		gap: 28px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 15px;
+	}
+
+	ul a:not(.btn) {
+		text-decoration: none;
+	}
+
+	ul a:not(.btn):hover {
+		color: var(--q-accent);
+	}
+
+	.theme-toggle {
+		display: grid;
+		place-items: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0;
+		border: 0;
+		background: var(--q-surface);
+		color: var(--q-text);
+		cursor: pointer;
+	}
+
+	.theme-toggle :global(svg) {
+		width: 18px;
+		height: 18px;
+	}
+
+	:global([data-theme='dark']) .theme-toggle :global(.icon-moon),
+	:global(:root:not([data-theme='dark'])) .theme-toggle :global(.icon-sun) {
+		display: none;
+	}
+
+	@media (max-width: 760px) {
+		ul {
+			gap: 14px;
+		}
+
+		.hide-sm {
+			display: none;
+		}
+	}
+
+	@media (max-width: 420px) {
+		ul {
+			gap: 12px;
+		}
+
+		.ver {
+			display: none;
+		}
+	}
+
+	/* The theme follows the system on the smallest phones. */
+	@media (max-width: 360px) {
+		.theme-toggle {
+			display: none;
+		}
+	}
+</style>

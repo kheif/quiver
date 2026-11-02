@@ -1,0 +1,403 @@
+---
+import HomeLayout from '../layouts/HomeLayout.astro';
+import EmailButton from '../components/EmailButton.astro';
+import { links, url } from '../data/site';
+
+const layers = [
+	['Company', 'Set once for every developer, such as a security review or the incident runbook.', 'company'],
+	['Team', 'Skills for one team, such as UI or backend, that the other teams never see.', 'team'],
+	['You', 'Each developer still keeps their own skills and style, in every folder.', 'you'],
+	['Project', 'Skills for one codebase, for everyone who works on it.', 'project'],
+];
+const gets = [
+	['One library', "The company's skills live in one library and change through review, like code."],
+	['Each team sees its own', "A team gets its own skills and the company's, and nothing from the teams next door."],
+	[
+		'Always-on rules',
+		"The always-on skills you choose are in every developer's sessions from the start. A skill is guidance for the assistant, not a hard block: what must never happen still needs the assistant's own permission settings.",
+	],
+	[
+		'Every assistant you use',
+		'Claude Code, Codex, Cursor and other MCP clients get the same skills from the same library. How much loads on its own differs by assistant.',
+	],
+	['Where skills reached', 'Which skills were loaded, in which sessions, recorded by your own Quiver server.'],
+];
+---
+
+<HomeLayout
+	title="Quiver for teams"
+	description="Quiver for teams: one library of agent skills for a whole company, with team and company layers and always-on skills in every session. Planned; free and open source."
+>
+	<section class="thero wrap" aria-labelledby="teams-title">
+		<div class="ttext">
+			<h1 id="teams-title" class="rise">Quiver for teams</h1>
+			<p class="lede rise" style="--d:90ms">
+				<b>Planned.</b> One library of agent skills for the whole company, delivered to the assistants your developers
+				use, with the always-on skills every session must start with.
+			</p>
+		</div>
+		<ol class="stairs rise" style="--d:150ms" aria-label="The four layers" data-ui>
+			{
+				layers.map(([name, , cls]) => (
+					<li class={cls}>
+						<b>{name}</b>
+					</li>
+				))
+			}
+		</ol>
+	</section>
+
+	<section class="layers wrap split" aria-labelledby="layers-title">
+		<div class="text">
+			<h2 id="layers-title" class="h2 rise">Four layers, from company to project</h2>
+			<p class="rise" style="--d:80ms">
+				Every folder gets the skills of its layers, and each layer adds to the ones above it, so nobody copies skills
+				between projects or teams. Your own layer and the project layer work today; Quiver for teams adds the company
+				and team layers.
+			</p>
+		</div>
+		<dl class="ldl rise" style="--d:120ms" data-ui>
+			{
+				layers.map(([name, what]) => (
+					<div>
+						<dt>{name}</dt>
+						<dd>{what}</dd>
+					</div>
+				))
+			}
+		</dl>
+	</section>
+
+	<section class="gets wrap" aria-labelledby="gets-title">
+		<h2 id="gets-title" class="h2 rise">What a team gets</h2>
+		<div class="grid">
+			{
+				gets.map(([title, body], i) => (
+					<div class="g rise" style={`--d:${i * 60}ms`} data-ui={i === 1 ? '' : undefined}>
+						<h3>{title}</h3>
+						<p>{body}</p>
+						{i === 1 && (
+							<ul class="catalog">
+								<li><span>design-tokens</span><span>UI team · always on</span></li>
+								<li><span>a11y-check</span><span>UI team</span></li>
+								<li><span>security-review</span><span>company · always on</span></li>
+								<li class="absent"><span>api-conventions</span><span>backend team · not in this catalog</span></li>
+							</ul>
+						)}
+					</div>
+				))
+			}
+		</div>
+	</section>
+
+	<section class="runs" aria-labelledby="runs-title">
+		<div class="rpanel panel-ground split">
+			<div class="text">
+				<h2 id="runs-title" class="h2 rise">Run it yourself</h2>
+			</div>
+			<ul class="stair-list rise" style="--d:80ms">
+				<li>Free and open source under Apache-2.0, like the rest of Quiver.</li>
+				<li>Runs on your own servers. Hosting by us is coming soon, for teams that would rather not run it.</li>
+				<li>Skills stay plain <code>SKILL.md</code> files in git, so nothing locks you in.</li>
+			</ul>
+		</div>
+	</section>
+
+	<section class="status wrap split" aria-labelledby="status-title">
+		<div class="text">
+			<h2 id="status-title" class="h2 rise">Where it stands</h2>
+			<p class="rise" style="--d:80ms">
+				Planned. Quiver for one developer comes first, then a test phase on more assistants and on Windows, then
+				teams. Follow the releases on GitHub.
+			</p>
+			<h3 class="today rise" style="--d:110ms">What a team can do today</h3>
+			<p class="rise" style="--d:140ms">
+				Keep the team's skills in one git repository. Each developer adds it to Quiver as a source and assigns its
+				skills to their projects, and changes arrive with an update each developer reviews first. There is no team
+				layer yet, so every developer sets this up once.
+			</p>
+			<p class="links rise" style="--d:170ms">
+				<a class="btn" href={url('/docs/guides/sources/')}>Share skills through a source</a>
+				<a href={links.releases}>Releases</a>
+				<a href={url('/docs/concepts/layers/')}>How layers work today</a>
+			</p>
+			<p class="write rise" style="--d:200ms">Planning a rollout for your company? <EmailButton /></p>
+		</div>
+		<div class="session rise" style="--d:120ms" data-ui>
+			<p class="cap">A UI developer's session in ~/code/checkout-web</p>
+			<p class="h">Before the first message</p>
+			<ul>
+				<li><span>security-review</span><span>company</span></li>
+				<li><span>design-tokens</span><span>UI team</span></li>
+				<li><span>reply-style</span><span>you</span></li>
+			</ul>
+			<p class="h">Loaded when a task fits</p>
+			<ul>
+				<li><span>a11y-check</span><span>UI team</span></li>
+				<li><span>incident-runbook</span><span>company</span></li>
+				<li><span>release-notes</span><span>project</span></li>
+			</ul>
+		</div>
+	</section>
+</HomeLayout>
+
+<style>
+	.thero {
+		display: grid;
+		grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+		align-items: end;
+		gap: clamp(32px, 5vw, 96px);
+		padding-top: clamp(64px, 9vw, 150px);
+	}
+
+	.lede b {
+		color: var(--q-caution);
+		font-weight: 500;
+	}
+
+	h1 {
+		font-size: var(--q-step-display);
+		line-height: 0.92;
+		letter-spacing: -0.05em;
+	}
+
+	.lede {
+		max-width: 40ch;
+		margin-top: 32px;
+	}
+
+	.stairs {
+		display: grid;
+		gap: 6px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.stairs li {
+		padding: 18px 22px;
+		background: var(--q-surface);
+		font-size: var(--q-step-lead);
+	}
+
+	.stairs b {
+		font-weight: 500;
+	}
+
+	/* The same colours as the home page's layers: you in the accent, the project dark. */
+	.stairs .team {
+		margin-left: 12%;
+	}
+
+	.stairs .you {
+		margin-left: 24%;
+		background: var(--q-accent);
+		color: var(--q-accent-ink);
+	}
+
+	.stairs .project {
+		margin-left: 36%;
+		background: var(--q-panel);
+		color: var(--q-panel-ink);
+	}
+
+	.layers,
+	.gets,
+	.status {
+		padding-top: var(--q-gap);
+	}
+
+	.ldl {
+		display: grid;
+		gap: 22px;
+		margin: 0;
+	}
+
+	.ldl div {
+		display: grid;
+		grid-template-columns: 7em 1fr;
+		gap: 16px;
+	}
+
+	.ldl dt {
+		font-weight: 500;
+	}
+
+	.ldl dd {
+		margin: 0;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 8px;
+		margin-top: 40px;
+	}
+
+	.g {
+		padding: 28px;
+		background: var(--q-surface);
+	}
+
+	.g:first-child {
+		grid-column: span 2;
+		background: var(--q-accent);
+		color: var(--q-accent-ink);
+	}
+
+	.g h3 {
+		font-size: var(--q-step-lead);
+		letter-spacing: -0.02em;
+	}
+
+	.g p {
+		margin-top: 10px;
+		max-width: 40ch;
+	}
+
+	.runs {
+		padding-top: var(--q-gap);
+	}
+
+	.rpanel {
+		margin: 0 20px;
+		padding: clamp(48px, 6vw, 96px);
+		background: var(--q-panel);
+		color: var(--q-panel-ink-2);
+	}
+
+	.rpanel h2 {
+		color: var(--q-panel-ink);
+	}
+
+	.rpanel ul {
+		display: grid;
+		gap: 24px;
+		font-size: var(--q-step-lead);
+	}
+
+	.rpanel b {
+		color: var(--q-panel-ink);
+		font-weight: 500;
+	}
+
+	.status {
+		padding-bottom: clamp(96px, 10vw, 160px);
+	}
+
+	.status .text > p:not(.links) {
+		max-width: 50ch;
+		margin-top: 24px;
+	}
+
+	.ldl {
+		padding: 28px;
+		background: var(--q-surface);
+	}
+
+	.catalog,
+	.session ul {
+		display: grid;
+		gap: 2px;
+		margin: 18px 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: var(--q-step-small);
+	}
+
+	.catalog li,
+	.session li {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 9px 12px;
+		background: var(--q-bg);
+		color: var(--q-text);
+	}
+
+	.catalog li span:last-child,
+	.session li span:last-child {
+		color: var(--q-text-2);
+	}
+
+	.catalog .absent span:first-child {
+		text-decoration: line-through;
+		color: var(--q-text-2);
+	}
+
+	.session {
+		padding: 28px;
+		background: var(--q-surface);
+	}
+
+	.session .cap {
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	.session .h {
+		margin-top: 20px;
+		font-weight: 500;
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 24px;
+		margin-top: 32px;
+	}
+
+	.write {
+		color: var(--q-text-2);
+	}
+
+	.status .today {
+		margin-top: 40px;
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		letter-spacing: -0.02em;
+	}
+
+	.status .text > h3.today + p {
+		margin-top: 12px;
+	}
+
+	@media (max-width: 1024px) {
+		.thero {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.g:first-child {
+			grid-column: auto;
+		}
+
+		.rpanel {
+			margin: 0 10px;
+			padding: 32px 24px;
+		}
+	}
+
+	@media (max-width: 760px) {
+		.lede,
+		.layers p,
+		.g p,
+		.status .text > p:not(.links) {
+			max-width: none;
+		}
+
+		.ldl,
+		.session,
+		.g {
+			padding: 18px;
+		}
+
+		.rpanel {
+			margin: 0;
+		}
+	}
+</style>

@@ -1,0 +1,20 @@
+---
+title: Page not found
+description: This page does not exist.
+template: splash
+editUrl: false
+pagefind: false
+hero:
+  title: Page not found
+  tagline: The page may have moved. Search the docs, or start from one of these pages.
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { url as path } from '../../data/site';
+
+<CardGrid>
+	<LinkCard title="Introduction" href={path('/docs/introduction/')} description="What Quiver is and how it works." />
+	<LinkCard title="Quickstart" href={path('/docs/quickstart/')} description="From install to a skill your assistant uses." />
+	<LinkCard title="CLI reference" href={path('/docs/reference/cli/')} description="Every command and its flags." />
+	<LinkCard title="Home" href={path('/')} description="The Quiver home page." />
+</CardGrid>

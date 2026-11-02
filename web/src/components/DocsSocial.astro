@@ -1,0 +1,23 @@
+---
+// The docs header's links: the same Teams and Releases links as the home page
+// header, then Starlight's own social icons, so both headers lead to the same places.
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+import { links, url } from '../data/site';
+---
+
+<a class="q-nav" href={url('/teams/')}>Teams</a>
+<a class="q-nav" href={links.releases}>Releases</a>
+<Default />
+
+<style>
+	.q-nav {
+		color: var(--sl-color-gray-2);
+		font-size: var(--sl-text-sm);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.q-nav:hover {
+		color: var(--sl-color-white);
+	}
+</style>

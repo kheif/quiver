@@ -1,0 +1,118 @@
+/* Maps Quiver's tokens onto Starlight's, so the docs match the home page. */
+/* Maps Quiver's tokens onto Starlight's, so the docs match the home page.
+   Starlight sets data-theme on every page, so each theme gets its own block. */
+:root {
+	--sl-font: var(--q-font-sans);
+	--sl-font-mono: var(--q-font-mono);
+	--sl-color-accent: var(--q-accent);
+	--sl-color-bg-nav: var(--q-bg);
+	--sl-color-bg-sidebar: var(--q-bg);
+	--sl-color-hairline: var(--q-line);
+	--sl-color-hairline-light: var(--q-line-strong);
+	--sl-line-height-headings: 1.1;
+	--sl-content-width: 46rem;
+}
+
+:root[data-theme='dark'] {
+	--sl-color-white: #ededed;
+	--sl-color-gray-1: #e0e2e5;
+	--sl-color-gray-2: #c2c6cb;
+	--sl-color-gray-3: #9aa0a7;
+	--sl-color-gray-4: #5d636a;
+	--sl-color-gray-5: #2b2f34;
+	--sl-color-gray-6: #1a1c1f;
+	--sl-color-black: #0f1012;
+	--sl-color-accent-low: #1c2547;
+	--sl-color-accent-high: #c9d4ff;
+}
+
+:root[data-theme='light'] {
+	--sl-color-white: #111111;
+	--sl-color-gray-1: #1e1e1e;
+	--sl-color-gray-2: #3a3a3a;
+	--sl-color-gray-3: #5f5f5f;
+	--sl-color-gray-4: #8a8a8a;
+	--sl-color-gray-5: #cfcfcf;
+	--sl-color-gray-6: #ececec;
+	--sl-color-gray-7: #f4f4f4;
+	--sl-color-black: #ffffff;
+	--sl-color-accent-low: #dfe6ff;
+	--sl-color-accent-high: #133bb5;
+}
+
+/* Headings: tighter, in the weight of the home page. */
+.sl-markdown-content :is(h1, h2, h3, h4) {
+	letter-spacing: -0.025em;
+	font-weight: 500;
+	text-wrap: balance;
+}
+h1#_top {
+	letter-spacing: -0.04em;
+	font-weight: 500;
+	text-wrap: balance;
+}
+.sl-markdown-content p,
+.sl-markdown-content li {
+	text-wrap: pretty;
+}
+
+/* The wordmark next to the mark, as on the home page. */
+.site-title {
+	gap: 0.55rem;
+	color: var(--sl-color-white);
+	font-size: 1.25rem;
+	font-weight: 500;
+	letter-spacing: -0.03em;
+	text-transform: lowercase;
+}
+.site-title img {
+	height: 1.45rem;
+	width: auto;
+}
+
+/* Current page in the sidebar: a quiet tint, not a solid block. */
+.sidebar-content a[aria-current='page'],
+.sidebar-content a[aria-current='page']:hover,
+.sidebar-content a[aria-current='page']:focus {
+	background: var(--q-accent-soft);
+	color: var(--q-accent);
+	font-weight: 500;
+}
+
+/* "Next" badges in the sidebar: an outline, like the home page tag. */
+.sidebar-content .sl-badge {
+	border-color: var(--q-line-strong);
+	background: transparent;
+	color: var(--sl-color-gray-3);
+	font-weight: 400;
+}
+
+/* Tables: smaller text and quiet hairlines. Long paths wrap, so tables fit
+   narrow screens instead of scrolling. */
+.sl-markdown-content table {
+	font-size: var(--sl-text-sm);
+}
+.sl-markdown-content :is(td, th) {
+	border-color: var(--q-line);
+	overflow-wrap: anywhere;
+}
+/* The first column holds names; keep them whole. */
+.sl-markdown-content :is(td, th):first-child {
+	overflow-wrap: normal;
+	white-space: nowrap;
+}
+
+/* Inline code: quieter fill, no border noise. */
+.sl-markdown-content :not(pre) > code {
+	background: var(--q-surface-2);
+	border: 1px solid var(--q-line);
+	border-radius: var(--q-radius-sm);
+	padding: 0.1em 0.35em;
+	font-size: 0.875em;
+}
+
+/* Focus ring appears at once and stays visible. */
+:focus-visible {
+	outline: 2px solid var(--q-accent);
+	outline-offset: 2px;
+}

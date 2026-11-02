@@ -1,0 +1,87 @@
+---
+import '@fontsource-variable/hanken-grotesk';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { url } from '../data/site';
+// Preloaded, so the headline does not reflow when the font arrives.
+import sansLatin from '@fontsource-variable/hanken-grotesk/files/hanken-grotesk-latin-wght-normal.woff2?url';
+
+interface Props {
+	title: string;
+	description: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(url('/og.png'), Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<link rel="preload" href={sansLatin} as="font" type="font/woff2" crossorigin />
+		<link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+		<link rel="sitemap" href={url('/sitemap-index.xml')} />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Quiver" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="Quiver: agent skills, managed in layers" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0f1012" media="(prefers-color-scheme: dark)" />
+		<meta name="generator" content={Astro.generator} />
+		{/* Same storage key and logic as Starlight, so the theme carries over to the docs. */}
+		<script is:inline>
+			(() => {
+				document.documentElement.classList.add('js');
+				let stored = null;
+				try {
+					stored = localStorage.getItem('starlight-theme');
+				} catch {}
+				const theme = stored || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+				document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+				// If the page script never runs, show every part instead of leaving it hidden.
+				setTimeout(() => {
+					if (!window.quiverRise) document.querySelectorAll('.rise').forEach((e) => e.classList.add('in'));
+				}, 3000);
+			})();
+		</script>
+	</head>
+	<body>
+		<a class="skip-link" href="#main">Skip to content</a>
+		<SiteHeader />
+		<main id="main">
+			<slot />
+		</main>
+		<SiteFooter />
+		<script>
+			// Each part of a section rises into place once, as it comes into view.
+			(window as unknown as { quiverRise: boolean }).quiverRise = true;
+			const io = new IntersectionObserver(
+				(entries) =>
+					entries.forEach((e) => {
+						if (e.isIntersecting) {
+							e.target.classList.add('in');
+							io.unobserve(e.target);
+						}
+					}),
+				// No inset: a part that shows anywhere on screen, even in one jump of a scroll, is revealed.
+				{ rootMargin: '0px' },
+			);
+			document.querySelectorAll('.rise').forEach((el) => io.observe(el));
+		</script>
+	</body>
+</html>

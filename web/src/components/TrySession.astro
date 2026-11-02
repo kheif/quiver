@@ -1,0 +1,310 @@
+---
+// One session, built live: what the assistant has before the first message.
+import demo from '../data/demo.json';
+import { alwaysBlock, where } from '../scripts/session';
+
+const block = alwaysBlock(['security-review', 'reply-style']);
+const folders = [
+	['checkout-web', 'checkout-web'],
+	['api', 'api'],
+	['none', '~/notes'],
+];
+---
+
+<section class="tryfield accent-ground" id="try" aria-labelledby="try-title">
+	<div class="wrap">
+		<div class="tryhead">
+			<h2 id="try-title" class="h2 rise">Try one session</h2>
+			<p class="rise" style="--d:80ms">
+				Pick a folder and a team, and choose what is always on, to see what the assistant has before your first
+				message.
+			</p>
+		</div>
+		<div class="spanel plain-ground rise" style="--d:140ms" data-ui>
+			<div class="view">
+				<p class="who">Claude Code</p>
+				<p class="where" id="try-where">{where('checkout-web')}</p>
+				<pre id="ctx">{block}</pre>
+				<p class="catalog" id="cat">
+					<b>Loaded when a task fits:</b> design-tokens, a11y-check, anthropic/pdf, release-notes
+				</p>
+			</div>
+			<div class="ctl">
+				<p class="grp" id="try-folder">Folder</p>
+				<div class="seg" role="group" aria-labelledby="try-folder">
+					{
+						folders.map(([id, name], i) => (
+							<button type="button" data-try-folder={id} aria-pressed={i === 0 ? 'true' : 'false'}>
+								{name}
+							</button>
+						))
+					}
+				</div>
+				<p class="grp" id="try-team">Team</p>
+				<div class="seg" role="group" aria-labelledby="try-team">
+					{
+						Object.entries(demo.teams).map(([id, t], i) => (
+							<button type="button" data-try-team={id} aria-pressed={i === 0 ? 'true' : 'false'}>
+								{t.name.replace(' team', '')}
+							</button>
+						))
+					}
+				</div>
+				<p class="grp" id="try-always">Always on</p>
+				<div class="row">
+					<code id="try-sk-security">security-review</code>
+					<button class="sw" type="button" role="switch" aria-checked="true" data-skill="security-review" aria-labelledby="try-sk-security try-always"></button>
+				</div>
+				<div class="row">
+					<code id="try-sk-style">reply-style</code>
+					<button class="sw" type="button" role="switch" aria-checked="true" data-skill="reply-style" aria-labelledby="try-sk-style try-always"></button>
+				</div>
+				<div class="row">
+					<code id="try-team-skill">design-tokens</code>
+					<button class="sw" type="button" role="switch" aria-checked="false" data-skill="team" aria-labelledby="try-team-skill try-always"></button>
+				</div>
+			</div>
+			<p class="sr" id="try-status" aria-live="polite"></p>
+		</div>
+		<p class="after rise" style="--d:200ms">
+			For real, on your own layer: <code>{'quiver add reply-style --global --always'.split(' ').map((t, i) => <>{i > 0 && ' '}<span class="tok">{t}</span></>)}</code>. In Claude Code and Codex, a
+			session-start hook puts this block in the conversation (coming soon). Today Claude Code and Cursor load the same
+			skills through Quiver's instructions to the assistant.
+		</p>
+	</div>
+</section>
+
+<script>
+	import demo from '../data/demo.json';
+	import { alwaysBlock, where, type Folder, type Team } from '../scripts/session';
+
+	const state: { folder: Folder; team: Team; on: Record<string, boolean> } = {
+		folder: 'checkout-web',
+		team: 'ui',
+		on: { 'security-review': true, 'reply-style': true, team: false },
+	};
+
+	function render() {
+		const t = demo.teams[state.team];
+		const always = [
+			...(state.on['security-review'] ? ['security-review'] : []),
+			...(state.on.team ? [t.skill] : []),
+			...(state.on['reply-style'] ? ['reply-style'] : []),
+		];
+		const rest = [
+			...(state.on['security-review'] ? [] : ['security-review']),
+			...(state.on.team ? [] : [t.skill]),
+			t.other,
+			...(state.on['reply-style'] ? [] : ['reply-style']),
+			'anthropic/pdf',
+			...demo.folders[state.folder],
+		];
+		const ctx = document.getElementById('ctx');
+		const cat = document.getElementById('cat');
+		if (ctx) ctx.textContent = alwaysBlock(always);
+		if (cat) cat.innerHTML = `<b>Loaded when a task fits:</b> ${rest.join(', ')}`;
+		const place = document.getElementById('try-where');
+		if (place) place.textContent = where(state.folder);
+		const skill = document.getElementById('try-team-skill');
+		if (skill) skill.textContent = t.skill;
+	}
+
+	/** One short line for screen readers after a change; the panel itself is not live. */
+	function announce() {
+		const status = document.getElementById('try-status');
+		const always = [...document.querySelectorAll<HTMLButtonElement>('#try .sw')]
+			.filter((b) => b.getAttribute('aria-checked') === 'true')
+			.map((b) => document.getElementById(b.getAttribute('aria-labelledby')?.split(' ')[0] ?? '')?.textContent);
+		if (status) status.textContent = `${where(state.folder)}: ${always.length ? `always on, ${always.join(', ')}` : 'nothing always on'}.`;
+	}
+
+	document.querySelectorAll<HTMLButtonElement>('[data-try-folder], [data-try-team]').forEach((button) =>
+		button.addEventListener('click', () => {
+			if (button.dataset.tryFolder) state.folder = button.dataset.tryFolder as Folder;
+			if (button.dataset.tryTeam) state.team = button.dataset.tryTeam as Team;
+			button.parentElement
+				?.querySelectorAll('button')
+				.forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+			render();
+			announce();
+		}),
+	);
+
+	document.querySelectorAll<HTMLButtonElement>('#try .sw').forEach((button) =>
+		button.addEventListener('click', () => {
+			const on = button.getAttribute('aria-checked') !== 'true';
+			button.setAttribute('aria-checked', String(on));
+			state.on[button.dataset.skill ?? ''] = on;
+			render();
+			announce();
+		}),
+	);
+</script>
+
+<style>
+	.tryfield {
+		margin-top: var(--q-gap);
+		padding: clamp(96px, 10vw, 150px) 0;
+		background: var(--q-accent);
+		color: var(--q-accent-ink);
+	}
+
+	.tryhead p {
+		max-width: 46ch;
+		margin-top: 18px;
+	}
+
+	.spanel {
+		display: grid;
+		grid-template-columns: 62fr 38fr;
+		min-height: 520px;
+		margin-top: 40px;
+		background: var(--q-bg);
+		color: var(--q-text);
+	}
+
+	.view {
+		padding: 28px;
+	}
+
+	.who {
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	.where {
+		margin: 4px 0 18px;
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		letter-spacing: -0.02em;
+	}
+
+	pre {
+		padding: 18px 20px;
+		background: var(--q-surface);
+		font-size: 14px;
+		line-height: 1.6;
+		white-space: pre-wrap;
+	}
+
+	.catalog {
+		margin-top: 16px;
+		font-size: var(--q-step-small);
+	}
+
+	.catalog :global(b) {
+		font-weight: 500;
+	}
+
+	.ctl {
+		display: flex;
+		flex-direction: column;
+		padding: 24px 22px;
+		background: var(--q-surface);
+	}
+
+	.grp {
+		margin: 14px 0 8px;
+		font-size: var(--q-step-small);
+		font-weight: 500;
+	}
+
+	.grp:first-child {
+		margin-top: 0;
+	}
+
+	.seg {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+
+	.seg button {
+		padding: 10px 12px;
+		border: 0;
+		background: var(--q-bg);
+		color: var(--q-text);
+		font: 500 14px / 1 var(--q-font-sans);
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.seg button[aria-pressed='true'] {
+		background: var(--q-text);
+		color: var(--q-bg);
+	}
+
+	@media (pointer: coarse) {
+		.seg button {
+			min-height: 44px;
+		}
+	}
+
+	.row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 10px;
+		min-height: 44px;
+	}
+
+	.row code {
+		font-size: 13px;
+	}
+
+	.sw {
+		position: relative;
+		flex: none;
+		width: 46px;
+		height: 26px;
+		padding: 0;
+		border: 0;
+		/* Off: a dark track that keeps 3:1 against the panel. */
+		background: var(--q-text-2);
+		cursor: pointer;
+		transition: background-color 0.15s;
+	}
+
+	.sw::after {
+		content: '';
+		position: absolute;
+		top: 4px;
+		left: 4px;
+		width: 18px;
+		height: 18px;
+		background: var(--q-bg);
+		transition: transform 0.15s;
+	}
+
+	.sw[aria-checked='true'] {
+		background: var(--q-accent);
+	}
+
+	.sw[aria-checked='true']::after {
+		transform: translateX(20px);
+	}
+
+	.after {
+		max-width: 72ch;
+		margin-top: 22px;
+		color: var(--q-accent-ink-2);
+		font-size: var(--q-step-small);
+	}
+
+	.after code {
+		color: var(--q-accent-ink);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sw,
+		.sw::after {
+			transition: none;
+		}
+	}
+
+	@media (max-width: 1024px) {
+		.spanel {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+</style>

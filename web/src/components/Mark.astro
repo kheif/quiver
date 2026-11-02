@@ -1,0 +1,14 @@
+---
+// The Quiver mark: four layers, each one step further in; the last is the accent.
+interface Props {
+	size?: number;
+}
+const { size = 22 } = Astro.props;
+---
+
+<svg class="mark" viewBox="0 0 22 22" width={size} height={size} aria-hidden="true">
+	<rect x="0" y="0" width="22" height="4" fill="currentColor"></rect>
+	<rect x="5.5" y="6" width="16.5" height="4" fill="currentColor"></rect>
+	<rect x="11" y="12" width="11" height="4" fill="currentColor"></rect>
+	<rect x="16.5" y="18" width="5.5" height="4" fill="var(--q-accent)"></rect>
+</svg>

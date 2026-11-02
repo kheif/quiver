@@ -1,0 +1,150 @@
+---
+// The problem: the same skill, copied into every assistant's own place.
+const today = [
+	['~/code/app/.claude/skills/release-notes/', 'the original', false],
+	['~/code/api/.cursor/rules/release-notes.mdc', 'copied, then edited', true],
+	['~/code/site/AGENTS.md', 'pasted in, out of date', true],
+	['~/archive/old-tool/.claude/skills/k8s-debug/', 'gone with the project', true],
+] as const;
+const quiver = [
+	['~/.quiver/local/release-notes/SKILL.md', 'one copy, in git'],
+	['~/.quiver/local/k8s-debug/SKILL.md', 'kept, usable anywhere'],
+] as const;
+---
+
+<section class="why" id="why" aria-labelledby="why-title">
+	<div class="wrap split">
+		<div class="text">
+			<h2 id="why-title" class="h2 rise">Your skills are scattered across assistants</h2>
+			<p class="rise" style="--d:80ms">
+				Agent skills are instruction files that teach an assistant how your work is done: how you review a
+				migration, write release notes or debug a crashing pod.
+			</p>
+			<p class="rise" style="--d:140ms">
+				Today Claude Code keeps them in <code>.claude/skills</code>, Cursor in its rules, Codex in
+				{' '}<code>.codex/skills</code> and <code>AGENTS.md</code>. They are copied from project to project, drift apart,
+				and leave with the project.
+			</p>
+			<p class="rise" style="--d:200ms">
+				Quiver keeps one copy, in a git repository on your machine, and serves it to every assistant in the folders
+				that need it.
+			</p>
+		</div>
+		<div class="compare">
+			<div class="cmp today rise" style="--d:100ms" data-ui>
+				<p class="cmp-h">Today</p>
+				<ul>
+					{
+						today.map(([path, note, bad]) => (
+							<li>
+								<code>{path}</code>
+								<span class={bad ? 'bad' : ''}>{note}</span>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+			<div class="cmp quiver accent-ground rise" style="--d:180ms" data-ui>
+				<p class="cmp-h">With Quiver</p>
+				<ul>
+					{
+						quiver.map(([path, note]) => (
+							<li>
+								<code>{path}</code>
+								<span>{note}</span>
+							</li>
+						))
+					}
+				</ul>
+				<p class="flow"><span>served over MCP to</span> <b>Claude Code</b> <b>Codex</b> <b>Cursor</b></p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.why {
+		padding-top: var(--q-gap);
+	}
+
+	.compare {
+		display: grid;
+		gap: 8px;
+	}
+
+	.cmp {
+		padding: 24px 26px;
+	}
+
+	.today {
+		background: var(--q-surface);
+	}
+
+	.quiver {
+		background: var(--q-accent);
+		color: var(--q-accent-ink);
+	}
+
+	.cmp-h {
+		margin-bottom: 14px;
+		font-size: var(--q-step-lead);
+		font-weight: 500;
+		letter-spacing: -0.02em;
+	}
+
+	ul {
+		display: grid;
+		gap: 12px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	li {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: 6px 16px;
+	}
+
+	li code {
+		font-size: 14px;
+		overflow-wrap: anywhere;
+	}
+
+	li span {
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+
+	li span.bad {
+		color: var(--q-text);
+		font-weight: 500;
+	}
+
+	.quiver li span,
+	.flow span {
+		color: var(--q-accent-ink-2);
+	}
+
+	.flow {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		margin-top: 20px;
+		font-size: var(--q-step-small);
+	}
+
+	.flow span {
+		margin-right: 6px;
+	}
+
+	.flow b {
+		padding: 6px 10px;
+		background: var(--q-accent-ink);
+		color: var(--q-accent);
+		font-weight: 500;
+	}
+</style>

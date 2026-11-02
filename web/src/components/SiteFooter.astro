@@ -1,0 +1,198 @@
+---
+import EmailButton from './EmailButton.astro';
+import { links, url } from '../data/site';
+
+const columns = [
+	{
+		title: 'Docs',
+		items: [
+			['Introduction', url('/docs/introduction/')],
+			['Installation', url('/docs/installation/')],
+			['Quickstart', url('/docs/quickstart/')],
+			['CLI reference', url('/docs/reference/cli/')],
+		],
+	},
+	{
+		title: 'Concepts',
+		items: [
+			['Layers', url('/docs/concepts/layers/')],
+			['Always-on skills', url('/docs/concepts/always-on/')],
+			['Assistants', url('/docs/assistants/')],
+		],
+	},
+	{
+		title: 'Project',
+		items: [
+			['GitHub', links.repo],
+			['Releases', links.releases],
+			['Issues', links.issues],
+			['Contributing', links.contributing],
+		],
+	},
+	{
+		title: 'Policies',
+		items: [
+			['Security', links.security],
+			['License', links.license],
+		],
+	},
+];
+---
+
+<footer class="site-footer panel-ground">
+	<div class="bigmark">
+		<i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
+		<p class="word">quiver</p>
+	</div>
+	<div class="cols">
+		{
+			columns.map((c) => (
+				<div class="col">
+					<h2>{c.title}</h2>
+					<ul>
+						{c.items.map(([label, href]) => (
+							<li>
+								<a href={href}>{label}</a>
+							</li>
+						))}
+					</ul>
+				</div>
+			))
+		}
+		<div class="col teams">
+			<h2>For companies</h2>
+			<p>Planning a rollout of Quiver for teams? Write to us.</p>
+			<p class="reveal-row"><EmailButton /></p>
+		</div>
+	</div>
+	<div class="legal">
+		<span>Quiver · Apache-2.0 · made by its contributors · <a href={links.website}>edit this site on GitHub</a></span>
+		<a class="btn small light" href={links.repo}>GitHub</a>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		background: var(--q-panel);
+		color: var(--q-panel-ink);
+		padding: 56px var(--q-margin) 32px;
+	}
+
+	.bigmark {
+		position: relative;
+		display: grid;
+		grid-template-rows: repeat(4, 1fr);
+		gap: 4px;
+		height: 34svh;
+		min-height: 220px;
+	}
+
+	.bigmark i {
+		display: block;
+		justify-self: end;
+	}
+
+	.bigmark i:nth-child(1) {
+		width: 100%;
+		background: color-mix(in srgb, var(--q-panel-ink) 10%, var(--q-panel));
+	}
+
+	.bigmark i:nth-child(2) {
+		width: 75%;
+		background: color-mix(in srgb, var(--q-panel-ink) 16%, var(--q-panel));
+	}
+
+	.bigmark i:nth-child(3) {
+		width: 50%;
+		background: color-mix(in srgb, var(--q-panel-ink) 23%, var(--q-panel));
+	}
+
+	.bigmark i:nth-child(4) {
+		width: 25%;
+		background: var(--q-accent);
+	}
+
+	.word {
+		position: absolute;
+		left: 0;
+		bottom: -0.06em;
+		font-size: clamp(72px, 12vw, 180px);
+		line-height: 0.8;
+		letter-spacing: -0.06em;
+		font-weight: 500;
+	}
+
+	.cols {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 2fr)) minmax(0, 4fr);
+		gap: 20px;
+		margin-top: 56px;
+		font-size: 15px;
+	}
+
+	h2 {
+		margin-bottom: 10px;
+		color: var(--q-panel-ink-2);
+		font-size: 15px;
+		font-weight: 400;
+	}
+
+	ul {
+		display: grid;
+		gap: 8px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	a {
+		text-decoration: none;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+
+	.teams p {
+		max-width: 34ch;
+		color: var(--q-panel-ink-2);
+	}
+
+	.reveal-row {
+		margin-top: 12px;
+	}
+
+	.reveal-row :global(.email-reveal),
+	.reveal-row :global(.email-link) {
+		color: var(--q-panel-ink);
+	}
+
+	.legal {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 16px;
+		margin-top: 56px;
+		color: var(--q-panel-ink-2);
+		font-size: 14px;
+	}
+
+	.legal span a {
+		text-decoration: underline;
+	}
+
+	@media (max-width: 760px) {
+		.cols {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.teams {
+			grid-column: span 2;
+		}
+
+		.bigmark {
+			height: 22svh;
+		}
+	}
+</style>
