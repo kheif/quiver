@@ -1,0 +1,47 @@
+#!/usr/bin/expect -f
+# usage: claude-hooks-tui.exp <dir>
+# Runs one interactive Claude Code session in <dir>: answers the trust dialog,
+# then a prompt, /clear, a prompt, /compact, a prompt. Writes <dir>/pretrust.txt,
+# which says whether the hook ran before the dialog was answered. A run started
+# from inside Claude Code inherits CLAUDE_CODE_CHILD_SESSION, which turns the
+# transcript off, so it is cleared here.
+set d [lindex $argv 0]
+cd $d
+set env(HOOK_LOG) $d/hook.log
+log_user 0
+match_max 100000
+spawn env -u CLAUDE_CODE_CHILD_SESSION TERM=xterm-256color claude --setting-sources project --strict-mcp-config
+stty rows 50 columns 150
+
+# drain reads the output for a fixed time, so the terminal never blocks the session.
+proc drain {secs} {
+    set timeout $secs
+    expect {
+        -re {.+} { exp_continue -continue_timer }
+        timeout {}
+        eof {}
+    }
+}
+proc say {text secs} {
+    send -- $text
+    drain 1
+    send -- "\r"
+    drain $secs
+}
+
+drain 6
+set f [open $d/pretrust.txt w]
+puts $f "hook ran before the trust answer: [file exists $d/hook.log]"
+close $f
+# The dialog starts on "No, exit".
+send -- "\033\[B"
+drain 1
+send -- "\r"
+drain 10
+say "Suggest three names for a cat." 30
+say "/clear" 8
+say "Suggest three names for a dog." 30
+say "/compact" 60
+say "Suggest three names for a fish." 30
+send -- "/exit\r"
+drain 3

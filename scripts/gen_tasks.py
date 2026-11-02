@@ -1157,6 +1157,15 @@ Steps, in a throwaway workspace with the hook in its `.claude/settings.json`:
 6. Time: how long may the hook run before Claude Code gives up, and does a slow hook delay the first reply?
 
 **Done when:** the results are in `docs/spike-hooks.md`.
+
+**Notes:**
+- Results in docs/spike-hooks.md (Claude Code 2.1.308, `spike/b01/claude-hooks-run.sh`). Delivery level: hook. Always-on 10 of 10, fitting skills 6 of 6, other skills 0 of 4, with plain stdout and with `additionalContext` alike, and no `get_skill` for `reply-style`. With the server's pointer also active, the model still loaded it in 6 of 10.
+- Limit: 10,000 characters per hook command, counted in characters. Above it the model gets a file path and a 2 KB preview, and a rule after the preview was followed in 0 of 6.
+- Sources: `clear` needs the hook, or the rule is gone. On `resume` the earlier text stays and a new firing adds a second copy. The matcher `startup|clear|compact` gives every context the text once.
+- `SessionStart` does not reach sub-agents (0 of 6); `SubagentStart` with `additionalContext` does (6 of 6).
+- A failing hook never stops a session, and its text is dropped. A slow hook delays the first reply by its whole run time; the default timeout is 600 seconds.
+- Besides the facts listed above, stdin has `transcript_path`, interactive sessions add `model` and `scratchpad_dir`, and `source` can also be `fork` (documented).
+- Not measured: the user's own settings file, the managed settings file, Windows, automatic compaction, and what the terminal shows for a failed hook.
 """)
 
 task("TASKF1.2", "Codex hooks", "TASK38", """
@@ -1233,7 +1242,7 @@ A command that a session-start hook runs: it prints the always-on skills of the 
 """)
 
 task("TASKF3", "Always-on pointer becomes the fallback", "TASKF2", """
-With the hook installed, the pointer in `instructions` (TASKA1) would make the model load each always-on skill a second time with `get_skill`. Without the hook it is still needed.
+With the hook installed, the pointer in `instructions` (TASKA1) makes the model load each always-on skill a second time with `get_skill`: in 6 of 10 B01 prompts in TASKF1.1. Without the hook it is still needed.
 
 1. Change `pointer` in `internal/server/catalog.go` to:
    ```
@@ -1264,10 +1273,10 @@ task("TASKF4.1", "Rename to `quiver install` and `quiver uninstall`", "TASK38", 
 
 task("TASKF4.2", "Claude Code hook", "TASKF1.1, TASKF2, TASKF4.1", """
 1. **Where.** The user's Claude Code settings file found in TASKF1.1 (`~/.claude/settings.json`, or `$CLAUDE_CONFIG_DIR/settings.json`).
-2. **What.** A `SessionStart` entry whose command is `<quiver> hook session-start claude-code`, `<quiver>` being the path `command()` in `internal/cli/mcp.go` returns (Claude Code has the shell's `PATH`, so the npm launcher works), quoted with `assistant.ShellQuote`.
+2. **What.** A `SessionStart` entry with the matcher `startup|clear|compact`, whose command is `<quiver> hook session-start claude-code`, `<quiver>` being the path `command()` in `internal/cli/mcp.go` returns (Claude Code has the shell's `PATH`, so the npm launcher works), quoted with `assistant.ShellQuote`.
 3. **How.** Generalize `internal/assistant/jsonconfig.go`: today `change` edits the `mcpServers` object; the hook lives in `hooks.SessionStart`, an array of groups that each hold a `hooks` array. Keep every other key, group and hook, the key order, the indentation and the file mode; save `<file>.quiver-backup` first; write atomically (`fsutil.WriteFileAtomic`); never write a file that is not valid JSON.
 4. **Recognize Quiver's hook** by its command: one whose arguments end with `hook session-start claude-code` and whose program is named `quiver` (or `quiver.exe`). `install` points it to the current binary (reported as updated), adds it if missing, and leaves it alone if it is current; `uninstall` removes only it, and the group if it is then empty.
-5. Set the hook's timeout to the value found in TASKF1.1.
+5. Set the hook's `timeout` to 10 seconds. The default is 600, and a slow hook delays the first reply by its whole run time (TASKF1.1).
 
 **Done when:** tests in `internal/assistant` cover a missing file, a file with other settings and hooks, an update after a move, removal, and a file that is not valid JSON; tests in `internal/cli` cover install and uninstall; and a new Claude Code session follows an always-on fixture skill from the hook.
 """)
@@ -1589,7 +1598,7 @@ for old in flat:
     REMAP[old] = REMAP[parent] + dot + sub if dot else f"TASK{sum('.' not in t for t in REMAP) + 1:02d}"
 remap = lambda s: re.sub(r"TASK(?:\d\d|[A-H]\d)(?:\.\d+)?", lambda m: REMAP.get(m.group(0)) or REMAP[m.group(0).split(".")[0]] + m.group(0)[len(m.group(0).split(".")[0]):], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

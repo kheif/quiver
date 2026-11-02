@@ -6,7 +6,7 @@
 
 **Depends on:** TASK53
 
-With the hook installed, the pointer in `instructions` (TASK19) would make the model load each always-on skill a second time with `get_skill`. Without the hook it is still needed.
+With the hook installed, the pointer in `instructions` (TASK19) makes the model load each always-on skill a second time with `get_skill`: in 6 of 10 B01 prompts in TASK52.1. Without the hook it is still needed.
 
 1. Change `pointer` in `internal/server/catalog.go` to:
    ```
