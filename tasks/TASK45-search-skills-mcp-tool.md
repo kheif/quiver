@@ -1,6 +1,6 @@
 # TASK45 — `search_skills` MCP tool
 
-**Phase:** Phase 5 — v2
+**Phase:** Phase 5 — v1.3
 
 **Status:** ✅ Done
 

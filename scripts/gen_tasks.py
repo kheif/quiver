@@ -721,7 +721,7 @@ Stabilization before v2, from using v1.0.0 (2026-10-28). Released as v1.1.0: a n
 1c. Imported skills are assigned to the project of the current folder (or to every folder), also when a folder elsewhere is imported. `quiver import` without a path keeps searching this project's `.claude/skills`, or every folder of it with `--deep`.
 2. `quiver --version` of a `go install` build shows the module version (`1.1.0`), not `dev`. A plain `go build` shows Go's VCS version; release builds keep the ldflags version.
 
-**Not done (decided 2026-10-28):** prefix-free commands (TASKB1) stay in v2. It is not measured yet whether the assistant reliably follows a pointer file to `get_skill`, so the MCP prompts stay as they are for now.
+**Not done (decided 2026-10-28):** prefix-free commands (TASKB1) stay for a later version. It is not measured yet whether the assistant reliably follows a pointer file to `get_skill`, so the MCP prompts stay as they are for now.
 
 **Notes:**
 - `importOne` in `internal/cli/import.go` handles one skill before the folder search; `library.ReadFound` reads a skill folder for both paths. A lone markdown file is copied to a temp folder as `SKILL.md` first. Deleting the original deletes the skill folder, or only the lone file.
@@ -800,7 +800,7 @@ task("TASKD3", "`quiver show`, `quiver search`, every skill in the catalog", "TA
 """)
 
 task("TASKD4", "`quiver mcp install` for Cursor and Claude Desktop", "TASKC1", """
-Today `mcp install` registers Quiver only with Claude Code (`internal/assistant/claude.go`). Pulls the first part of the v2 task "`mcp install` for more assistants" into v1.2.
+Today `mcp install` registers Quiver only with Claude Code (`internal/assistant/claude.go`). Pulls the first part of TASK38 ("`mcp install` for more assistants") into v1.2.
 
 1. **Spike first, per assistant.** The catalog and always-on skills reach the assistant through the MCP `instructions`. Check that Cursor and Claude Desktop pass `instructions` to the model, as in docs/spike-b01-results.md: does a fitting prompt load the skill, does an always-on skill apply from the first reply? Record the results in `docs/`. If an assistant ignores `instructions`, decide with the user before adding it.
 2. **Shared JSON installer.** Most assistants keep MCP servers in a JSON file under `mcpServers`. One function adds, updates and removes the `quiver` entry, keeps every other key and the file's indentation, backs up the original, and writes atomically. A broken JSON file is an error, never overwritten.
@@ -885,7 +885,7 @@ task("TASKD8", "Release v1.2.0", "TASKD1, TASKD2, TASKD3, TASKD4, TASKD5, TASKD6
 """)
 
 # ---------------------------------------------------------------- Phase 5
-phase("Phase 5 — v2")
+phase("Phase 5 — v1.3")
 
 task("TASKE1", "Split machine-local state out of the registry", "TASKD8", """
 Backlog B04. `registry.json` holds each project's absolute `paths`. Synced between machines (Phase 5's library sync), the paths are wrong on the other machine and both machines rewrite the file, so every sync conflicts.
@@ -1035,7 +1035,7 @@ Inside the TUI, check the remote sources for updates quietly, one at a time.
 - Checks respect the interval.
 """)
 
-task("TASKB1", "Prefix-free commands in Claude Code", "TASK20, TASK10, TASK22", """
+task("TASKB1", "Prefix-free commands in Claude Code", "TASK20, TASK10, TASK22, TASKF4.1", """
 MCP prompts (TASK20) appear in Claude Code as `/quiver:<id>`, and the server name cannot be dropped. Claude Code's own skills have no prefix: a folder `.claude/skills/<name>/SKILL.md` becomes `/<name>`. Quiver writes a small Claude Code skill for every served skill, so the user types `/review ship 1.2`.
 
 Facts from the Claude Code docs (checked 2026-10-28):
@@ -1051,13 +1051,35 @@ Facts from the Claude Code docs (checked 2026-10-28):
 3. The command is the skill's `name`: `acme/review` gives `/review`. If two served skills share a name, both use their ID with `/` replaced by `-` (`/acme-review`).
 4. Never change or delete a folder without the marker. If the user's own skill has the name, skip it and warn in `quiver status` and `quiver doctor`.
 5. Sync after every change to what is served: `add`, `remove`, `new`, `create_skill`, `update`, `source remove`. Delete generated folders whose skill is no longer served.
-6. Opt in: `quiver mcp install` asks once (or `--commands`), saved in the config. `quiver mcp uninstall` removes every generated folder.
+6. Opt in: `quiver install` asks once (or `--commands`), saved in the config. `quiver uninstall` removes every generated folder.
 
 **Decide first:** the body could instead hold a copy of the skill. That needs no tool call and works when the server is down, but extra files (`references/…`) are then missing, so the pointer is the default.
 
 **Done when:**
 - Tests cover naming, name clashes, the marker rule, removal of stale folders and `.git/info/exclude`.
 - In Claude Code, `/review ship version 1.2` loads the skill and gets the whole task.
+""")
+
+task("TASKE3", "Release v1.3.0", "TASKE1, TASKE2, TASK32, TASK33, TASK34, TASK35, TASK36, TASK37, TASK38", """
+Versions follow Semantic Versioning: only a breaking change needs a new major version. Everything since v1.2.0 adds features except one dropped flag, so this phase is released as v1.3.0 once that flag is back.
+
+1. **`--for` again.** v1.2.0 named one assistant with `quiver mcp install --for <assistant>`; TASK38 made the assistants arguments and dropped the flag. Bring it back on `install` and `uninstall` as a hidden, deprecated flag (`MarkDeprecated`, like `--print`) that counts as one more argument, so `quiver mcp install --for claude-desktop` does what it did in v1.2.0 and points to `quiver mcp install claude-desktop`. Test both commands with the flag.
+2. **Upgrade check.** Make a Quiver home with the v1.2.0 binary (init, source add, add, add --always, a project), run the new binary on it, and check that the same skills, assignments and always-on skills are served and `doctor` is clean.
+3. README and help text cover every change of this phase; PROJECT.md's roadmap lists them under v1.3.
+4. The GitHub release notes list the changes since v1.2.0 and the deprecated `--for`.
+5. Tag `v1.3.0` only after the maintainer confirms. The release workflow publishes to GitHub and npm and installs on clean machines.
+6. **Website.** The status marks follow the release (`latestRelease`, `unreleased` and the **Next release** asides; see `web/README.md`). `quiver install` is not in v1.3.0, so its asides stay. Website changes are committed only after the maintainer confirms.
+
+**Done when:** the release workflow is green and `quiver mcp install --for <assistant>` works in the release.
+""")
+
+task("TASKE4", "Release v1.5.0", "TASK39, TASK40, TASKB1", """
+1. README and help text cover every change of this phase; PROJECT.md's roadmap lists them under v1.5.
+2. The GitHub release notes list the changes since v1.4.0.
+3. Tag `v1.5.0` only after the maintainer confirms. The release workflow publishes to GitHub and npm and installs on clean machines.
+4. **Website.** The status marks follow the release (see `web/README.md`). Website changes are committed only after the maintainer confirms.
+
+**Done when:** the release workflow is green.
 """)
 
 task("TASKA1", "Always-on skills (MCP instructions)", "TASK17, TASK10", """
@@ -1090,7 +1112,7 @@ The full skill text does not go into `instructions`: Claude Code cuts them at ab
 """)
 
 # ---------------------------------------------------------------- Phase 6
-phase("Phase 6: Session-start delivery")
+phase("Phase 6: Session-start delivery (v1.4)")
 
 task("TASKF1", "Spike: session-start hooks per assistant", "TASK38", """
 Always-on skills reach the model through the MCP server's `instructions` (TASKA1). Only some assistants put those into the prompt: Claude Code and Cursor do; Codex loads them only after the model searches for Quiver's tools, Antigravity writes them to a file the model rarely reads, and Claude Desktop drops them (docs/spike-mcp-clients.md). In those three, always-on skills applied in 0 of 10 prompts.
@@ -1224,12 +1246,13 @@ The current code is in `internal/cli/mcp.go` (`mcpTargets`, `mcpInstall`, `mcpUn
 """)
 
 task("TASKF4.1", "Rename to `quiver install` and `quiver uninstall`", "TASK38", """
-1. Move the commands from `internal/cli/mcp.go` to `internal/cli/install.go` as `quiver install [assistant...]` and `quiver uninstall [assistant...]`, with the same names, completion and output. Remove `quiver mcp install`, `quiver mcp uninstall` and the deprecated `--print`; keep no alias.
-2. Update every caller and message: `guidedSetup` in `internal/cli/init.go`, the fix hints of `doctor` ("run: quiver mcp install ..."), the npm note in `mcpInstall`, and any other output a search for `mcp install` finds.
-3. Update the docs: README (command table and the MCP server section), PROJECT.md (CLI and How It Works), CONTRIBUTING.md if it names the command, and the First Milestone of `tasks/README.md` in `scripts/gen_tasks.py`. The website is updated by the maintainer.
-4. The GitHub release notes of the next release say that the command changed.
+1. Move the commands from `internal/cli/mcp.go` to `internal/cli/install.go` as `quiver install [assistant...]` and `quiver uninstall [assistant...]`, with the same names, completion and output.
+2. **Keep the old names.** Removing a command is a breaking change, which needs a new major version. `quiver mcp install` and `quiver mcp uninstall` stay as hidden, deprecated commands that run the new ones and print one line on stderr naming the new command; their deprecated `--for` (TASKE3) and `--print` keep working. They are removed in the next major version.
+3. Update every caller and message: `guidedSetup` in `internal/cli/init.go`, the fix hints of `doctor` ("run: quiver mcp install ..."), the npm note in `mcpInstall`, and any other output a search for `mcp install` finds.
+4. Update the docs: README (command table and the MCP server section), PROJECT.md (CLI and How It Works), CONTRIBUTING.md if it names the command, and the First Milestone of `tasks/README.md` in `scripts/gen_tasks.py`. The website is updated by the maintainer.
+5. The GitHub release notes of v1.4.0 say that the command changed and that the old name still works.
 
-**Done when:** the tests and completion use the new commands, and a search for `mcp install` finds nothing outside the files of finished tasks.
+**Done when:** the tests and completion use the new commands, the old ones still work and print the deprecation line, and a search for `mcp install` finds nothing outside the old commands, their tests and the files of finished tasks.
 """)
 
 task("TASKF4.2", "Claude Code hook", "TASKF1.1, TASKF2, TASKF4.1", """
@@ -1295,8 +1318,19 @@ For an assistant without a usable hook that always loads a rules file, `quiver i
 **Done when:** tests cover a new file, an existing file, an update of the block, removal, the setting and `.git/info/exclude`.
 """)
 
-# ---------------------------------------------------------------- Phase 7
-phase("Phase 7: Test phase")
+task("TASKF7", "Release v1.4.0", "TASKF1, TASKF2, TASKF3, TASKF4, TASKF5, TASKF6", """
+1. **Old names still work.** `quiver mcp install` and `quiver mcp uninstall`, with `--for` and `--print`, work as in v1.3.0 and name the new commands (TASKF4.1).
+2. **Upgrade check.** As in TASKE3, from a home made by the v1.3.0 binary: `quiver install` gives every installed assistant its hook or pointer, the same skills are served, and `doctor` is clean.
+3. README and help text cover every change of this phase; PROJECT.md's roadmap lists them under v1.4.
+4. The GitHub release notes say that `quiver install` replaces `quiver mcp install`, and which assistants get always-on skills from a hook.
+5. Tag `v1.4.0` only after the maintainer confirms. The release workflow publishes to GitHub and npm and installs on clean machines.
+6. **Website.** The status marks follow the release (see `web/README.md`). Website changes are committed only after the maintainer confirms.
+
+**Done when:** the release workflow is green.
+""")
+
+# ---------------------------------------------------------------- Phase 8
+phase("Phase 8: Test phase")
 
 task("TASKG1", "Coverage baseline", "TASKF6", """
 Package coverage today undercounts code that other packages' tests run: `internal/library` shows 39% and `internal/git` 41% because most of their code runs from `internal/cli`, and `internal/homesync` has no tests of its own. The e2e suite runs the built binary, whose coverage is not measured at all.
@@ -1516,8 +1550,8 @@ Record the result in this task's notes. The enterprise phase starts after it.
 **Done when:** every point above holds.
 """)
 
-# ---------------------------------------------------------------- Phase 8
-phase("Phase 8: Enterprise")
+# ---------------------------------------------------------------- Phase 9
+phase("Phase 9: Enterprise")
 
 task("TASKH1", "Enterprise", "TASKG8", """
 Central skill management for organizations, as described in PROJECT.md (Direction). To be planned in detail after the test phase; this task only holds its place.
@@ -1532,10 +1566,11 @@ ORDER = [
     ("Phase 4 — v1 Release", ["TASK29", "TASK30", "TASK31"]),
     ("Phase 4b — v1.1", ["TASKC1"]),
     ("Phase 4c — v1.2", ["TASKD1", "TASKD2", "TASKD3", "TASKD4", "TASKD5", "TASKD6", "TASKD7", "TASKD8"]),
-    ("Phase 5 — v2", ["TASKE1", "TASKE2", "TASK32", "TASK33", "TASK34", "TASK35", "TASK36", "TASK37", "TASK38", "TASK39", "TASK40", "TASKB1"]),
-    ("Phase 6: Session-start delivery", ["TASKF1", "TASKF1.1", "TASKF1.2", "TASKF1.3", "TASKF1.4", "TASKF2", "TASKF3", "TASKF4", "TASKF4.1", "TASKF4.2", "TASKF4.3", "TASKF4.4", "TASKF5", "TASKF6"]),
-    ("Phase 7: Test phase", ["TASKG1", "TASKG2", "TASKG2.1", "TASKG2.2", "TASKG2.3", "TASKG2.4", "TASKG3", "TASKG3.1", "TASKG3.2", "TASKG3.3", "TASKG4", "TASKG5", "TASKG5.1", "TASKG5.2", "TASKG5.3", "TASKG5.4", "TASKG6", "TASKG6.1", "TASKG6.2", "TASKG6.3", "TASKG7", "TASKG8"]),
-    ("Phase 8: Enterprise", ["TASKH1"]),
+    ("Phase 5 — v1.3", ["TASKE1", "TASKE2", "TASK32", "TASK33", "TASK34", "TASK35", "TASK36", "TASK37", "TASK38", "TASKE3"]),
+    ("Phase 6: Session-start delivery (v1.4)", ["TASKF1", "TASKF1.1", "TASKF1.2", "TASKF1.3", "TASKF1.4", "TASKF2", "TASKF3", "TASKF4", "TASKF4.1", "TASKF4.2", "TASKF4.3", "TASKF4.4", "TASKF5", "TASKF6", "TASKF7"]),
+    ("Phase 7: TUI and slash commands (v1.5)", ["TASK39", "TASK40", "TASKB1", "TASKE4"]),
+    ("Phase 8: Test phase", ["TASKG1", "TASKG2", "TASKG2.1", "TASKG2.2", "TASKG2.3", "TASKG2.4", "TASKG3", "TASKG3.1", "TASKG3.2", "TASKG3.3", "TASKG4", "TASKG5", "TASKG5.1", "TASKG5.2", "TASKG5.3", "TASKG5.4", "TASKG6", "TASKG6.1", "TASKG6.2", "TASKG6.3", "TASKG7", "TASKG8"]),
+    ("Phase 9: Enterprise", ["TASKH1"]),
 ]
 ALL = {t[0]: t for _, ts in PHASES for t in ts}
 flat = [tid for _, ids in ORDER for tid in ids]

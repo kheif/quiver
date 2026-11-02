@@ -50,7 +50,7 @@ Items are ordered by priority within each section.
 ### B08 — Non-interactive git
 - **Concern:** If a private repo asks for credentials, a background `git ls-remote` or `git pull` hangs.
 - **Proposal:** Always run git with `GIT_TERMINAL_PROMPT=0` and a timeout.
-- **Related:** TASK09, background update checks (Phase 5)
+- **Related:** TASK09, background update checks (TASK60)
 - **Resolved 2026-10-29:** `GIT_TERMINAL_PROMPT=0` and timeouts on every git command (TASK34).
 
 ### B09 — `mcp install` writes an absolute path
@@ -101,9 +101,9 @@ Items are ordered by priority within each section.
 ### B17 — Show new skills in an open Claude Code session
 - **Concern:** The catalog reaches the assistant only when a session starts. A skill added during a session is found only through `list_skills`, so the assistant usually does not know about it.
 - **Proposal:** `mcp install` adds a Claude Code `UserPromptSubmit` hook that runs `quiver`. When the served skills changed since the session started, it adds a short note for the assistant ("new skill: deploy: …"). The same hook can show the user a new Quiver version (TASK39).
-- **Status:** not planned for v1.2. TASK55 adds a session-start hook only; a per-prompt hook is out of its scope.
+- **Status:** not planned for v1.2. TASK53 adds a session-start hook only; a per-prompt hook is out of its scope.
 
 ### B18 — Measure skill loading against the real assistant
 - **Concern:** That the assistant loads a fitting skill and follows always-on skills was measured by hand (docs/spike-b01-results.md). A new model can change this.
 - **Proposal:** A workflow started by hand (`workflow_dispatch`) runs `claude -p` with a few prompts against a test library and counts `get_skill` calls. It needs an API key secret and costs a few cents per run, so it runs now and then, such as before a release. Copilot on GitHub would only test Copilot, not Claude.
-- **Planned 2026-11-01:** TASK64, a benchmark over every assistant with a headless mode, run by hand before each release.
+- **Planned 2026-11-01:** TASK67, a benchmark over every assistant with a headless mode, run by hand before each release.

@@ -1,6 +1,6 @@
 # TASK42 — Split machine-local state out of the registry
 
-**Phase:** Phase 5 — v2
+**Phase:** Phase 5 — v1.3
 
 **Status:** ✅ Done
 

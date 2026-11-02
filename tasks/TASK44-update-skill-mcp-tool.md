@@ -1,6 +1,6 @@
 # TASK44 — `update_skill` MCP tool
 
-**Phase:** Phase 5 — v2
+**Phase:** Phase 5 — v1.3
 
 **Status:** ✅ Done
 

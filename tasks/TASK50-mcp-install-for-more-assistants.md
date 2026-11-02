@@ -1,6 +1,6 @@
 # TASK50 — `mcp install` for more assistants
 
-**Phase:** Phase 5 — v2
+**Phase:** Phase 5 — v1.3
 
 **Status:** ✅ Done
 

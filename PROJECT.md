@@ -218,21 +218,24 @@ quiver doctor                       # Check the library and fix problems
 - Guided first run, notice of a new Quiver version, `install.ps1` for Windows
 - Git timeouts, dependency and vulnerability checks
 
-**v2**
+**v1.3**
 - Machine-local state out of `registry.json`, stable skill IDs
 - `update_skill`, `search_skills`, `fork`
 - Pinning remote skills to a commit
 - Update preview with diffs
 - Library sync between machines
 - More assistants for `mcp install`, which sets up every supported assistant that is installed
-- Interactive TUI with search
-- Background update checks with notices
 
-**Session-start delivery**
+**v1.4: Session-start delivery**
 - Always-on skills added to the context by a session-start hook, in assistants that have one; the other skills stay on the MCP server
 - `quiver install` replaces `quiver mcp install` and reports, per assistant, how always-on skills reach it
 - VS Code Copilot
 - A pointer in the rules file of assistants without hooks
+
+**v1.5**
+- Interactive TUI with search
+- Background update checks with notices
+- Slash commands without the `quiver:` prefix in Claude Code
 
 **Test phase** (before the enterprise track)
 - End-to-end user journeys, Windows without skipped tests, versioned data formats with migration tests
@@ -260,4 +263,4 @@ Decisions in the individual track should not block the enterprise one. Sources a
 - Copying or linking skills into projects. The MCP server is the only delivery path, and `.quiver.json` is the only file in a project.
 - Running scripts. The assistant runs a skill's scripts itself, using the paths that `get_skill` returns.
 - Defining a new skill format.
-- Hosting a central marketplace in v1 and v2. Sources are plain git repositories. Search and a marketplace may come later (see Roadmap).
+- Hosting a central marketplace. Sources are plain git repositories. Search and a marketplace may come later (see Roadmap).

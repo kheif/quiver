@@ -1,6 +1,8 @@
 # Releasing
 
-A tag `v<major>.<minor>.<patch>` releases Quiver. `.github/workflows/release.yml` then:
+A tag `v<major>.<minor>.<patch>` releases Quiver. Versions follow [Semantic Versioning](https://semver.org): a new major version only for a breaking change to the commands, flags, data files in `~/.quiver` or MCP tools; a minor version for new features, or when something is deprecated; a patch for fixes only. A renamed command or flag keeps working under its old name, hidden and deprecated, until the next major version.
+
+`.github/workflows/release.yml` then:
 
 1. runs the tests,
 2. builds the archives with GoReleaser and publishes the GitHub release with `checksums.txt`,

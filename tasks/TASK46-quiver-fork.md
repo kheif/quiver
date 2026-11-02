@@ -1,6 +1,6 @@
 # TASK46 — `quiver fork`
 
-**Phase:** Phase 5 — v2
+**Phase:** Phase 5 — v1.3
 
 **Status:** ✅ Done
 
