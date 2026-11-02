@@ -1182,6 +1182,16 @@ Steps:
 5. Find out whether a project can have its own `hooks.json`.
 
 **Done when:** the results are in `docs/spike-hooks.md`.
+
+**Notes:**
+- Results in docs/spike-hooks.md (Codex 0.166.0, `spike/b01/codex-hooks-run.sh`, source tag `rust-v0.166.0`). Delivery level: hook. Always-on 10 of 10 with plain stdout and with `additionalContext` alike, fitting skills 0 of 6 and other skills 0 of 4 as without the hook, since the model never searches for Quiver's tools. With the server's pointer also active, no `get_skill` for `reply-style`.
+- The hook runs when the first prompt is sent. A failing hook never stops a session; `codex exec` reports nothing, the TUI prints `Hook failed`. Codex does not check `hookEventName`. The command runs as `$SHELL -lc` (`cmd.exe /C` on Windows, where `commandWindows` replaces `command`).
+- Limit: `additionalContextLimit` per hook, default 2,500 tokens counted as 10,000 bytes, no maximum, `0` turns it off. Above it the model gets the start and the end and a file path; a rule in the middle was followed in 0 of 6.
+- Sources as in Claude Code, plus `fork`. Compaction keeps no hook text, so `compact` needs the hook. The matcher `startup|clear|compact` gives every context the text once.
+- Sub-agents fire `SubagentStart` (plain stdout or `additionalContext`, 6 of 6 each). `spawn_agent` starts them with the parent's history by default, and then they have the text already; with `fork_turns` `none` only `SubagentStart` brings it.
+- Trust: every new or changed hook needs it; the TUI shows "Hooks need review", `codex exec` skips the hook silently. It is a hash per hook in the user's `config.toml`, so a moved binary needs it again. No `codex` command sets it; `codex app-server` (`hooks/list`, `config/batchWrite`) did, and so did a hash computed outside Codex.
+- A project can have `.codex/hooks.json`; it runs once the user trusts the folder and the hook. Managed hooks (`[hooks]` in `requirements.toml`, or `/etc/codex/config.toml` and `/etc/codex/hooks.json`) need no trust; `managed_dir` only names their source.
+- Not measured: the Codex app (not installed), managed hooks, Windows, automatic compaction.
 """)
 
 task("TASKF1.3", "VS Code Copilot", "TASK38", """
@@ -1233,8 +1243,8 @@ A command that a session-start hook runs: it prints the always-on skills of the 
    Extra files of these skills are loaded with the get_skill_file tool of the quiver MCP server.
    </quiver-always-on>
    ```
-5. **Size.** Keep the whole block under the assistant's limit (TASKF1). If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
-6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (Claude Code's `SubagentStart`; Codex's if TASKF1.2 finds that it reaches sub-agents). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASKF1.1).
+5. **Size.** Keep the whole block under 10,000 characters, Claude Code's limit (TASKF1.1). The Codex hook turns Codex's own limit off (TASKF4.3), so the same limit applies there. If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
+6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (`SubagentStart` in Claude Code and Codex). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASKF1.1).
 7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASKG6.3.
 
 **Out of scope:** installing the hook (TASKF4), per-prompt hooks.
@@ -1243,7 +1253,7 @@ A command that a session-start hook runs: it prints the always-on skills of the 
 """)
 
 task("TASKF3", "Always-on pointer becomes the fallback", "TASKF2", """
-With the hook installed, the pointer in `instructions` (TASKA1) makes the model load each always-on skill a second time with `get_skill`: in 6 of 10 B01 prompts in TASKF1.1. Without the hook it is still needed.
+With the hook installed, the pointer in `instructions` (TASKA1) makes the model load each always-on skill a second time with `get_skill`: in 6 of 10 B01 prompts in Claude Code (TASKF1.1), and in 0 of 10 in Codex (TASKF1.2). Without the hook it is still needed.
 
 1. Change `pointer` in `internal/server/catalog.go` to:
    ```
@@ -1284,12 +1294,13 @@ task("TASKF4.2", "Claude Code hook", "TASKF1.1, TASKF2, TASKF4.1", """
 
 task("TASKF4.3", "Codex hook", "TASKF1.2, TASKF2, TASKF4.1", """
 1. **Where.** Codex's `hooks.json` (`~/.codex/hooks.json`, or `$CODEX_HOME/hooks.json`). The Codex CLI and app share it.
-2. **What.** A `SessionStart` entry whose command is `<quiver> hook session-start codex`, `<quiver>` being the binary itself (`appCommand()`), since the Codex app has no shell `PATH`. If TASKF1.2 found that Codex's `SubagentStart` reaches sub-agents, also a `SubagentStart` entry like TASKF4.2's.
-3. **How.** The JSON editing of TASKF4.2, with the same rules for other hooks, backups and recognition.
-4. **Trust.** Apply the trust step found in TASKF1.2. If a new hook cannot be trusted without the user, `install` says what the user must do and `doctor` reports the hook as not trusted.
-5. **Tests.** The fake codex (`assistanttest.InstallCodex`) covers the `codex` calls in `internal/cli`; a test like `TestRealCodex` in `internal/assistant/codex_test.go` checks the real codex in a throwaway `CODEX_HOME` when it is installed.
+2. **What.** A `SessionStart` entry with the matcher `startup|clear|compact`, whose command is `<quiver> hook session-start codex`, and a `SubagentStart` entry with no matcher, whose command is `<quiver> hook subagent-start codex`. `<quiver>` is the binary itself (`appCommand()`), since the Codex app has no shell `PATH`, quoted with `assistant.ShellQuote`. A sub-agent that starts with its parent's history, Codex's default, then has the text twice; one that starts without it gets the text only from `SubagentStart` (TASKF1.2).
+3. **Fields.** Set each hook's `timeout` to 10 seconds; `additionalContextLimit` to 0, so Codex does not cut the block (TASKF2 keeps it within its limit); and `statusMessage` to `Quiver always-on skills`, the name Codex's review list shows.
+4. **How.** The JSON editing of TASKF4.2, with the same rules for other hooks, backups and recognition.
+5. **Trust.** Codex runs a new or changed hook only once it is trusted, and `codex exec` skips it without a message (TASKF1.2). After writing the file, trust Quiver's own hooks, and only those, through `codex app-server`: `hooks/list` for their keys and current hashes, then `config/batchWrite` of `hooks.state.<key>.trusted_hash`, the two requests Codex's own review dialog sends. `install` says that it trusted them. Every change to a hook's fields or command changes its hash, so trust again whenever `install` updates the hook. If the app server fails, print the step for the user: start `codex`, open "Review hooks" and trust the Quiver hooks. `doctor` reads the status through `hooks/list` and reports a Quiver hook that is new or changed, for example after the binary moved.
+6. **Tests.** The fake codex (`assistanttest.InstallCodex`) covers the `codex` calls in `internal/cli`, the app server included; a test like `TestRealCodex` in `internal/assistant/codex_test.go` checks the real codex in a throwaway `CODEX_HOME` when it is installed, including that `codex exec` runs the hooks right after `install`.
 
-**Done when:** the tests pass, and a new Codex session follows an always-on fixture skill with no `get_skill` call for it.
+**Done when:** the tests pass, and right after `install`, with no review dialog, a new Codex session and a sub-agent it starts with `fork_turns` `none` both follow an always-on fixture skill with no `get_skill` call for it.
 """)
 
 task("TASKF4.4", "Delivery report, doctor and status", "TASKF4.2", """
@@ -1599,7 +1610,7 @@ for old in flat:
     REMAP[old] = REMAP[parent] + dot + sub if dot else f"TASK{sum('.' not in t for t in REMAP) + 1:02d}"
 remap = lambda s: re.sub(r"TASK(?:\d\d|[A-H]\d)(?:\.\d+)?", lambda m: REMAP.get(m.group(0)) or REMAP[m.group(0).split(".")[0]] + m.group(0)[len(m.group(0).split(".")[0]):], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x", "TASK52.2": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

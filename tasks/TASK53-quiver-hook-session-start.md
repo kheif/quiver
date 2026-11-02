@@ -25,8 +25,8 @@ A command that a session-start hook runs: it prints the always-on skills of the 
    Extra files of these skills are loaded with the get_skill_file tool of the quiver MCP server.
    </quiver-always-on>
    ```
-5. **Size.** Keep the whole block under the assistant's limit (TASK52). If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
-6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (Claude Code's `SubagentStart`; Codex's if TASK52.2 finds that it reaches sub-agents). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASK52.1).
+5. **Size.** Keep the whole block under 10,000 characters, Claude Code's limit (TASK52.1). The Codex hook turns Codex's own limit off (TASK55.3), so the same limit applies there. If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
+6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (`SubagentStart` in Claude Code and Codex). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASK52.1).
 7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASK68.3.
 
 **Out of scope:** installing the hook (TASK55), per-prompt hooks.

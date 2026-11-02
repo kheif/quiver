@@ -4,7 +4,7 @@
 
 **Part of:** [TASK52](TASK52-spike-session-start-hooks-per-assistant.md): Spike: session-start hooks per assistant
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK50
 
@@ -21,3 +21,13 @@ Steps:
 5. Find out whether a project can have its own `hooks.json`.
 
 **Done when:** the results are in `docs/spike-hooks.md`.
+
+**Notes:**
+- Results in docs/spike-hooks.md (Codex 0.166.0, `spike/b01/codex-hooks-run.sh`, source tag `rust-v0.166.0`). Delivery level: hook. Always-on 10 of 10 with plain stdout and with `additionalContext` alike, fitting skills 0 of 6 and other skills 0 of 4 as without the hook, since the model never searches for Quiver's tools. With the server's pointer also active, no `get_skill` for `reply-style`.
+- The hook runs when the first prompt is sent. A failing hook never stops a session; `codex exec` reports nothing, the TUI prints `Hook failed`. Codex does not check `hookEventName`. The command runs as `$SHELL -lc` (`cmd.exe /C` on Windows, where `commandWindows` replaces `command`).
+- Limit: `additionalContextLimit` per hook, default 2,500 tokens counted as 10,000 bytes, no maximum, `0` turns it off. Above it the model gets the start and the end and a file path; a rule in the middle was followed in 0 of 6.
+- Sources as in Claude Code, plus `fork`. Compaction keeps no hook text, so `compact` needs the hook. The matcher `startup|clear|compact` gives every context the text once.
+- Sub-agents fire `SubagentStart` (plain stdout or `additionalContext`, 6 of 6 each). `spawn_agent` starts them with the parent's history by default, and then they have the text already; with `fork_turns` `none` only `SubagentStart` brings it.
+- Trust: every new or changed hook needs it; the TUI shows "Hooks need review", `codex exec` skips the hook silently. It is a hash per hook in the user's `config.toml`, so a moved binary needs it again. No `codex` command sets it; `codex app-server` (`hooks/list`, `config/batchWrite`) did, and so did a hash computed outside Codex.
+- A project can have `.codex/hooks.json`; it runs once the user trusts the folder and the hook. Managed hooks (`[hooks]` in `requirements.toml`, or `/etc/codex/config.toml` and `/etc/codex/hooks.json`) need no trust; `managed_dir` only names their source.
+- Not measured: the Codex app (not installed), managed hooks, Windows, automatic compaction.

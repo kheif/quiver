@@ -127,7 +127,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 |---|---|---|---|
 | 🚧 | [TASK52](TASK52-spike-session-start-hooks-per-assistant.md) | Spike: session-start hooks per assistant | TASK50 |
 | ✅ | ↳ [TASK52.1](TASK52.1-claude-code-hooks.md) | Claude Code hooks | TASK50 |
-|  | ↳ [TASK52.2](TASK52.2-codex-hooks.md) | Codex hooks | TASK50 |
+| ✅ | ↳ [TASK52.2](TASK52.2-codex-hooks.md) | Codex hooks | TASK50 |
 |  | ↳ [TASK52.3](TASK52.3-vs-code-copilot.md) | VS Code Copilot | TASK50 |
 |  | ↳ [TASK52.4](TASK52.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
 |  | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
