@@ -6,7 +6,7 @@
 
 **Depends on:** TASK52, TASK19
 
-A command that a session-start hook runs: it prints the always-on skills of the folder the session starts in, in the format the assistant expects. Installing the hook is TASK55.
+A command that a session-start hook runs: it prints the always-on skills of the folder the session starts in, in the format the assistant expects. A second command does the same when a sub-agent starts, since the session-start text does not reach sub-agents (TASK52.1). Installing the hooks is TASK55.
 
 1. **Command.** `quiver hook session-start <assistant>` in a new `internal/cli/hook.go`. `<assistant>` is a name from `quiver install` (such as `claude-code`, `codex`) and selects the input and output format found in TASK52. It is listed in the help like `quiver mcp`, with a Long text that says assistants run it.
 2. **Project.** Read the hook's JSON from stdin and take its `cwd`. Resolve the project as the MCP server does (`server.Resolve` in `internal/server/resolve.go`): `QUIVER_PROJECT` first, then that folder. A folder outside any project gets only the global skills.
@@ -26,8 +26,9 @@ A command that a session-start hook runs: it prints the always-on skills of the 
    </quiver-always-on>
    ```
 5. **Size.** Keep the whole block under the assistant's limit (TASK52). If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
-6. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASK68.3.
+6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (Claude Code's `SubagentStart`; Codex's if TASK52.2 finds that it reaches sub-agents). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASK52.1).
+7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASK68.3.
 
 **Out of scope:** installing the hook (TASK55), per-prompt hooks.
 
-**Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line) and each output format.
+**Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line), each output format and `subagent-start`.

@@ -1214,7 +1214,7 @@ Steps:
 """)
 
 task("TASKF2", "`quiver hook session-start`", "TASKF1, TASKA1", """
-A command that a session-start hook runs: it prints the always-on skills of the folder the session starts in, in the format the assistant expects. Installing the hook is TASKF4.
+A command that a session-start hook runs: it prints the always-on skills of the folder the session starts in, in the format the assistant expects. A second command does the same when a sub-agent starts, since the session-start text does not reach sub-agents (TASKF1.1). Installing the hooks is TASKF4.
 
 1. **Command.** `quiver hook session-start <assistant>` in a new `internal/cli/hook.go`. `<assistant>` is a name from `quiver install` (such as `claude-code`, `codex`) and selects the input and output format found in TASKF1. It is listed in the help like `quiver mcp`, with a Long text that says assistants run it.
 2. **Project.** Read the hook's JSON from stdin and take its `cwd`. Resolve the project as the MCP server does (`server.Resolve` in `internal/server/resolve.go`): `QUIVER_PROJECT` first, then that folder. A folder outside any project gets only the global skills.
@@ -1234,11 +1234,12 @@ A command that a session-start hook runs: it prints the always-on skills of the 
    </quiver-always-on>
    ```
 5. **Size.** Keep the whole block under the assistant's limit (TASKF1). If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
-6. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASKG6.3.
+6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (Claude Code's `SubagentStart`; Codex's if TASKF1.2 finds that it reaches sub-agents). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASKF1.1).
+7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASKG6.3.
 
 **Out of scope:** installing the hook (TASKF4), per-prompt hooks.
 
-**Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line) and each output format.
+**Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line), each output format and `subagent-start`.
 """)
 
 task("TASKF3", "Always-on pointer becomes the fallback", "TASKF2", """
@@ -1273,17 +1274,17 @@ task("TASKF4.1", "Rename to `quiver install` and `quiver uninstall`", "TASK38", 
 
 task("TASKF4.2", "Claude Code hook", "TASKF1.1, TASKF2, TASKF4.1", """
 1. **Where.** The user's Claude Code settings file found in TASKF1.1 (`~/.claude/settings.json`, or `$CLAUDE_CONFIG_DIR/settings.json`).
-2. **What.** A `SessionStart` entry with the matcher `startup|clear|compact`, whose command is `<quiver> hook session-start claude-code`, `<quiver>` being the path `command()` in `internal/cli/mcp.go` returns (Claude Code has the shell's `PATH`, so the npm launcher works), quoted with `assistant.ShellQuote`.
-3. **How.** Generalize `internal/assistant/jsonconfig.go`: today `change` edits the `mcpServers` object; the hook lives in `hooks.SessionStart`, an array of groups that each hold a `hooks` array. Keep every other key, group and hook, the key order, the indentation and the file mode; save `<file>.quiver-backup` first; write atomically (`fsutil.WriteFileAtomic`); never write a file that is not valid JSON.
-4. **Recognize Quiver's hook** by its command: one whose arguments end with `hook session-start claude-code` and whose program is named `quiver` (or `quiver.exe`). `install` points it to the current binary (reported as updated), adds it if missing, and leaves it alone if it is current; `uninstall` removes only it, and the group if it is then empty.
-5. Set the hook's `timeout` to 10 seconds. The default is 600, and a slow hook delays the first reply by its whole run time (TASKF1.1).
+2. **What.** A `SessionStart` entry with the matcher `startup|clear|compact`, whose command is `<quiver> hook session-start claude-code`, and a `SubagentStart` entry with no matcher, whose command is `<quiver> hook subagent-start claude-code`. `<quiver>` is the path `command()` in `internal/cli/mcp.go` returns (Claude Code has the shell's `PATH`, so the npm launcher works), quoted with `assistant.ShellQuote`.
+3. **How.** Generalize `internal/assistant/jsonconfig.go`: today `change` edits the `mcpServers` object; the hooks live in `hooks.SessionStart` and `hooks.SubagentStart`, arrays of groups that each hold a `hooks` array. Keep every other key, group and hook, the key order, the indentation and the file mode; save `<file>.quiver-backup` first; write atomically (`fsutil.WriteFileAtomic`); never write a file that is not valid JSON.
+4. **Recognize Quiver's hooks** by their command: one whose arguments end with `hook session-start claude-code` or `hook subagent-start claude-code` and whose program is named `quiver` (or `quiver.exe`). `install` points it to the current binary (reported as updated), adds it if missing, and leaves it alone if it is current; `uninstall` removes only it, and the group if it is then empty.
+5. Set each hook's `timeout` to 10 seconds. The default is 600, and a slow hook delays the first reply by its whole run time (TASKF1.1).
 
-**Done when:** tests in `internal/assistant` cover a missing file, a file with other settings and hooks, an update after a move, removal, and a file that is not valid JSON; tests in `internal/cli` cover install and uninstall; and a new Claude Code session follows an always-on fixture skill from the hook.
+**Done when:** tests in `internal/assistant` cover a missing file, a file with other settings and hooks, an update after a move, removal, and a file that is not valid JSON; tests in `internal/cli` cover install and uninstall; and a new Claude Code session and a sub-agent it starts both follow an always-on fixture skill from the hooks.
 """)
 
 task("TASKF4.3", "Codex hook", "TASKF1.2, TASKF2, TASKF4.1", """
 1. **Where.** Codex's `hooks.json` (`~/.codex/hooks.json`, or `$CODEX_HOME/hooks.json`). The Codex CLI and app share it.
-2. **What.** A `SessionStart` entry whose command is `<quiver> hook session-start codex`, `<quiver>` being the binary itself (`appCommand()`), since the Codex app has no shell `PATH`.
+2. **What.** A `SessionStart` entry whose command is `<quiver> hook session-start codex`, `<quiver>` being the binary itself (`appCommand()`), since the Codex app has no shell `PATH`. If TASKF1.2 found that Codex's `SubagentStart` reaches sub-agents, also a `SubagentStart` entry like TASKF4.2's.
 3. **How.** The JSON editing of TASKF4.2, with the same rules for other hooks, backups and recognition.
 4. **Trust.** Apply the trust step found in TASKF1.2. If a new hook cannot be trusted without the user, `install` says what the user must do and `doctor` reports the hook as not trusted.
 5. **Tests.** The fake codex (`assistanttest.InstallCodex`) covers the `codex` calls in `internal/cli`; a test like `TestRealCodex` in `internal/assistant/codex_test.go` checks the real codex in a throwaway `CODEX_HOME` when it is installed.
