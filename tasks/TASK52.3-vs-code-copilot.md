@@ -4,7 +4,7 @@
 
 **Part of:** [TASK52](TASK52-spike-session-start-hooks-per-assistant.md): Spike: session-start hooks per assistant
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK50
 
@@ -22,3 +22,13 @@ Steps, with the fixture server in a throwaway workspace's `.vscode/mcp.json`:
 5. Where is the `mcp.json` on Windows and Linux, and for VS Code Insiders?
 
 **Done when:** the results are in `docs/spike-hooks.md`.
+
+**Notes:**
+- Results in docs/spike-hooks.md (VS Code 1.143.1, Copilot Chat 0.71.0, `spike/b01/vscode-hooks-run.sh`). Delivery level: hook. A second VS Code with its own profile runs the prompts through a small driver extension, since `code chat` ignores `--user-data-dir`.
+- Server only: always-on 4 of 10, fitting skills 6 of 6, other skills 0 of 4. With a `SessionStart` hook: 10 of 10, 6 of 6, 0 of 4, and no `get_skill` for `reply-style`; with the pointer also active, the model loaded it again in 6 of 10.
+- VS Code has two harnesses: Local (the default) takes only `hookSpecificOutput.additionalContext`, the Copilot harness only a top-level `additionalContext`; plain stdout reaches neither. A command that prints both works in both, once. Both read `~/.copilot/hooks/*.json`; the Copilot CLI reads it too.
+- No size limit up to 200,000 characters (Local). `SubagentStart` reaches sub-agents, `SessionStart` does not. A failing hook never stops a session. The command runs with `/bin/sh`; the default timeout is 30 seconds.
+- `.claude/settings.json` files count only with `chat.useClaudeHooks` (off by default).
+- From the user's `mcp.json` the server starts in the home folder; with `"cwd": "${workspaceFolder}"` it did not start. VS Code sends the workspace folder as an MCP root.
+- A user instructions file with a pointer raised always-on to 8 of 10.
+- Not measured: trust (workspace trust was off), managed hooks, compaction, Windows, Linux, Insiders.

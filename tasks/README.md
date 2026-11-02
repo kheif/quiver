@@ -128,7 +128,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | 🚧 | [TASK52](TASK52-spike-session-start-hooks-per-assistant.md) | Spike: session-start hooks per assistant | TASK50 |
 | ✅ | ↳ [TASK52.1](TASK52.1-claude-code-hooks.md) | Claude Code hooks | TASK50 |
 | ✅ | ↳ [TASK52.2](TASK52.2-codex-hooks.md) | Codex hooks | TASK50 |
-|  | ↳ [TASK52.3](TASK52.3-vs-code-copilot.md) | VS Code Copilot | TASK50 |
+| ✅ | ↳ [TASK52.3](TASK52.3-vs-code-copilot.md) | VS Code Copilot | TASK50 |
 |  | ↳ [TASK52.4](TASK52.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
 |  | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
 |  | [TASK54](TASK54-always-on-pointer-becomes-the-fallback.md) | Always-on pointer becomes the fallback | TASK53 |
@@ -137,7 +137,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 |  | ↳ [TASK55.2](TASK55.2-claude-code-hook.md) | Claude Code hook | TASK52.1, TASK53, TASK55.1 |
 |  | ↳ [TASK55.3](TASK55.3-codex-hook.md) | Codex hook | TASK52.2, TASK53, TASK55.1 |
 |  | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
-|  | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK55.1 |
+|  | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
 |  | [TASK57](TASK57-rules-file-pointer-for-assistants-without-hooks.md) | Rules-file pointer for assistants without hooks | TASK52.4, TASK55.4 |
 |  | [TASK58](TASK58-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56, TASK57 |
 

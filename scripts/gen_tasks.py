@@ -1209,6 +1209,16 @@ Steps, with the fixture server in a throwaway workspace's `.vscode/mcp.json`:
 5. Where is the `mcp.json` on Windows and Linux, and for VS Code Insiders?
 
 **Done when:** the results are in `docs/spike-hooks.md`.
+
+**Notes:**
+- Results in docs/spike-hooks.md (VS Code 1.143.1, Copilot Chat 0.71.0, `spike/b01/vscode-hooks-run.sh`). Delivery level: hook. A second VS Code with its own profile runs the prompts through a small driver extension, since `code chat` ignores `--user-data-dir`.
+- Server only: always-on 4 of 10, fitting skills 6 of 6, other skills 0 of 4. With a `SessionStart` hook: 10 of 10, 6 of 6, 0 of 4, and no `get_skill` for `reply-style`; with the pointer also active, the model loaded it again in 6 of 10.
+- VS Code has two harnesses: Local (the default) takes only `hookSpecificOutput.additionalContext`, the Copilot harness only a top-level `additionalContext`; plain stdout reaches neither. A command that prints both works in both, once. Both read `~/.copilot/hooks/*.json`; the Copilot CLI reads it too.
+- No size limit up to 200,000 characters (Local). `SubagentStart` reaches sub-agents, `SessionStart` does not. A failing hook never stops a session. The command runs with `/bin/sh`; the default timeout is 30 seconds.
+- `.claude/settings.json` files count only with `chat.useClaudeHooks` (off by default).
+- From the user's `mcp.json` the server starts in the home folder; with `"cwd": "${workspaceFolder}"` it did not start. VS Code sends the workspace folder as an MCP root.
+- A user instructions file with a pointer raised always-on to 8 of 10.
+- Not measured: trust (workspace trust was off), managed hooks, compaction, Windows, Linux, Insiders.
 """)
 
 task("TASKF1.4", "Cursor, Antigravity and global rules files", "TASK38", """
@@ -1226,7 +1236,7 @@ Steps:
 task("TASKF2", "`quiver hook session-start`", "TASKF1, TASKA1", """
 A command that a session-start hook runs: it prints the always-on skills of the folder the session starts in, in the format the assistant expects. A second command does the same when a sub-agent starts, since the session-start text does not reach sub-agents (TASKF1.1). Installing the hooks is TASKF4.
 
-1. **Command.** `quiver hook session-start <assistant>` in a new `internal/cli/hook.go`. `<assistant>` is a name from `quiver install` (such as `claude-code`, `codex`) and selects the input and output format found in TASKF1. It is listed in the help like `quiver mcp`, with a Long text that says assistants run it.
+1. **Command.** `quiver hook session-start <assistant>` in a new `internal/cli/hook.go`. `<assistant>` is a name from `quiver install` (such as `claude-code`, `codex`, `vscode`) and selects the input and output format found in TASKF1. For `vscode` the output carries the text twice, as `additionalContext` and as `hookSpecificOutput.additionalContext`, since VS Code's two harnesses each read one of them (TASKF1.3). It is listed in the help like `quiver mcp`, with a Long text that says assistants run it.
 2. **Project.** Read the hook's JSON from stdin and take its `cwd`. Resolve the project as the MCP server does (`server.Resolve` in `internal/server/resolve.go`): `QUIVER_PROJECT` first, then that folder. A folder outside any project gets only the global skills.
 3. **Skills.** The IDs come from `Registry.AlwaysOnServed` (`internal/registry/assign.go`): global ones first, then the project's, each in the order it was marked, each ID once. IDs no longer in the library are left out, as in the catalog. The text of each skill is what `get_skill` returns: move the code that builds it (`skillText` in `internal/server/skills.go`) where both can use it.
 4. **Block.** Print one marked block, so the MCP server's pointer (TASKF3) can refer to it:
@@ -1244,7 +1254,7 @@ A command that a session-start hook runs: it prints the always-on skills of the 
    </quiver-always-on>
    ```
 5. **Size.** Keep the whole block under 10,000 characters, Claude Code's limit (TASKF1.1). The Codex hook turns Codex's own limit off (TASKF4.3), so the same limit applies there. If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
-6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (`SubagentStart` in Claude Code and Codex). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASKF1.1).
+6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (`SubagentStart` in Claude Code, Codex and VS Code). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASKF1.1).
 7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASKG6.3.
 
 **Out of scope:** installing the hook (TASKF4), per-prompt hooks.
@@ -1253,7 +1263,7 @@ A command that a session-start hook runs: it prints the always-on skills of the 
 """)
 
 task("TASKF3", "Always-on pointer becomes the fallback", "TASKF2", """
-With the hook installed, the pointer in `instructions` (TASKA1) makes the model load each always-on skill a second time with `get_skill`: in 6 of 10 B01 prompts in Claude Code (TASKF1.1), and in 0 of 10 in Codex (TASKF1.2). Without the hook it is still needed.
+With the hook installed, the pointer in `instructions` (TASKA1) makes the model load each always-on skill a second time with `get_skill`: in 6 of 10 B01 prompts in Claude Code (TASKF1.1) and in VS Code (TASKF1.3), and in 0 of 10 in Codex (TASKF1.2). Without the hook it is still needed.
 
 1. Change `pointer` in `internal/server/catalog.go` to:
    ```
@@ -1319,15 +1329,16 @@ Users must see which assistants load always-on skills by themselves, so they do 
 **Done when:** tests cover every level, the warning with and without always-on skills, and the doctor checks.
 """)
 
-task("TASKF5", "VS Code Copilot", "TASKF1.3, TASKF4.1", """
+task("TASKF5", "VS Code Copilot", "TASKF1.3, TASKF2, TASKF4.1", """
 Add VS Code to `quiver install` with the delivery level found in TASKF1.3.
 
-1. **MCP.** Add `quiver` to `servers` in VS Code's user `mcp.json`: `~/Library/Application Support/Code/User/mcp.json` on macOS, `%APPDATA%\\Code\\User\\mcp.json` on Windows, `~/.config/Code/User/mcp.json` on Linux. The entry has `"type": "stdio"` and, if TASKF1.3 found it needed, `"cwd": "${workspaceFolder}"`. Extend `JSONAssistant` with the name of the servers key (today always `mcpServers`) and the extra fields of an entry. Use `code --add-mcp` only if TASKF1.3 shows it is better; it cannot remove an entry.
-2. **Delivery.** Add the hook or the rules-file pointer if TASKF1.3 found one; otherwise VS Code is at the instructions or on-request level.
-3. **Installed** means its user folder exists. VS Code Insiders is included if TASKF1.3 found its paths.
-4. The command is the binary itself (`appCommand()`), as for the other desktop apps.
+1. **MCP.** Add `quiver` to `servers` in VS Code's user `mcp.json`: `~/Library/Application Support/Code/User/mcp.json` on macOS, `%APPDATA%\\Code\\User\\mcp.json` on Windows, `~/.config/Code/User/mcp.json` on Linux. The entry has `"type": "stdio"` and no `cwd`: with `"cwd": "${workspaceFolder}"` the server did not start (TASKF1.3). Extend `JSONAssistant` with the name of the servers key (today always `mcpServers`) and the extra fields of an entry. Do not use `code --add-mcp`; it cannot remove an entry.
+2. **Project.** VS Code starts the server in the home folder but sends the workspace folder as an MCP root when the server is initialized (TASKF1.3). When `QUIVER_PROJECT` is unset and the working directory is in no project, `server.Resolve` (`internal/server/resolve.go`) asks the client for its roots after initialization and serves the project of the first root that is in one. Clients that start the server in the project behave as before. Update the comment there that says roots are not used.
+3. **Hook.** Quiver owns the file `~/.copilot/hooks/quiver.json`, which VS Code's Local and Copilot harnesses both read (and the Copilot CLI too): a `SessionStart` and a `SubagentStart` entry in the flat form, `{"type": "command", "command": "<quiver> hook session-start vscode", "timeoutSec": 10}` and the same with `subagent-start`, `<quiver>` being the binary itself (`appCommand()`), quoted with `assistant.ShellQuote` since the command runs with `/bin/sh`. `uninstall` removes the file. It is written whole, so no merging is needed.
+4. **Installed** means its user folder exists. VS Code Insiders keeps its files under `Code - Insiders` in place of `Code` (VS Code's documented user folder; not measured).
+5. The MCP command is the binary itself (`appCommand()`), as for the other desktop apps.
 
-**Done when:** install, update, uninstall and doctor are tested for VS Code, and a Copilot agent session uses the fixture skills at the measured level.
+**Done when:** install, update, uninstall and doctor are tested for VS Code; a Copilot agent session in VS Code follows an always-on fixture skill from the hook, in the Local and in the Copilot harness; and a skill assigned to the open workspace's project is served.
 """)
 
 task("TASKF6", "Rules-file pointer for assistants without hooks", "TASKF1.4, TASKF4.4", """
@@ -1610,7 +1621,7 @@ for old in flat:
     REMAP[old] = REMAP[parent] + dot + sub if dot else f"TASK{sum('.' not in t for t in REMAP) + 1:02d}"
 remap = lambda s: re.sub(r"TASK(?:\d\d|[A-H]\d)(?:\.\d+)?", lambda m: REMAP.get(m.group(0)) or REMAP[m.group(0).split(".")[0]] + m.group(0)[len(m.group(0).split(".")[0]):], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x", "TASK52.2": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x", "TASK52.2": "x", "TASK52.3": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

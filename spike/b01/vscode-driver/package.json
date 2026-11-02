@@ -1,0 +1,9 @@
+{
+  "name": "quiver-spike-driver",
+  "displayName": "Quiver spike driver",
+  "version": "0.0.1",
+  "publisher": "quiver-spike",
+  "engines": { "vscode": "^1.100.0" },
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js"
+}

@@ -2,7 +2,7 @@
 
 Always-on skills reach the model through the MCP server's `instructions`, and only some assistants put those into the prompt (see [spike-mcp-clients.md](spike-mcp-clients.md)). A session-start hook runs a command when a session starts and adds its output to the model's context, so the skill text is there without the model deciding to load it. This spike checks, per assistant, whether such a hook exists and how it behaves.
 
-**Status:** Claude Code and Codex done on 2026-11-02. VS Code Copilot, Cursor and Antigravity are not measured yet.
+**Status:** Claude Code and Codex done on 2026-11-02, VS Code Copilot on 2026-11-03. Cursor and Antigravity are not measured yet.
 
 **Delivery levels.** Each assistant gets one:
 
@@ -17,6 +17,7 @@ Always-on skills reach the model through the MCP server's `instructions`, and on
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Claude Code 2.1.308 | `SessionStart`, matcher on `source` | `~/.claude/settings.json` or `$CLAUDE_CONFIG_DIR/settings.json`; `managed-settings.json` in a system folder | JSON with `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `source`; interactive sessions add `model` and `scratchpad_dir` | Plain stdout or `additionalContext` | Yes, 10 of 10 | 10,000 characters per hook command; above that, a file path and a 2 KB preview | Fires again with `source` `compact` | `SessionStart` does not reach them; `SubagentStart` does | The folder's trust dialog, in interactive sessions only; no approval per hook | Documented: Git Bash, or PowerShell without Git Bash; `shell` chooses | Documented: `~/.claude/CLAUDE.md` | **hook** |
 | Codex 0.166.0 | `SessionStart`, matcher on `source`; runs when the first prompt is sent | `$CODEX_HOME/hooks.json` (`~/.codex/hooks.json`) or `[hooks]` in `config.toml`; managed: `[hooks]` in `requirements.toml`, or `/etc/codex/config.toml` and `/etc/codex/hooks.json` | JSON with `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`, `source` | Plain stdout or `additionalContext` | Yes, 10 of 10 | `additionalContextLimit` per hook command, default 2,500 tokens counted as 10,000 bytes; above that, the start and end and a file path; `0` turns it off | Fires again with `source` `compact`; compaction keeps no hook text | `SubagentStart` does; a sub-agent that starts with its parent's history, the default, has the text already | Every new or changed hook: "Hooks need review" in the TUI; `codex exec` skips it without a message | From source: `cmd.exe /C`, and `commandWindows` replaces `command` | From source: `AGENTS.override.md` or `AGENTS.md` in `$CODEX_HOME` | **hook** |
+| VS Code 1.143.1, Copilot Chat 0.71.0 | `SessionStart`, when the first prompt starts a session; `source` is always `new` | `~/.copilot/hooks/*.json`, read by both harnesses; managed: `chat.hooks.allowManagedOnly`, and for the Copilot harness `/etc/github-copilot/policy.d/*.json` (documented) | JSON with `timestamp`, `hook_event_name`, `session_id`, `transcript_path`, `source`, `model`, `cwd` | JSON only: `hookSpecificOutput.additionalContext` in the Local harness, `additionalContext` at the top level in the Copilot harness; plain stdout is dropped | Yes, 10 of 10 | None up to 200,000 characters in the Local harness; 10 MiB documented for the Copilot harness | Not measured | `SubagentStart` does, `SessionStart` does not | None seen, with workspace trust off | Documented: a `windows` field (Local), `powershell` (Copilot harness) | `*.instructions.md` with `applyTo: "**"` in the profile's `prompts` folder, or `~/.copilot/instructions` | **hook** |
 
 ## Claude Code
 
@@ -274,3 +275,103 @@ From the source; not measured, since writing there needs administrator rights an
 ### Windows
 
 From the source; not measured. A hook runs as `%COMSPEC% /C "<command>"`, `cmd.exe` by default, and a hook's `commandWindows` replaces `command` there.
+
+## VS Code Copilot
+
+Measured on 2026-11-02 and 2026-11-03 with VS Code 1.143.1 on macOS, its built-in GitHub Copilot Chat 0.71.0, agent mode and the model `Auto`, which picked `gpt-5.6-luna`. The run script is `spike/b01/vscode-hooks-run.sh`, and `spike/b01/vscode-hooks-analyze.py` summarizes its output:
+
+```sh
+QUIVER=$PWD/bin/quiver spike/b01/vscode-hooks-run.sh /tmp/quiver-vscode-hooks
+python3 spike/b01/vscode-hooks-analyze.py /tmp/quiver-vscode-hooks
+```
+
+VS Code has no headless mode. The script runs a second VS Code with its own profile in `/tmp/qvsc`, signed in to Copilot once by hand, so the user's own profile is not changed. The profile's path must be short, since VS Code puts a socket there and a longer path keeps it from starting. That VS Code loads `spike/b01/vscode-driver`, a small extension that sends each prompt in a new chat (`workbench.action.chat.open`), because `code chat` ignores `--user-data-dir` and opens the prompt in the user's own VS Code. The answers come from the chat session files in the profile's workspace storage, which also keep the context the model got with each prompt. Each check has its own workspace with the hook in `.github/hooks/quiver.json`.
+
+The profile changes four things. It approves every tool call, since the agent otherwise waits for a click on terminal commands and 3 of 10 prompts never finished. It turns off workspace trust, so no dialog stops a run. It turns off personal skills and hooks: VS Code reads `~/.claude/skills` and `~/.copilot/hooks` whatever the profile, and in a first run the model acted on the user's own skills. And it sets `COPILOT_HOME` to a throwaway folder.
+
+VS Code has two agent harnesses. The **Local** one is the default (`chat.defaultToCopilotHarness` is `false`, and an experiment can change it). The **Copilot** one runs the Copilot runtime (1.0.100-1 here), which the Copilot CLI shares. Unless named, results are for the Local harness. Each count is one pass, except where two are named.
+
+### The 10 prompts
+
+| Setup | Always-on | Fitting skills | Other skills loaded | `get_skill` for `reply-style` |
+|---|---|---|---|---|
+| Server only; `reply-style` assigned as always-on | 4 of 10 | 6 of 6 | 0 of 4 | 4 of 10 |
+| Hook; `reply-style` not assigned | 10 of 10 | 6 of 6 | 0 of 4 | 0 of 10 |
+| Hook, and `reply-style` also assigned as always-on | 10 of 10 | 5 of 6 | 0 of 4 | 6 of 10 |
+| Server only, with the pointer in a user instructions file (below) | 8 of 10 | 6 of 6 | 0 of 4 | 8 of 10 |
+
+VS Code defers MCP tools: the model sees their names and loads them with `tool_search`. It knows the skill IDs, so the server's instructions reach it, but it followed the always-on skill in only 4 of 10. With the hook and the pointer both active, it loaded the skill it already had in 6 of 10, as in Claude Code.
+
+The hook's text reaches the model in the first user message, inside its `<context>` block, after `Additional instructions from hooks:`.
+
+### Hook files and output
+
+The hook fires when the first prompt starts a session. Its input is `timestamp`, `hook_event_name`, `session_id`, `transcript_path`, `source` (always `new`), `model` and `cwd`, and it runs in the workspace folder.
+
+| Hook | Text reached the model |
+|---|---|
+| `.github/hooks/*.json`, flat form, `hookSpecificOutput.additionalContext` | 10 of 10 (the prompts above) |
+| The same with the event key `sessionStart` | 2 of 2 |
+| Claude Code's nested groups, with the matcher `startup` | 2 of 2; the matcher is ignored |
+| `additionalContext` at the top level | 0 of 2 |
+| Plain stdout | 0 of 2; the log says `Hook command returned non-JSON output` |
+| Both outputs at once | 1 of 1, one copy |
+| `.claude/settings.json` in the workspace | 0 of 2; 2 of 2 with `chat.useClaudeHooks` |
+| A folder under `~/` named in `chat.hookFilesLocations` | 1 of 1 |
+| An absolute path in `chat.hookFilesLocations` | 0 of 2; the setting accepts only relative and `~/` paths |
+| `$COPILOT_HOME/hooks` | 0 of 1: the Local harness reads `~/.copilot/hooks` from the home folder |
+
+The default locations are `.github/hooks`, `.claude/settings.local.json`, `.claude/settings.json`, `~/.copilot/hooks` and `~/.claude/settings.json`. The Claude files count only with `chat.useClaudeHooks`, which is off by default. With it on, by that list, a hook Quiver puts into `~/.claude/settings.json` for Claude Code would run in VS Code too; this was not measured.
+
+### Size
+
+20,000, 50,000 and 200,000 characters arrived whole, start, middle and end, in 2 of 2 each. The Copilot runtime documents a limit of 10 MiB for the combined `additionalContext`.
+
+### Sub-agents
+
+| Hooks | Sub-agent (`runSubagent`) followed the rule |
+|---|---|
+| `SessionStart` only | 0 of 2 |
+| `SessionStart` and `SubagentStart` with `hookSpecificOutput.additionalContext` | 2 of 2 |
+
+The main session followed the rule in 4 of 4. `SubagentStart` gets `agent_id` and `agent_type` (`default` here).
+
+### Time and failures
+
+The command runs with `/bin/sh` in the workspace folder. The documented default timeout is 30 seconds. A hook's errors go to the output channel "GitHub Copilot Chat Hooks". A `sleep 5` hook made the first request take 7.5 seconds, against 2.0 without a hook.
+
+| Hook | Outcome |
+|---|---|
+| Prints the text, exits 1 | `NonBlockingError`; text not added |
+| Prints the text, exits 2 | `Error`; text not added; the session went on |
+| Prints the text, runs past a `timeout` of 2 seconds | Logged as timed out after 2 seconds, but VS Code waited for the command to end, 8 seconds; text not added |
+| Binary does not exist | `/bin/sh: /nonexistent/quiver: No such file or directory`; the session went on |
+
+### The Copilot harness
+
+With `chat.defaultToCopilotHarness` on, sessions are stored under `$COPILOT_HOME/session-state` (default `~/.copilot`), and the hook output must be at the top level.
+
+| Hook | Rule followed |
+|---|---|
+| `.github/hooks`, flat form, `hookSpecificOutput.additionalContext` only | 0 of 3 |
+| The same with both outputs | 2 of 2 |
+| Copilot's own form: `"version": 1`, the key `sessionStart`, `additionalContext` at the top level, `timeoutSec` | 2 of 2 |
+| `$COPILOT_HOME/hooks`, both outputs | 2 of 2 |
+
+With the key `SessionStart`, the input is `hook_event_name`, `session_id`, `timestamp`, `cwd`, `source` and `initial_prompt`; with `sessionStart`, the same in camelCase. Both harnesses take a file in the flat form with the key `SessionStart` whose command prints both outputs, and both read `~/.copilot/hooks` by default.
+
+### MCP server
+
+- With the server in the workspace's `.vscode/mcp.json`, it starts in the workspace folder.
+- With the server in the user's `mcp.json`, it started in the home folder, 2 of 2, so Quiver serves no project there. With `"cwd": "${workspaceFolder}"` added, the server did not start at all, 2 of 2.
+- VS Code sends the workspace folder as an MCP root when the server is initialized (`roots` with `listChanged`), seen with `spike/b01/quiver-spike`. Quiver does not read roots today.
+
+The user's `mcp.json` is in the user folder: `~/Library/Application Support/Code/User/` on macOS, `%APPDATA%\Code\User\` on Windows, `~/.config/Code/User/` on Linux, with `Code - Insiders` in place of `Code` for VS Code Insiders. This follows VS Code's documented user folder and was not measured on Windows, Linux or Insiders.
+
+### User instructions file
+
+A file `quiver.instructions.md` in the profile's `prompts` folder, with `applyTo: "**"` and the line "Before your first reply, load the tools of the quiver MCP server and follow its instructions.", is added to every chat. The session lists it among the request's references. It raised always-on from 4 to 8 of 10. VS Code also reads `~/.copilot/instructions`.
+
+### Trust and managed hooks
+
+No hook asked for approval, but workspace trust was off, so trust was not measured. The documentation says agent-scoped hooks need a trusted workspace. From the settings: `chat.useHooks` (on by default, policy `ChatHooks`) turns the Local harness's hooks off, and `chat.hooks.allowManagedOnly` (policy `ChatAllowManagedHooksOnly`) allows only managed ones. For the Copilot harness, GitHub documents policy hooks in `/etc/github-copilot/policy.d/*.json` on macOS and Linux, `C:\ProgramData\GitHub\Copilot\policy.d\*.json` and `HKLM\Software\Policies\GitHub\Copilot` on Windows; they need no trust and cannot be turned off by the user. None of this was measured.
