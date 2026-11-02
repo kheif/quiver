@@ -26,10 +26,6 @@ They are cut at about 4096 characters. When the catalog does not fit, it is repl
 | `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. |
 | `search_skills` | `query` | Searches the whole library, also skills not assigned here, and marks each match as assigned here (`global` or `project`) or not. The assistant may suggest an unassigned skill, but asks before using it. |
 
-:::note[Next release]
-`update_skill` and `search_skills` are on the main branch and ship after v1.2.0.
-:::
-
 ## Prompts
 
 Every served skill is also an MCP prompt, named by its ID. In Claude Code it appears as `/quiver:<id>`. Text after the command is passed to the skill as the task.

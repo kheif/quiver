@@ -13,10 +13,6 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - **Fork to change.** Source skills are read-only in Quiver. `quiver fork` copies one into your own skills.
 - **Watch global skills.** `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`.
 
-:::note[Next release]
-The update preview with `--diff`, `quiver pin`, `quiver fork` and `update_skill` are on the main branch and ship after v1.2.0. In v1.2.0, `quiver update` pulls first and then lists what changed.
-:::
-
 Every change to your own skills is a commit in `~/.quiver/local` (in `~/.quiver` once you use `quiver sync`). `git -C ~/.quiver/local log -p` shows them, and `git revert` undoes one.
 
 ## Installing Quiver

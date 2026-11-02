@@ -110,7 +110,7 @@ test('hero: planned layers are marked on their own rows, and the summary comes b
 
 test('next-release tags follow unreleased in site.ts', { skip }, () => {
 	const site = readFileSync(new URL('../src/data/site.ts', import.meta.url), 'utf8');
-	const ids = JSON.parse(site.match(/unreleased = new Set\((\[[^\]]*\])\)/)[1].replace(/'/g, '"'));
+	const ids = JSON.parse(site.match(/unreleased = new Set(?:<\w+>)?\((\[[^\]]*\])\)/)[1].replace(/'/g, '"'));
 	for (const id of ids) assert.match(html, new RegExp(`data-assistant="${id}"[^>]*>[\\s\\S]*?tag-next`), `${id} has no Next release tag`);
 	assert.equal((html.match(/class="tag-next/g) ?? []).length, ids.length);
 });

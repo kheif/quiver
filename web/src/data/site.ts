@@ -21,11 +21,16 @@ export function url(path = '/'): string {
  * Assistants supported on the main branch but not yet in the latest release.
  * The home page's assistant tiles mark them; empty the set after the next release.
  */
-export const latestRelease = 'v1.2.0';
-export const unreleased = new Set(['codex', 'antigravity']);
+export const latestRelease = 'v1.3.0';
+export const unreleased = new Set<string>([]);
 
 /** The latest releases, newest first, for the home page. */
 export const releases: { tag: string; date: string; summary?: string }[] = [
+	{
+		tag: 'v1.3.0',
+		date: '2 November 2026',
+		summary: 'sync between machines, update preview, pin and fork, Codex and Antigravity',
+	},
 	{
 		tag: 'v1.2.0',
 		date: '31 October 2026',

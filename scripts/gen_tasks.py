@@ -1071,6 +1071,13 @@ Versions follow Semantic Versioning: only a breaking change needs a new major ve
 6. **Website.** The status marks follow the release (`latestRelease`, `unreleased` and the **Next release** asides; see `web/README.md`). `quiver install` is not in v1.3.0, so its asides stay. Website changes are committed only after the maintainer confirms.
 
 **Done when:** the release workflow is green and `quiver mcp install --for <assistant>` works in the release.
+
+**Notes:**
+- `addForFlag` and `withFor` in `internal/cli/mcp.go`; `TestMCPInstallFor` covers install, uninstall with arguments, the deprecation line and the help.
+- Upgrade check on 2026-11-02, with a v1.2.0 binary built from the tag and a fixture source (two global skills, one always-on, and an always-on project skill): `status`, the MCP `instructions` and `list_skills` were the same before and after the first write, `registry.json` became version 2 with `state/projects.json`, and `doctor` reported no errors.
+- The README and PROJECT.md already covered the phase; each task had updated them. The release notes are GoReleaser's changelog of the commits, as for v1.2.0.
+- Website: the **Next release** asides and badges of the phase are gone, `latestRelease` is v1.3.0 with an empty `unreleased`, and the `quiver install` aside names v1.3.0. Three tests in `web/tests` that held the v1.2.0 state follow it.
+- Tagged `v1.3.0` on 2026-11-02.
 """)
 
 task("TASKE4", "Release v1.5.0", "TASK39, TASK40, TASKB1", """
@@ -1582,7 +1589,7 @@ for old in flat:
     REMAP[old] = REMAP[parent] + dot + sub if dot else f"TASK{sum('.' not in t for t in REMAP) + 1:02d}"
 remap = lambda s: re.sub(r"TASK(?:\d\d|[A-H]\d)(?:\.\d+)?", lambda m: REMAP.get(m.group(0)) or REMAP[m.group(0).split(".")[0]] + m.group(0)[len(m.group(0).split(".")[0]):], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

@@ -119,7 +119,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK48](TASK48-update-preview.md) | Update preview | TASK15 |
 | ✅ | [TASK49](TASK49-library-sync-between-machines.md) | Library sync between machines | TASK30 |
 | ✅ | [TASK50](TASK50-mcp-install-for-more-assistants.md) | `mcp install` for more assistants | TASK37 |
-|  | [TASK51](TASK51-release-v1-3-0.md) | Release v1.3.0 | TASK42, TASK43, TASK44, TASK45, TASK46, TASK47, TASK48, TASK49, TASK50 |
+| ✅ | [TASK51](TASK51-release-v1-3-0.md) | Release v1.3.0 | TASK42, TASK43, TASK44, TASK45, TASK46, TASK47, TASK48, TASK49, TASK50 |
 
 ### Phase 6: Session-start delivery (v1.4)
 

@@ -150,8 +150,26 @@ func assistantArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.
 	return suggest(ids, args, toComplete), noFiles
 }
 
+// addForFlag adds --for, with which v1.2.0 named one assistant. It counts
+// as one more argument.
+func addForFlag(cmd *cobra.Command, forID *string) {
+	cmd.Flags().StringVar(forID, "for", "", "only this assistant")
+	_ = cmd.Flags().MarkDeprecated("for", "name the assistant as an argument: quiver mcp "+cmd.Name()+" <assistant>")
+	ids, _ := assistantIDs()
+	_ = cmd.RegisterFlagCompletionFunc("for", cobra.FixedCompletions(ids, cobra.ShellCompDirectiveNoFileComp))
+}
+
+// withFor adds the assistant --for names to args.
+func withFor(args []string, forID string) []string {
+	if forID == "" {
+		return args
+	}
+	return append(args, forID)
+}
+
 func newMCPInstallCmd() *cobra.Command {
 	var printOnly bool
+	var forID string
 	cmd := &cobra.Command{
 		Use:   "install [assistant...]",
 		Short: "Register the MCP server with your assistants",
@@ -178,11 +196,12 @@ is kept, and the old file is saved next to it with the suffix
 			if printOnly {
 				return mcpPrint(cmd.OutOrStdout())
 			}
-			return mcpInstall(cmd.OutOrStdout(), args)
+			return mcpInstall(cmd.OutOrStdout(), withFor(args, forID))
 		},
 	}
 	cmd.Flags().BoolVar(&printOnly, "print", false, "only print the setup, change nothing")
 	_ = cmd.Flags().MarkDeprecated("print", "use quiver mcp config")
+	addForFlag(cmd, &forID)
 	return cmd
 }
 
@@ -323,6 +342,7 @@ func installClaude(out io.Writer, bin string) error {
 }
 
 func newMCPUninstallCmd() *cobra.Command {
+	var forID string
 	cmd := &cobra.Command{
 		Use:   "uninstall [assistant...]",
 		Short: "Remove the MCP server from your assistants",
@@ -337,9 +357,10 @@ Supported assistants: ` + supportedList(),
   quiver mcp uninstall claude-desktop`,
 		ValidArgsFunction: assistantArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return mcpUninstall(cmd.OutOrStdout(), args)
+			return mcpUninstall(cmd.OutOrStdout(), withFor(args, forID))
 		},
 	}
+	addForFlag(cmd, &forID)
 	return cmd
 }
 

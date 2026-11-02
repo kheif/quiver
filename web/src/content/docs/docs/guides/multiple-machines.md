@@ -1,15 +1,7 @@
 ---
 title: Working across machines
 description: Keep your skills, sources and assignments the same on every machine with quiver sync.
-sidebar:
-  badge:
-    text: Next
-    variant: default
 ---
-
-:::note[Next release]
-`quiver sync` is on the main branch and ships after v1.2.0.
-:::
 
 `quiver sync` keeps the Quiver home in a git remote, so each of your machines has the same local skills, sources and assignments.
 

@@ -47,8 +47,8 @@ If you use one assistant and keep a handful of skills, `~/.claude/skills` and th
 - **Skills from any git repository:** a GitHub `owner/repo`, any git URL or a local folder. Repositories with a Claude Code plugin marketplace work as they are. See [Sources](/docs/guides/sources/).
 - **Import the skills you have:** `quiver import` moves the skills in `.claude/skills` into the library, so the assistant does not load them twice. See [Importing skills](/docs/guides/importing-skills/).
 - **Skills written from the conversation:** ask the assistant to keep what you just did, and it saves a skill with the `create_skill` tool, committed in your library.
-- **Updates you review first:** `quiver update` shows what changed and asks before it applies anything; `quiver pin` keeps a skill at one commit, `quiver fork` makes your own copy (next release). See [Updating and pinning](/docs/guides/updating-and-pinning/).
-- **Every machine:** keep your library in a private git remote with `quiver sync` (next release). See [Multiple machines](/docs/guides/multiple-machines/).
+- **Updates you review first:** `quiver update` shows what changed and asks before it applies anything; `quiver pin` keeps a skill at one commit, `quiver fork` makes your own copy. See [Updating and pinning](/docs/guides/updating-and-pinning/).
+- **Every machine:** keep your library in a private git remote with `quiver sync`. See [Multiple machines](/docs/guides/multiple-machines/).
 - **Check and repair:** `quiver doctor` finds broken setups and copies of skills an assistant would load twice.
 
 ## Skill format

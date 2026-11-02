@@ -351,6 +351,37 @@ func TestMCPInstallNamed(t *testing.T) {
 	}
 }
 
+// The --for flag of v1.2.0 still names an assistant, hidden and deprecated.
+func TestMCPInstallFor(t *testing.T) {
+	f := assistanttest.Install(t)
+	apps := appHome(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install", "--for", "cursor")
+	if err != nil || !strings.Contains(out, "Registered with Cursor") || strings.Contains(out, "Claude") {
+		t.Errorf("install: %v\n%s", err, out)
+	}
+	wantLines(t, out, "Flag --for has been deprecated, name the assistant as an argument: quiver mcp install <assistant>")
+	if len(f.Calls()) != 0 {
+		t.Errorf("ran claude: %q", f.Calls())
+	}
+
+	// With arguments, --for counts as one more.
+	out, err = runIn(t, "", "mcp", "uninstall", "claude-desktop", "--for", "cursor")
+	if err != nil || !strings.Contains(out, "Removed from Cursor.") || !strings.Contains(out, "Quiver was not registered with Claude Desktop.") {
+		t.Errorf("uninstall: %v\n%s", err, out)
+	}
+	wantLines(t, out, "Flag --for has been deprecated, name the assistant as an argument: quiver mcp uninstall <assistant>")
+	if reg, err := apps["cursor"].Get(); err != nil || reg != nil {
+		t.Errorf("cursor: %+v %v", reg, err)
+	}
+
+	for _, sub := range []string{"install", "uninstall"} {
+		if out, _ := runIn(t, "", "mcp", sub, "--help"); strings.Contains(out, "--for") {
+			t.Errorf("mcp %s --help shows --for:\n%s", sub, out)
+		}
+	}
+}
+
 // A broken config file is reported and left alone; the other assistants
 // are still set up.
 func TestMCPInstallBrokenJSON(t *testing.T) {

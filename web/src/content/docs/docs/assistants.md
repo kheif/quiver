@@ -16,7 +16,7 @@ quiver install codex cursor
 ```
 
 :::note[Next release]
-In the next release, `quiver install` replaces `quiver mcp install`, and Codex and Antigravity are supported. In v1.2.0, run `quiver mcp install`, which sets up Claude Code and Cursor, and name one other assistant with `--for`, such as `quiver mcp install --for claude-desktop`.
+In the next release, `quiver install` replaces `quiver mcp install`. In v1.3.0, run `quiver mcp install`, which sets up every supported assistant that is installed, or name the assistants to set up, such as `quiver mcp install claude-desktop`.
 :::
 
 ## Supported assistants

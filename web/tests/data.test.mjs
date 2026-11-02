@@ -43,7 +43,7 @@ test('every skill that can be always on has a text to show', () => {
 test('site.ts lists the releases newest first', () => {
 	const site = readFileSync(new URL('../src/data/site.ts', import.meta.url), 'utf8');
 	const tags = [...site.matchAll(/tag: '(v[\d.]+)'/g)].map((m) => m[1]);
-	assert.deepEqual(tags, ['v1.2.0', 'v1.1.0', 'v1.0.0']);
+	assert.deepEqual(tags, ['v1.3.0', 'v1.2.0', 'v1.1.0', 'v1.0.0']);
 	assert.ok(existsSync(new URL('../src/data/site.ts', import.meta.url)));
 });
 
@@ -66,10 +66,10 @@ test('assistant labels say what works today', () => {
 	for (const a of assistants) assert.ok(!(a.marks ?? []).includes('next-release'), `${a.id}: next-release comes from site.ts`);
 });
 
-test('the introduction marks commands that are not in the latest release', () => {
+test('the introduction does not mark commands of the latest release', () => {
 	const intro = docs('introduction.md');
 	for (const cmd of ['quiver pin', 'quiver fork', 'quiver sync', 'quiver update']) {
 		const line = intro.split('\n').find((l) => l.includes(cmd));
-		assert.ok(line && /next release/i.test(line), `${cmd} is not marked`);
+		assert.ok(line && !/next release/i.test(line), `${cmd} is missing or still marked`);
 	}
 });

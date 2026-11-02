@@ -1,15 +1,7 @@
 ---
 title: Updating and pinning
 description: Review and apply updates from sources, pin a source skill to a commit, or fork it to change it.
-sidebar:
-  badge:
-    text: Next
-    variant: default
 ---
-
-:::note[Next release]
-The update preview, `quiver pin`, `quiver unpin` and `quiver fork` are on the main branch and ship after v1.2.0. In v1.2.0, `quiver update` pulls first, then lists what changed.
-:::
 
 ## Update sources
 

@@ -77,7 +77,3 @@ The assistant can also change a local skill with `update_skill`. Each change is 
 :::caution[Review what the assistant writes]
 A global skill's description reaches the assistant in every folder. Review new global skills with `quiver list` and `quiver show`, and change them with `quiver edit`. `git -C ~/.quiver/local log -p` shows every change, and `git revert` undoes one.
 :::
-
-:::note[Next release]
-`update_skill` is on the main branch and ships after v1.2.0. `create_skill` is in v1.2.0.
-:::
