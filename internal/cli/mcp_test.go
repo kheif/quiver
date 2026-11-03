@@ -238,6 +238,61 @@ func TestInstallClaudeHook(t *testing.T) {
 	}
 }
 
+// install adds Quiver's hooks to Codex's hooks file and trusts them; uninstall
+// removes them.
+func TestInstallCodexHook(t *testing.T) {
+	assistanttest.InstallCodex(t)
+	appHome(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "install", "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Added the Codex session-start hook for always-on skills") ||
+		!strings.Contains(out, "Trusted the Quiver hooks in Codex.") {
+		t.Errorf("install output:\n%s", out)
+	}
+	path, _ := assistant.CodexHooksPath()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("hooks file: %v", err)
+	}
+	var m struct {
+		Hooks map[string][]struct {
+			Matcher string
+			Hooks   []struct {
+				Command                string
+				Timeout                int
+				AdditionalContextLimit int
+				StatusMessage          string
+			}
+		}
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("hooks JSON: %v\n%s", err, data)
+	}
+	h := m.Hooks["SessionStart"][0]
+	if h.Matcher != "startup|clear|compact" || h.Hooks[0].Command != "/opt/bin/quiver hook session-start codex" ||
+		h.Hooks[0].Timeout != 10 || h.Hooks[0].AdditionalContextLimit != 0 || h.Hooks[0].StatusMessage != "Quiver always-on skills" {
+		t.Errorf("SessionStart: %+v", h)
+	}
+	if sub := m.Hooks["SubagentStart"][0]; sub.Matcher != "" || sub.Hooks[0].Command != "/opt/bin/quiver hook subagent-start codex" {
+		t.Errorf("SubagentStart: %+v", sub)
+	}
+
+	out, err = runIn(t, "", "uninstall", "codex")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Removed the session-start hook from Codex.") {
+		t.Errorf("uninstall output:\n%s", out)
+	}
+	data, _ = os.ReadFile(path)
+	if strings.Contains(string(data), "quiver hook") {
+		t.Errorf("hook still in file:\n%s", data)
+	}
+}
+
 func TestMCPInstallHidden(t *testing.T) {
 	f := assistanttest.Install(t)
 	appHome(t)

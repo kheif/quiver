@@ -121,6 +121,7 @@ func (f *Fake) write(t *testing.T, name, content string) {
 const codexScript = `#!/bin/sh
 dir="$(dirname "$0")"
 echo "$*" >> "$dir/calls"
+if [ "$1" = "app-server" ]; then exec python3 "$dir/appserver.py"; fi
 case "$1 $2" in
 "mcp get")
   if [ ! -f "$dir/user" ]; then echo "Error: No MCP server named '$3' found."; exit 1; fi
@@ -146,8 +147,71 @@ case "$1 $2" in
 esac
 `
 
+// codexAppServer is a fake "codex app-server": it answers the hooks/list and
+// config/batchWrite requests Quiver sends to trust its hooks. It reads the
+// hooks file ($CODEX_HOME/hooks.json, or ~/.codex/hooks.json) and keeps the
+// trusted hashes in trusted.json next to it. A hook's hash is the SHA-256 of
+// its command, so moving the binary makes the hook "modified".
+const codexAppServer = `import hashlib, json, os, sys
+
+home = os.environ.get("CODEX_HOME") or os.path.join(os.path.expanduser("~"), ".codex")
+hooks_path = os.path.join(home, "hooks.json")
+trusted_path = os.path.join(home, "trusted.json")
+LABEL = {"SessionStart": "session_start", "SubagentStart": "subagent_start"}
+
+def load(path, default):
+    try:
+        return json.load(open(path))
+    except FileNotFoundError:
+        return default
+
+def listing():
+    doc = load(hooks_path, {"hooks": {}})
+    trusted = load(trusted_path, {})
+    hooks = []
+    for event, groups in doc.get("hooks", {}).items():
+        for gi, group in enumerate(groups):
+            for hi, h in enumerate(group.get("hooks", [])):
+                cmd = h.get("command", "")
+                key = "%s:%s:%d:%d" % (hooks_path, LABEL.get(event, event), gi, hi)
+                cur = "sha256:" + hashlib.sha256(cmd.encode()).hexdigest()
+                status = "untrusted"
+                if key in trusted:
+                    status = "trusted" if trusted[key] == cur else "modified"
+                hooks.append({"key": key, "command": cmd, "currentHash": cur, "trustStatus": status})
+    return {"data": [{"cwd": os.getcwd(), "hooks": hooks}]}
+
+def batch(params):
+    trusted = load(trusted_path, {})
+    for edit in params.get("edits", []):
+        for key, val in edit.get("value", {}).items():
+            trusted[key] = val["trusted_hash"]
+    json.dump(trusted, open(trusted_path, "w"))
+    return {}
+
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    m = json.loads(line)
+    method, mid = m.get("method"), m.get("id")
+    if mid is None:
+        continue
+    if method == "initialize":
+        result = {}
+    elif method == "hooks/list":
+        result = listing()
+    elif method == "config/batchWrite":
+        result = batch(m.get("params", {}))
+    else:
+        result = {}
+    sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": mid, "result": result}) + "\n")
+    sys.stdout.flush()
+`
+
 // InstallCodex puts a fake codex command first on PATH, with no
-// registration. The fake keeps at most one env variable.
+// registration. The fake keeps at most one env variable and answers the
+// app-server hook-trust requests.
 func InstallCodex(t *testing.T) *Fake {
 	t.Helper()
 	if runtime.GOOS == "windows" {
@@ -155,6 +219,9 @@ func InstallCodex(t *testing.T) *Fake {
 	}
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "codex"), []byte(codexScript), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "appserver.py"), []byte(codexAppServer), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))

@@ -278,6 +278,46 @@ func installCodex(out io.Writer, bin string) error {
 		fmt.Fprintln(out, "Start a new Codex session to use it.")
 	}
 	onRequestNote(out, "Codex")
+	return installCodexHook(out, bin)
+}
+
+// installCodexHook adds or updates Quiver's hooks in Codex's hooks file and
+// trusts them through codex app-server, so Codex runs them with no review
+// dialog.
+func installCodexHook(out io.Writer, bin string) error {
+	res, err := assistant.InstallCodexHooks(bin)
+	if err != nil {
+		fmt.Fprintf(out, "Codex: the session-start hook was not added: %v\n", err)
+		return err
+	}
+	path, _ := assistant.CodexHooksPath()
+	switch res {
+	case assistant.Installed:
+		fmt.Fprintf(out, "Added the Codex session-start hook for always-on skills (%s).\n", path)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the Codex session-start hook to %s (%s).\n", bin, path)
+	}
+	n, err := assistant.CodexTrustHooks()
+	if err != nil {
+		fmt.Fprintln(out, "Could not trust the Codex hooks. Start codex, open \"Review hooks\" and trust the Quiver hooks.")
+		return nil
+	}
+	if n > 0 {
+		fmt.Fprintln(out, "Trusted the Quiver hooks in Codex.")
+	}
+	return nil
+}
+
+// uninstallCodexHook removes Quiver's hooks from Codex's hooks file.
+func uninstallCodexHook(out io.Writer) error {
+	res, err := assistant.UninstallCodexHooks()
+	if err != nil {
+		fmt.Fprintf(out, "Codex: the session-start hook was not removed: %v\n", err)
+		return err
+	}
+	if res == assistant.Removed {
+		fmt.Fprintln(out, "Removed the session-start hook from Codex.")
+	}
 	return nil
 }
 
@@ -372,6 +412,9 @@ func mcpUninstall(out io.Writer, ids []string) error {
 			if errors.Is(err, assistant.ErrNoCodex) {
 				fmt.Fprintf(out, "The codex command was not found. To remove Quiver from Codex, run:\n  %s\n", assistant.CodexRemoveCommand())
 				continue
+			}
+			if hookErr := uninstallCodexHook(out); hookErr != nil {
+				errs = append(errs, hookErr)
 			}
 		default:
 			res, err = t.json.Uninstall()

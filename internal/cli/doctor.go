@@ -596,6 +596,11 @@ func (d *doc) checkCodex(bin string, knowBin bool) {
 	default:
 		d.report("ok", "registered with Codex")
 	}
+	if knowBin {
+		if need, err := assistant.CodexHooksNeedTrust(); err == nil && len(need) > 0 {
+			d.report("warn", "Quiver hooks in Codex are new or changed and need review; "+fix)
+		}
+	}
 }
 
 func (d *doc) checkClaudeCode(bin string, knowBin, others bool) {

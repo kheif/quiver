@@ -8,18 +8,29 @@ import (
 	"strings"
 )
 
-// claudeHookTimeout is each hook's timeout in seconds. The default is 600,
-// and a slow hook delays the first reply by its whole run time
-// (docs/spike-hooks.md).
-const claudeHookTimeout = 10
+// hookTimeout is each hook's timeout in seconds. The default is 600, and a
+// slow hook delays the first reply by its whole run time (docs/spike-hooks.md).
+const hookTimeout = 10
 
-// claudeHook is one Claude Code hook Quiver installs: its event, the hook
+// hookEvent is one hook Quiver installs: its event key in the file, the hook
 // subcommand it runs, and the matcher of its group ("" for no matcher).
-type claudeHook struct{ event, subcommand, matcher string }
+type hookEvent struct{ event, subcommand, matcher string }
 
-var claudeHooks = []claudeHook{
+// quiverHookEvents are the two hooks every assistant with a session-start hook
+// gets. The file keys (SessionStart, SubagentStart) are the same for Claude
+// Code and Codex.
+var quiverHookEvents = []hookEvent{
 	{"SessionStart", "session-start", "startup|clear|compact"},
 	{"SubagentStart", "subagent-start", ""},
+}
+
+// hookTarget is an assistant's hook file and the fields its entries carry.
+type hookTarget struct {
+	path string // the hooks file
+	id   string // the assistant id in the hook command and recognition
+	// extra are members added to each new hook entry, after type, command
+	// and timeout (such as Codex's additionalContextLimit and statusMessage).
+	extra []member
 }
 
 // ClaudeSettingsPath is the user's Claude Code settings file:
@@ -35,28 +46,88 @@ func ClaudeSettingsPath() (string, error) {
 	return filepath.Join(home, ".claude", "settings.json"), nil
 }
 
-// command is the command string of a hook that runs bin for subcommand.
-func (h claudeHook) command(bin string) string {
-	return ShellQuote(bin) + " hook " + h.subcommand + " claude-code"
+// claudeHookTarget is the Claude Code hook file; its entries carry only the
+// timeout.
+func claudeHookTarget() (hookTarget, error) {
+	path, err := ClaudeSettingsPath()
+	return hookTarget{path: path, id: "claude-code"}, err
+}
+
+// CodexHooksPath is Codex's hooks file: $CODEX_HOME/hooks.json, or
+// ~/.codex/hooks.json. The Codex CLI and app share it.
+func CodexHooksPath() (string, error) {
+	if dir := os.Getenv("CODEX_HOME"); dir != "" {
+		return filepath.Join(dir, "hooks.json"), nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".codex", "hooks.json"), nil
+}
+
+// codexHookTarget is Codex's hook file. Its entries carry the timeout,
+// additionalContextLimit 0 (so Codex never cuts the block) and a
+// statusMessage for Codex's review list.
+func codexHookTarget() (hookTarget, error) {
+	path, err := CodexHooksPath()
+	return hookTarget{path: path, id: "codex", extra: []member{
+		{"additionalContextLimit", json.RawMessage("0")},
+		{"statusMessage", mustMarshal("Quiver always-on skills")},
+	}}, err
+}
+
+// InstallCodexHooks adds Quiver's hooks to Codex's hooks file, which run bin.
+// After it, the caller trusts the hooks through codex app-server.
+func InstallCodexHooks(bin string) (Result, error) {
+	t, err := codexHookTarget()
+	if err != nil {
+		return Unchanged, err
+	}
+	return t.install(bin)
+}
+
+// UninstallCodexHooks removes only Quiver's hooks from Codex's hooks file.
+func UninstallCodexHooks() (Result, error) {
+	t, err := codexHookTarget()
+	if err != nil {
+		return Unchanged, err
+	}
+	return t.uninstall()
 }
 
 // InstallClaudeHooks adds Quiver's SessionStart and SubagentStart hooks to the
 // Claude Code settings file, which run bin, or points existing ones to bin.
-// Every other key, group and hook is kept.
 func InstallClaudeHooks(bin string) (Result, error) {
-	path, err := ClaudeSettingsPath()
+	t, err := claudeHookTarget()
 	if err != nil {
 		return Unchanged, err
 	}
-	return editJSONFile(path, func(top []member) ([]member, Result, error) {
+	return t.install(bin)
+}
+
+// UninstallClaudeHooks removes only Quiver's hooks from the Claude Code
+// settings file.
+func UninstallClaudeHooks() (Result, error) {
+	t, err := claudeHookTarget()
+	if err != nil {
+		return Unchanged, err
+	}
+	return t.uninstall()
+}
+
+// install adds or updates Quiver's hooks in the target's file, which run bin.
+// Every other key, group and hook is kept.
+func (t hookTarget) install(bin string) (Result, error) {
+	return editJSONFile(t.path, func(top []member) ([]member, Result, error) {
 		hooks, err := nestedObject(top, "hooks")
 		if err != nil {
 			return top, Unchanged, err
 		}
 		res := Unchanged
-		for _, h := range claudeHooks {
+		for _, h := range quiverHookEvents {
 			var r Result
-			hooks, r, err = installHook(hooks, h, bin)
+			hooks, r, err = t.installHook(hooks, h, bin)
 			if err != nil {
 				return top, Unchanged, err
 			}
@@ -69,14 +140,10 @@ func InstallClaudeHooks(bin string) (Result, error) {
 	})
 }
 
-// UninstallClaudeHooks removes only Quiver's hooks from the settings file, and
-// a group or event left empty by the removal.
-func UninstallClaudeHooks() (Result, error) {
-	path, err := ClaudeSettingsPath()
-	if err != nil {
-		return Unchanged, err
-	}
-	return editJSONFile(path, func(top []member) ([]member, Result, error) {
+// uninstall removes only Quiver's hooks from the target's file, and a group or
+// event left empty by the removal.
+func (t hookTarget) uninstall() (Result, error) {
+	return editJSONFile(t.path, func(top []member) ([]member, Result, error) {
 		i := index(top, "hooks")
 		if i < 0 {
 			return top, Unchanged, nil
@@ -86,9 +153,9 @@ func UninstallClaudeHooks() (Result, error) {
 			return top, Unchanged, nil // not an object: leave it alone
 		}
 		res := Unchanged
-		for _, h := range claudeHooks {
+		for _, h := range quiverHookEvents {
 			var r Result
-			hooks, r = uninstallHook(hooks, h)
+			hooks, r = t.uninstallHook(hooks, h)
 			res = stronger(res, r)
 		}
 		if res == Unchanged {
@@ -101,14 +168,19 @@ func UninstallClaudeHooks() (Result, error) {
 	})
 }
 
+// command is the command string of the hook that runs bin for h.
+func (t hookTarget) command(bin string, h hookEvent) string {
+	return ShellQuote(bin) + " hook " + h.subcommand + " " + t.id
+}
+
 // installHook adds or updates Quiver's hook for h in the hooks object. groups
 // of the event keep their order; other groups and hooks are kept.
-func installHook(hooks []member, h claudeHook, bin string) ([]member, Result, error) {
+func (t hookTarget) installHook(hooks []member, h hookEvent, bin string) ([]member, Result, error) {
 	groups, err := parseArray(hooks, h.event)
 	if err != nil {
 		return hooks, Unchanged, err
 	}
-	want := h.command(bin)
+	want := t.command(bin, h)
 	for gi, group := range groups {
 		entries, gm, err := groupEntries(group)
 		if err != nil {
@@ -120,10 +192,10 @@ func installHook(hooks []member, h claudeHook, bin string) ([]member, Result, er
 				continue
 			}
 			cmd, ok := stringMember(em, "command")
-			if !ok || !isQuiverHook(cmd, h.subcommand) {
+			if !ok || !t.isQuiverHook(cmd, h.subcommand) {
 				continue
 			}
-			if cmd == want && timeoutOf(em) == claudeHookTimeout {
+			if cmd == want && timeoutOf(em) == hookTimeout {
 				return hooks, Unchanged, nil
 			}
 			em = set(em, "command", mustMarshal(want))
@@ -134,12 +206,12 @@ func installHook(hooks []member, h claudeHook, bin string) ([]member, Result, er
 			return set(hooks, h.event, encodeArray(groups)), Updated, nil
 		}
 	}
-	groups = append(groups, h.newGroup(want))
+	groups = append(groups, t.newGroup(want, h))
 	return set(hooks, h.event, encodeArray(groups)), Installed, nil
 }
 
 // uninstallHook removes Quiver's hook for h, and a group or event left empty.
-func uninstallHook(hooks []member, h claudeHook) ([]member, Result) {
+func (t hookTarget) uninstallHook(hooks []member, h hookEvent) ([]member, Result) {
 	ei := index(hooks, h.event)
 	if ei < 0 {
 		return hooks, Unchanged
@@ -158,7 +230,7 @@ func uninstallHook(hooks []member, h claudeHook) ([]member, Result) {
 		for _, entry := range entries {
 			em, err := parseObject(entry)
 			if err == nil {
-				if cmd, ok := stringMember(em, "command"); ok && isQuiverHook(cmd, h.subcommand) {
+				if cmd, ok := stringMember(em, "command"); ok && t.isQuiverHook(cmd, h.subcommand) {
 					removed = true
 					continue
 				}
@@ -183,13 +255,14 @@ func uninstallHook(hooks []member, h claudeHook) ([]member, Result) {
 }
 
 // newGroup is the group that runs want for h: a matcher when h has one, then a
-// single command hook with the timeout.
-func (h claudeHook) newGroup(want string) json.RawMessage {
+// single command hook with the timeout and the target's extra fields.
+func (t hookTarget) newGroup(want string, h hookEvent) json.RawMessage {
 	entry := []member{
 		{"type", mustMarshal("command")},
 		{"command", mustMarshal(want)},
 		{"timeout", json.RawMessage("10")},
 	}
+	entry = append(entry, t.extra...)
 	var group []member
 	if h.matcher != "" {
 		group = append(group, member{"matcher", mustMarshal(h.matcher)})
@@ -198,11 +271,11 @@ func (h claudeHook) newGroup(want string) json.RawMessage {
 	return encodeObject(group)
 }
 
-// isQuiverHook reports whether command runs Quiver's hook for subcommand: its
-// arguments end with "hook <subcommand> claude-code" and its program is
-// named quiver or quiver.exe.
-func isQuiverHook(command, subcommand string) bool {
-	if !strings.HasSuffix(command, " hook "+subcommand+" claude-code") {
+// isQuiverHook reports whether command runs Quiver's hook for subcommand and
+// the target's assistant: its arguments end with "hook <subcommand> <id>" and
+// its program is named quiver or quiver.exe.
+func (t hookTarget) isQuiverHook(command, subcommand string) bool {
+	if !strings.HasSuffix(command, " hook "+subcommand+" "+t.id) {
 		return false
 	}
 	base := filepath.Base(firstToken(command))

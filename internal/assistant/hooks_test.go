@@ -46,7 +46,7 @@ func quiverHooks(t *testing.T, m map[string]any, event, subcommand string) (comm
 		for _, e := range entries {
 			entry, _ := e.(map[string]any)
 			cmd, _ := entry["command"].(string)
-			if isQuiverHook(cmd, subcommand) {
+			if (hookTarget{id: "claude-code"}).isQuiverHook(cmd, subcommand) {
 				to, _ := entry["timeout"].(float64)
 				return cmd, to, groups
 			}
@@ -63,7 +63,7 @@ func TestClaudeHooksMissingFile(t *testing.T) {
 	}
 	m := readSettings(t, path)
 	cmd, to, groups := quiverHooks(t, m, "SessionStart", "session-start")
-	if cmd != "/opt/bin/quiver hook session-start claude-code" || to != claudeHookTimeout || groups != 1 {
+	if cmd != "/opt/bin/quiver hook session-start claude-code" || to != hookTimeout || groups != 1 {
 		t.Errorf("SessionStart: %q timeout %v groups %d", cmd, to, groups)
 	}
 	// The SessionStart group carries the matcher.
@@ -78,7 +78,7 @@ func TestClaudeHooksMissingFile(t *testing.T) {
 		t.Errorf("SubagentStart has a matcher: %v", sub)
 	}
 	cmd, to, _ = quiverHooks(t, m, "SubagentStart", "subagent-start")
-	if cmd != "/opt/bin/quiver hook subagent-start claude-code" || to != claudeHookTimeout {
+	if cmd != "/opt/bin/quiver hook subagent-start claude-code" || to != hookTimeout {
 		t.Errorf("SubagentStart: %q timeout %v", cmd, to)
 	}
 

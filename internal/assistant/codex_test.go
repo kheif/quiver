@@ -106,3 +106,61 @@ func TestRealCodex(t *testing.T) {
 		t.Errorf("config.toml:\n%s", b)
 	}
 }
+
+// TestRealCodexTrust checks the app-server trust flow against the real codex
+// in a throwaway CODEX_HOME, when codex is installed and logged in.
+func TestRealCodexTrust(t *testing.T) {
+	if !HasCodex() {
+		t.Skip("codex is not installed")
+	}
+	auth, err := os.ReadFile(filepath.Join(realCodexHome(t), "auth.json"))
+	if err != nil {
+		t.Skip("no codex login to copy")
+	}
+	home := t.TempDir()
+	t.Setenv("CODEX_HOME", home)
+	if err := os.WriteFile(filepath.Join(home, "auth.json"), auth, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if res, err := InstallCodexHooks("/opt/bin/quiver"); err != nil || res != Installed {
+		t.Fatalf("install hooks: %v %v", res, err)
+	}
+	need, err := CodexHooksNeedTrust()
+	if err != nil || len(need) != 2 {
+		t.Fatalf("before trust, need: %v %v", need, err)
+	}
+	if n, err := CodexTrustHooks(); err != nil || n != 2 {
+		t.Fatalf("trust: %d %v", n, err)
+	}
+	if need, err := CodexHooksNeedTrust(); err != nil || len(need) != 0 {
+		t.Fatalf("after trust, need: %v %v", need, err)
+	}
+
+	// Moving the binary changes the hooks, so they need trust again.
+	if res, err := InstallCodexHooks("/new/quiver"); err != nil || res != Updated {
+		t.Fatalf("update hooks: %v %v", res, err)
+	}
+	if need, err := CodexHooksNeedTrust(); err != nil || len(need) != 2 {
+		t.Fatalf("after move, need: %v %v", need, err)
+	}
+	if n, err := CodexTrustHooks(); err != nil || n != 2 {
+		t.Fatalf("trust after move: %d %v", n, err)
+	}
+	if need, err := CodexHooksNeedTrust(); err != nil || len(need) != 0 {
+		t.Fatalf("after second trust, need: %v %v", need, err)
+	}
+}
+
+// realCodexHome is the user's real CODEX_HOME, to copy a login from.
+func realCodexHome(t *testing.T) string {
+	t.Helper()
+	if dir := os.Getenv("CODEX_HOME"); dir != "" {
+		return dir
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return filepath.Join(home, ".codex")
+}
