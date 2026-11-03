@@ -34,7 +34,7 @@ The same steps for Windows: it installs `quiver.exe` into `%LOCALAPPDATA%\Progra
 npm install -g @kheif/quiver
 ```
 
-npm installs the binary for your platform; no install script runs. If you switch Node versions with nvm, fnm or volta, run `quiver mcp install` again afterwards, because the path of `quiver` changes with the Node version.
+npm installs the binary for your platform; no install script runs. If you switch Node versions with nvm, fnm or volta, run `quiver install` again afterwards, because the path of `quiver` changes with the Node version.
 
 **Go:**
 
@@ -58,7 +58,7 @@ cd ~/code/app
 quiver new release-notes
 ```
 
-In a terminal, `quiver init` asks before each step: registering the MCP server (`quiver mcp install`), importing the skills in `~/.claude/skills` for every folder, and importing those in the current project's `.claude/skills`. Any step can be skipped and run later. `quiver init --yes`, or a run outside a terminal, only creates `~/.quiver`; any other command creates it too.
+In a terminal, `quiver init` asks before each step: registering the MCP server (`quiver install`), importing the skills in `~/.claude/skills` for every folder, and importing those in the current project's `.claude/skills`. Any step can be skipped and run later. `quiver init --yes`, or a run outside a terminal, only creates `~/.quiver`; any other command creates it too.
 
 `quiver new` opens the new `SKILL.md` in `$VISUAL` or `$EDITOR`. Write one sentence in `description` on when the assistant should use the skill, and the instructions below the frontmatter. Quiver commits the skill in `~/.quiver/local` and creates `~/code/app/.quiver.json`. Commit that file, so the project keeps its ID in every clone.
 
@@ -107,8 +107,8 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
-| `quiver mcp install [assistant...]` | Register the MCP server with every supported assistant that is installed, or only with the assistants named. See [MCP server](#mcp-server). |
-| `quiver mcp uninstall [assistant...]` | Remove it from them, or only from the assistants named. |
+| `quiver install [assistant...]` | Register the MCP server with every supported assistant that is installed, or only with the assistants named. See [MCP server](#mcp-server). |
+| `quiver uninstall [assistant...]` | Remove it from them, or only from the assistants named. |
 | `quiver mcp config` | Print the MCP config entry for any other assistant. |
 | `quiver mcp` | Run the MCP server. Assistants start this. |
 | `quiver completion <shell>` | Print the completion script for `bash`, `zsh`, `fish` or `powershell`. |
@@ -123,7 +123,7 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 
 ## MCP server
 
-`quiver mcp install` sets up every supported assistant that is installed. Name assistants to set up only those, such as `quiver mcp install codex cursor`. The supported assistants:
+`quiver install` sets up every supported assistant that is installed. Name assistants to set up only those, such as `quiver install codex cursor`. The supported assistants:
 
 | Assistant | Name | What it changes |
 |---|---|---|
@@ -133,9 +133,9 @@ quiver completion zsh > "${fpath[1]}/_quiver"
 | Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). |
 | Antigravity | `antigravity` | Adds `quiver` to `mcpServers` in `~/.gemini/config/mcp_config.json`, which the Antigravity CLI (`agy`) reads. |
 
-An assistant counts as installed when its command (`claude`, `codex`) is on `PATH`, or when its config folder exists (`~/.gemini/antigravity-cli` for Antigravity). In the JSON files, every other key stays as it is, including an `env` of the `quiver` entry, and the old file is saved next to it as `<file>.quiver-backup`. A file that is not valid JSON is reported and never overwritten. When Codex already has a `quiver` entry, its `env` is kept too. Restart the assistant afterwards. `quiver doctor` checks the entry of each installed assistant. Every assistant but Claude Code gets the path of the binary itself, never the npm launcher, because desktop apps do not see your shell's `PATH` and so cannot find `node`. Cursor passes the skill list to the model and starts the server in the workspace folder, so project skills work there.
+An assistant counts as installed when its command (`claude`, `codex`) is on `PATH`, or when its config folder exists (`~/.gemini/antigravity-cli` for Antigravity). In the JSON files, every other key stays as it is, including an `env` of the `quiver` entry, and the old file is saved next to it as `<file>.quiver-backup`. A file that is not valid JSON is reported and never overwritten. When Codex already has a `quiver` entry, its `env` is kept too. Restart the assistant afterwards. `quiver doctor` checks the entry of each installed assistant. Every assistant but Claude Code gets the path of the binary itself, never the npm launcher, because desktop apps do not see your shell's `PATH` and so cannot find `node`. Cursor passes the skill list to the model and starts the server in the workspace folder, so project skills work there. The earlier names `quiver mcp install` and `quiver mcp uninstall` still work as hidden, deprecated aliases.
 
-**Codex, Claude Desktop and Antigravity** use Quiver's skills only when you ask for them in the prompt, such as "check the quiver skills for this"; `quiver mcp install` says so. Codex loads an MCP server's tools, and with them its instructions, only when the model searches for them. Antigravity puts the instructions in a file the model rarely reads. Claude Desktop drops them. Once asked, Codex and Antigravity also follow the always-on skills; Claude Desktop does not. Codex and Antigravity start the server in the project folder, so project skills work there. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
+**Codex, Claude Desktop and Antigravity** use Quiver's skills only when you ask for them in the prompt, such as "check the quiver skills for this"; `quiver install` says so. Codex loads an MCP server's tools, and with them its instructions, only when the model searches for them. Antigravity puts the instructions in a file the model rarely reads. Claude Desktop drops them. Once asked, Codex and Antigravity also follow the always-on skills; Claude Desktop does not. Codex and Antigravity start the server in the project folder, so project skills work there. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
 
 For any other assistant, `quiver mcp config` prints the entry:
 
@@ -186,12 +186,12 @@ To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).
 The last command deletes your own skills too. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
 
 ```sh
-quiver mcp uninstall      # remove the MCP server from every assistant
+quiver uninstall          # remove the MCP server from every assistant
 rm "$(command -v quiver)" # remove the binary; with npm: npm uninstall -g @kheif/quiver
 rm -rf ~/.quiver          # delete the library
 ```
 
-On Windows, after `quiver mcp uninstall`, delete `%LOCALAPPDATA%\Programs\quiver` and `%USERPROFILE%\.quiver`, and remove the folder from your user `PATH` in the environment variables settings.
+On Windows, after `quiver uninstall`, delete `%LOCALAPPDATA%\Programs\quiver` and `%USERPROFILE%\.quiver`, and remove the folder from your user `PATH` in the environment variables settings.
 
 Projects keep their `.quiver.json`; delete it there if you no longer need it.
 

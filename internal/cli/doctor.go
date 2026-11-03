@@ -584,7 +584,7 @@ func (d *doc) checkMCP() {
 }
 
 func (d *doc) checkCodex(bin string, knowBin bool) {
-	const fix = "run: quiver mcp install codex"
+	const fix = "run: quiver install codex"
 	reg, err := assistant.CodexGet()
 	switch {
 	case err != nil:
@@ -612,11 +612,11 @@ func (d *doc) checkClaudeCode(bin string, knowBin, others bool) {
 		d.report("error", title, err.Error())
 		return
 	case reg == nil:
-		d.report("error", "not registered with Claude Code; run: quiver mcp install")
+		d.report("error", "not registered with Claude Code; run: quiver install")
 		return
 	}
 	if knowBin && reg.Command != bin {
-		d.report("warn", "Claude Code runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; run: quiver mcp install", reg.Command, reg.Args, bin))
+		d.report("warn", "Claude Code runs another quiver", fmt.Sprintf("it runs %s %s, but this is %s; run: quiver install", reg.Command, reg.Args, bin))
 		return
 	}
 	if !reg.User() {
@@ -627,7 +627,7 @@ func (d *doc) checkClaudeCode(bin string, knowBin, others bool) {
 }
 
 func (d *doc) checkJSONAssistant(a *assistant.JSONAssistant, bin string, knowBin bool) {
-	fix := "run: quiver mcp install " + a.ID
+	fix := "run: quiver install " + a.ID
 	reg, err := a.Get()
 	switch {
 	case err != nil:

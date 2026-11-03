@@ -1708,7 +1708,7 @@ Phases 0–2 are the first usable version. After TASK21 you can run:
 ```bash
 quiver source add JuliusBrussee/caveman --name caveman
 quiver add caveman/caveman --global --always
-quiver mcp install
+quiver install
 ```
 
 and every new assistant session follows caveman from the first message. Use Quiver this way every day before you start Phase 3.

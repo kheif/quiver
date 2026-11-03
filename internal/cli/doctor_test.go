@@ -117,7 +117,7 @@ func TestDoctorFindsAndFixes(t *testing.T) {
 		"warn   folders left over from an interrupted source add or remove\n       "+filepath.Join(f.home, "sources", ".add-x-123"),
 		"warn   projects with no folder on this machine\n       api [api-000002]: "+f.api,
 		`every folder: pdf, pdf-copy share the name "pdf"`,
-		"error  not registered with Claude Code; run: quiver mcp install",
+		"error  not registered with Claude Code; run: quiver install",
 	)
 	if strings.Contains(out, "fixed") {
 		t.Errorf("fixed without --fix:\n%s", out)
@@ -205,7 +205,7 @@ func TestDoctorClaudeRunsOtherQuiver(t *testing.T) {
 	if err != nil {
 		t.Errorf("a warning is not an error: %v", err)
 	}
-	wantLines(t, out, "warn   Claude Code runs another quiver\n       it runs /old/quiver mcp, but this is /opt/bin/quiver; run: quiver mcp install", "1 warning, no errors.")
+	wantLines(t, out, "warn   Claude Code runs another quiver\n       it runs /old/quiver mcp, but this is /opt/bin/quiver; run: quiver install", "1 warning, no errors.")
 }
 
 // nativeEnv is listEnv with copies of served skills in Claude Code: pdf

@@ -51,11 +51,11 @@ func newMCPCmd() *cobra.Command {
 		Use:   "mcp",
 		Short: "Run the MCP server on stdio (assistants start this)",
 		Long: `Run the MCP server on stdin and stdout. Assistants start this command; you
-do not need to run it yourself. Register it once with: quiver mcp install
+do not need to run it yourself. Register it once with: quiver install
 
 The server serves the skills of the project in its working directory, or in
 $QUIVER_PROJECT when that is set. It logs to ~/.quiver/logs.`,
-		Example: `  # What Claude Code runs after quiver mcp install
+		Example: `  # What Claude Code runs after quiver install
   quiver mcp`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.NoArgs,
@@ -67,7 +67,7 @@ $QUIVER_PROJECT when that is set. It logs to ~/.quiver/logs.`,
 	return cmd
 }
 
-// The mcp install names of the assistants set up with their own command:
+// The install names of the assistants set up with their own command:
 // Claude Code with claude, Codex with codex. The other assistants are
 // configured by JSON.
 const (
@@ -75,7 +75,7 @@ const (
 	codexID    = "codex"
 )
 
-// mcpTarget is an assistant mcp install or uninstall works on: Claude Code
+// mcpTarget is an assistant install or uninstall works on: Claude Code
 // or Codex by id when json is nil.
 type mcpTarget struct {
 	id   string
@@ -92,7 +92,7 @@ func (t mcpTarget) name() string {
 	return "Claude Code"
 }
 
-// assistantIDs returns the names mcp install and uninstall take.
+// assistantIDs returns the names install and uninstall take.
 func assistantIDs() ([]string, error) {
 	all, err := assistant.JSONAssistants()
 	if err != nil {
@@ -138,7 +138,7 @@ func mcpTargets(ids []string) ([]mcpTarget, error) {
 	return ts, nil
 }
 
-// supportedList returns the names mcp install takes, for the help.
+// supportedList returns the names install takes, for the help.
 func supportedList() string {
 	ids, _ := assistantIDs()
 	return strings.Join(ids, ", ")
@@ -151,10 +151,11 @@ func assistantArgs(_ *cobra.Command, args []string, toComplete string) ([]cobra.
 }
 
 // addForFlag adds --for, with which v1.2.0 named one assistant. It counts
-// as one more argument.
-func addForFlag(cmd *cobra.Command, forID *string) {
+// as one more argument. prefix is the command path without the leaf, named in
+// the deprecation message.
+func addForFlag(cmd *cobra.Command, forID *string, prefix string) {
 	cmd.Flags().StringVar(forID, "for", "", "only this assistant")
-	_ = cmd.Flags().MarkDeprecated("for", "name the assistant as an argument: quiver mcp "+cmd.Name()+" <assistant>")
+	_ = cmd.Flags().MarkDeprecated("for", "name the assistant as an argument: "+prefix+" "+cmd.Name()+" <assistant>")
 	ids, _ := assistantIDs()
 	_ = cmd.RegisterFlagCompletionFunc("for", cobra.FixedCompletions(ids, cobra.ShellCompDirectiveNoFileComp))
 }
@@ -167,43 +168,9 @@ func withFor(args []string, forID string) []string {
 	return append(args, forID)
 }
 
-func newMCPInstallCmd() *cobra.Command {
-	var printOnly bool
-	var forID string
-	cmd := &cobra.Command{
-		Use:   "install [assistant...]",
-		Short: "Register the MCP server with your assistants",
-		Long: `Register the MCP server with every supported assistant that is installed,
-or only with the assistants named. Some assistants use Quiver's skills only
-when you ask for them in the prompt; mcp install says which. For any other
-assistant, add the entry that quiver mcp config prints to its MCP config.
-
-Supported assistants: ` + supportedList() + `
-
-Run it again after moving the quiver binary: a registration that points to
-another binary is replaced. In the assistants' JSON files, every other key
-is kept, and the old file is saved next to it with the suffix
-.quiver-backup.`,
-		Example: `  quiver mcp install
-
-  # Only Cursor
-  quiver mcp install cursor
-
-  # Claude Code and Claude Desktop
-  quiver mcp install claude-code claude-desktop`,
-		ValidArgsFunction: assistantArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if printOnly {
-				return mcpPrint(cmd.OutOrStdout())
-			}
-			return mcpInstall(cmd.OutOrStdout(), withFor(args, forID))
-		},
-	}
-	cmd.Flags().BoolVar(&printOnly, "print", false, "only print the setup, change nothing")
-	_ = cmd.Flags().MarkDeprecated("print", "use quiver mcp config")
-	addForFlag(cmd, &forID)
-	return cmd
-}
+// newMCPInstallCmd is the hidden, deprecated alias quiver mcp install; the
+// command is now quiver install. It is removed in the next major version.
+func newMCPInstallCmd() *cobra.Command { return installCommand("quiver mcp", true) }
 
 func mcpPrint(out io.Writer) error {
 	bin, _, err := command()
@@ -251,7 +218,7 @@ func mcpInstall(out io.Writer, ids []string) error {
 		}
 	}
 	if viaNpm {
-		fmt.Fprintln(out, "Installed with npm: the path depends on your Node version. After switching Node versions (nvm, fnm, volta), run quiver mcp install again.")
+		fmt.Fprintln(out, "Installed with npm: the path depends on your Node version. After switching Node versions (nvm, fnm, volta), run quiver install again.")
 	}
 	return errors.Join(errs...)
 }
@@ -341,28 +308,9 @@ func installClaude(out io.Writer, bin string) error {
 	return nil
 }
 
-func newMCPUninstallCmd() *cobra.Command {
-	var forID string
-	cmd := &cobra.Command{
-		Use:   "uninstall [assistant...]",
-		Short: "Remove the MCP server from your assistants",
-		Long: `Remove the MCP server from every supported assistant that is installed, or
-only from the assistants named. The Quiver home and its skills are not
-touched.
-
-Supported assistants: ` + supportedList(),
-		Example: `  quiver mcp uninstall
-
-  # Only Claude Desktop
-  quiver mcp uninstall claude-desktop`,
-		ValidArgsFunction: assistantArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return mcpUninstall(cmd.OutOrStdout(), withFor(args, forID))
-		},
-	}
-	addForFlag(cmd, &forID)
-	return cmd
-}
+// newMCPUninstallCmd is the hidden, deprecated alias quiver mcp uninstall; the
+// command is now quiver uninstall. It is removed in the next major version.
+func newMCPUninstallCmd() *cobra.Command { return uninstallCommand("quiver mcp", true) }
 
 func mcpUninstall(out io.Writer, ids []string) error {
 	ts, err := mcpTargets(ids)
@@ -413,7 +361,7 @@ func newMCPConfigCmd() *cobra.Command {
 		Use:   "config",
 		Short: "Print the MCP config entry for any assistant",
 		Long: `Print the mcpServers entry that starts this quiver, for an assistant that
-quiver mcp install does not set up. Add it to that assistant's MCP config.
+quiver install does not set up. Add it to that assistant's MCP config.
 Nothing is changed.`,
 		Example:           `  quiver mcp config`,
 		ValidArgsFunction: noArgs,

@@ -27,7 +27,7 @@ overwritten.
 In a terminal it then offers the rest of the setup, one step at a time; each
 can be skipped:
 
-  1. register the MCP server with your assistants (quiver mcp install)
+  1. register the MCP server with your assistants (quiver install)
   2. import the skills in ~/.claude/skills, for every folder
   3. import the skills in the .claude/skills of the project in this folder
 
@@ -82,7 +82,7 @@ func guidedSetup(in *bufio.Reader, out io.Writer) error {
 			errs = append(errs, err)
 		}
 	} else {
-		fmt.Fprintln(out, "Skipped. Run it later with: quiver mcp install")
+		fmt.Fprintln(out, "Skipped. Run it later with: quiver install")
 	}
 
 	claude, err := library.ClaudeDir()

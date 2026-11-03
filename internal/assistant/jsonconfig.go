@@ -17,7 +17,7 @@ import (
 // JSONAssistant is an assistant that reads its MCP servers from the
 // mcpServers object of a JSON file.
 type JSONAssistant struct {
-	ID   string // the mcp install argument
+	ID   string // the install argument
 	Name string
 	Dir  string // the assistant's own folder; it exists once the assistant ran
 	Path string // the config file
@@ -26,7 +26,7 @@ type JSONAssistant struct {
 	Global bool
 	// OnRequest means the model sees Quiver's skill list and always-on
 	// skills only when the prompt asks for Quiver's skills, if at all
-	// (docs/spike-mcp-clients.md). mcp install says so.
+	// (docs/spike-mcp-clients.md). install says so.
 	OnRequest bool
 }
 

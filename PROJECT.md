@@ -161,7 +161,7 @@ Every action in the TUI is also a command, for scripts and quick use:
 ```bash
 # Setup
 quiver init                         # Create ~/.quiver; in a terminal, also register the MCP server and import existing skills
-quiver mcp install                  # Register the MCP server with every installed assistant
+quiver install                      # Register the MCP server with every installed assistant
 quiver                              # The project here, its skill count and a next step
 
 # Skills

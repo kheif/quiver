@@ -122,7 +122,7 @@ func TestMCPInstall(t *testing.T) {
 	f := assistanttest.Install(t)
 	appHome(t)
 	fakeExecutable(t, "/opt/homebrew/bin/quiver")
-	out, err := runIn(t, "", "mcp", "install")
+	out, err := runIn(t, "", "install")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,24 +133,54 @@ func TestMCPInstall(t *testing.T) {
 		t.Errorf("user %q", f.User())
 	}
 
-	out, err = runIn(t, "", "mcp", "install")
+	out, err = runIn(t, "", "install")
 	if err != nil || !strings.Contains(out, "Already registered") || strings.Contains(out, "new Claude Code session") {
 		t.Errorf("second install: %v\n%s", err, out)
 	}
 
 	fakeExecutable(t, "/usr/local/bin/quiver")
-	out, err = runIn(t, "", "mcp", "install")
+	out, err = runIn(t, "", "install")
 	if err != nil || !strings.Contains(out, "Updated the Claude Code registration to /usr/local/bin/quiver mcp") {
 		t.Errorf("moved binary: %v\n%s", err, out)
 	}
 
-	out, err = runIn(t, "", "mcp", "uninstall")
+	out, err = runIn(t, "", "uninstall")
 	if err != nil || !strings.Contains(out, "Removed from Claude Code.") || f.User() != "" {
 		t.Errorf("uninstall: %v, user %q\n%s", err, f.User(), out)
 	}
-	out, err = runIn(t, "", "mcp", "uninstall")
+	out, err = runIn(t, "", "uninstall")
 	if err != nil || !strings.Contains(out, "was not registered") {
 		t.Errorf("second uninstall: %v\n%s", err, out)
+	}
+}
+
+// The old quiver mcp install and quiver mcp uninstall still work and print a
+// deprecation line naming the new command. They are removed in the next major
+// version.
+func TestMCPInstallDeprecated(t *testing.T) {
+	f := assistanttest.Install(t)
+	appHome(t)
+	fakeExecutable(t, "/opt/homebrew/bin/quiver")
+	out, err := runIn(t, "", "mcp", "install")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, `Command "install" is deprecated, use "quiver install"`) {
+		t.Errorf("no deprecation line:\n%s", out)
+	}
+	if !strings.Contains(out, "Registered with Claude Code: /opt/homebrew/bin/quiver mcp") {
+		t.Errorf("did not register:\n%s", out)
+	}
+
+	out, err = runIn(t, "", "mcp", "uninstall")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, `Command "uninstall" is deprecated, use "quiver uninstall"`) {
+		t.Errorf("no deprecation line:\n%s", out)
+	}
+	if !strings.Contains(out, "Removed from Claude Code.") || f.User() != "" {
+		t.Errorf("did not remove: user %q\n%s", f.User(), out)
 	}
 }
 
@@ -283,8 +313,8 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	fakeExecutable(t, "/usr/local/bin/quiver")
 	out, _ = runIn(t, "", "doctor")
 	wantLines(t, out,
-		"warn   Cursor runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install cursor",
-		"warn   Codex runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver mcp install codex",
+		"warn   Cursor runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver install cursor",
+		"warn   Codex runs another quiver\n       it runs /opt/bin/quiver mcp, but this is /usr/local/bin/quiver; run: quiver install codex",
 	)
 
 	out, err = runIn(t, "", "mcp", "uninstall")
@@ -294,8 +324,8 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	wantLines(t, out, "Removed from Claude Code.", "Removed from Codex.", "Removed from Cursor.", "Removed from Claude Desktop.", "Removed from Antigravity.")
 	out, _ = runIn(t, "", "doctor")
 	wantLines(t, out,
-		"warn   Codex is installed, but Quiver is not registered with it; run: quiver mcp install codex",
-		"warn   Cursor is installed, but Quiver is not registered with it; run: quiver mcp install cursor",
+		"warn   Codex is installed, but Quiver is not registered with it; run: quiver install codex",
+		"warn   Cursor is installed, but Quiver is not registered with it; run: quiver install cursor",
 	)
 	out, err = runIn(t, "", "mcp", "uninstall", "cursor", "codex")
 	if err != nil || !strings.Contains(out, "Quiver was not registered with Cursor.") || !strings.Contains(out, "Quiver was not registered with Codex.") {

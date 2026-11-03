@@ -114,7 +114,7 @@ func TestInitGuidedSkipped(t *testing.T) {
 		t.Fatalf("%v\n%s", err, out)
 	}
 	wantLines(t, out,
-		"Register the MCP server with your assistants? [Y/n] Skipped. Run it later with: quiver mcp install",
+		"Register the MCP server with your assistants? [Y/n] Skipped. Run it later with: quiver install",
 		"Found 1 skill in "+filepath.Dir(user)+". Import them into the library? [Y/n] Skipped. Run it later with: quiver import "+filepath.Dir(user),
 		"Found 1 skill in "+filepath.Dir(proj)+". Import them into the library? [Y/n] Skipped. Run it later with: quiver import",
 	)

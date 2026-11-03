@@ -23,7 +23,7 @@ Phases 0–2 are the first usable version. After TASK21 you can run:
 ```bash
 quiver source add JuliusBrussee/caveman --name caveman
 quiver add caveman/caveman --global --always
-quiver mcp install
+quiver install
 ```
 
 and every new assistant session follows caveman from the first message. Use Quiver this way every day before you start Phase 3.
@@ -133,7 +133,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
 | ✅ | [TASK54](TASK54-always-on-pointer-becomes-the-fallback.md) | Always-on pointer becomes the fallback | TASK53 |
 |  | [TASK55](TASK55-quiver-install.md) | `quiver install` | TASK53, TASK50 |
-|  | ↳ [TASK55.1](TASK55.1-rename-to-quiver-install-and-quiver-uninstall.md) | Rename to `quiver install` and `quiver uninstall` | TASK50 |
+| ✅ | ↳ [TASK55.1](TASK55.1-rename-to-quiver-install-and-quiver-uninstall.md) | Rename to `quiver install` and `quiver uninstall` | TASK50 |
 |  | ↳ [TASK55.2](TASK55.2-claude-code-hook.md) | Claude Code hook | TASK52.1, TASK53, TASK55.1 |
 |  | ↳ [TASK55.3](TASK55.3-codex-hook.md) | Codex hook | TASK52.2, TASK53, TASK55.1 |
 |  | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
