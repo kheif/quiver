@@ -39,7 +39,7 @@ type versionCheck struct {
 }
 
 // startVersionCheck starts the check for a command run with args, unless
-// it is the MCP server, shell completion, a development build, turned off,
+// it is the MCP server, a hook, shell completion, a development build, turned off,
 // or stderr is not a terminal. It returns nil then.
 func startVersionCheck(root *cobra.Command, args []string, stderr io.Writer) *versionCheck {
 	if os.Getenv(noUpdateCheckEnv) != "" || devBuild(currentVersion()) {
@@ -57,6 +57,9 @@ func startVersionCheck(root *cobra.Command, args []string, stderr io.Writer) *ve
 		return nil
 	case cmd.Name() == "mcp" && cmd.Parent() == root:
 		// stdout is the protocol, and the server runs for hours.
+		return nil
+	case cmd.HasParent() && cmd.Parent().Name() == "hook" && cmd.Parent().Parent() == root:
+		// A hook delays the session's first reply, and uses no network.
 		return nil
 	}
 	v := &versionCheck{done: make(chan struct{})}

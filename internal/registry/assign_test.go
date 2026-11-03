@@ -78,6 +78,21 @@ func TestProjectsUsing(t *testing.T) {
 	}
 }
 
+func TestAlwaysOnInOrder(t *testing.T) {
+	r := withProject()
+	r.AssignGlobal("zeta", "alpha")
+	_ = r.Assign("app", "beta", "alpha")
+	_ = r.MarkAlwaysOnGlobal("zeta", "alpha")
+	_ = r.MarkAlwaysOn("app", "beta", "alpha")
+	// Global first, then the project's; alpha, in both, comes once.
+	if got := r.AlwaysOnInOrder("app"); !reflect.DeepEqual(got, []string{"alpha", "zeta", "beta"}) {
+		t.Errorf("app: %v", got)
+	}
+	if got := r.AlwaysOnInOrder(""); !reflect.DeepEqual(got, []string{"alpha", "zeta"}) {
+		t.Errorf("no project: %v", got)
+	}
+}
+
 func TestAlwaysOn(t *testing.T) {
 	r := withProject()
 	r.AssignGlobal("caveman", "pdf")

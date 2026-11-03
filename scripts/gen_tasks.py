@@ -1267,6 +1267,14 @@ A command that a session-start hook runs: it prints the always-on skills of the 
 **Out of scope:** installing the hook (TASKF4), per-prompt hooks.
 
 **Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line), each output format and `subagent-start`.
+
+**Notes:**
+- `internal/cli/hook.go` and `server.AlwaysOnBlock` (`internal/server/alwayson.go`). `server.ResolveIn` resolves a given folder; `Resolve` now calls it with the working directory.
+- Order: global skills first, then the project's, each ID once (`Registry.AlwaysOnInOrder`). Within each scope the order is the registry's, which is alphabetical: the registry keeps every list sorted, and sync merges lists as sorted sets, so the order of marking is not kept anywhere.
+- The session's folder is the input's `cwd`, Cursor's `workspace_roots[0]` or Antigravity's `workspacePaths[0]`; without one, the hook's own working directory.
+- With no always-on skill the hook prints nothing. `subagent-start` takes `claude-code`, `codex` and `vscode`; for the others, like a wrong assistant name, it prints nothing, says why on stderr, logs it and exits 0.
+- The hook skips the root's auto-init and the update check, so it never writes the Quiver home or uses the network.
+- Checked end to end: Claude Code with `quiver hook session-start claude-code` as its `SessionStart` hook followed the B01 always-on skill; the hook logged `ms=0`.
 """)
 
 task("TASKF3", "Always-on pointer becomes the fallback", "TASKF2", """
@@ -1629,7 +1637,7 @@ for old in flat:
     REMAP[old] = REMAP[parent] + dot + sub if dot else f"TASK{sum('.' not in t for t in REMAP) + 1:02d}"
 remap = lambda s: re.sub(r"TASK(?:\d\d|[A-H]\d)(?:\.\d+)?", lambda m: REMAP.get(m.group(0)) or REMAP[m.group(0).split(".")[0]] + m.group(0)[len(m.group(0).split(".")[0]):], s)
 MARK = {"x": "✅", "~": "🚧"}
-STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x", "TASK52.2": "x", "TASK52.3": "x", "TASK52.4": "x"}  # final IDs; x done, ~ in progress
+STATUS = {"TASK01": "x", "TASK02": "x", "TASK03": "x", "TASK04": "x", "TASK05": "x", "TASK06": "x", "TASK07": "x", "TASK08": "x", "TASK09": "x", "TASK10": "x", "TASK11": "x", "TASK12": "x", "TASK13": "x", "TASK14": "x", "TASK15": "x", "TASK16": "x", "TASK17": "x", "TASK18": "x", "TASK19": "x", "TASK20": "x", "TASK21": "x", "TASK22": "x", "TASK23": "x", "TASK24": "x", "TASK25": "x", "TASK26": "x", "TASK27": "x", "TASK28": "x", "TASK29": "x", "TASK30": "x", "TASK31": "x", "TASK32": "x", "TASK33": "x", "TASK34": "x", "TASK35": "x", "TASK36": "x", "TASK37": "x", "TASK38": "x", "TASK39": "x", "TASK40": "x", "TASK41": "x", "TASK42": "x", "TASK43": "x", "TASK44": "x", "TASK45": "x", "TASK46": "x", "TASK47": "x", "TASK48": "x", "TASK49": "x", "TASK50": "x", "TASK51": "x", "TASK52.1": "x", "TASK52.2": "x", "TASK52.3": "x", "TASK52.4": "x", "TASK53": "x"}  # final IDs; x done, ~ in progress
 EXTRA_DEPS = {"TASK29": ", TASK14"}  # e2e also waits for the last management task
 PHASES = [
     (ptitle, [(REMAP[o], remap(ALL[o][1]), remap(ALL[o][2] + EXTRA_DEPS.get(o, "")), remap(ALL[o][3])) for o in ids])

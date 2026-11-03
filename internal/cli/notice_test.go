@@ -104,6 +104,7 @@ func TestNoticeNotShown(t *testing.T) {
 	root := newRootCmd()
 	for name, args := range map[string][]string{
 		"mcp":        {"mcp"},
+		"hook":       {"hook", "session-start", "claude-code"},
 		"completion": {"__complete", "add", ""},
 	} {
 		if startVersionCheck(root, args, io.Discard) != nil {

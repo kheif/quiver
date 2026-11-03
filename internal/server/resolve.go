@@ -18,10 +18,11 @@ const ProjectEnv = "QUIVER_PROJECT"
 // Where is what the server serves. It is found once, at startup, because
 // the instructions are built before the first request.
 type Where struct {
-	// Dir is $QUIVER_PROJECT or the working directory. When there is no
-	// project yet, creating a skill registers this folder.
+	// Dir is $QUIVER_PROJECT or the working directory (for a hook, the
+	// session's folder). When there is no project yet, creating a skill
+	// registers this folder.
 	Dir string
-	// From is ProjectEnv or "working directory".
+	// From is ProjectEnv, "working directory", or what ResolveIn was given.
 	From string
 	// Project is nil when Dir is not inside a project. Then only global
 	// skills are served.
@@ -41,14 +42,25 @@ func (w Where) ProjectID() string {
 // for while a request is served (see docs/spike-b01-results.md). On error,
 // Project is nil, so the server still serves the global skills.
 func Resolve() (Where, error) {
+	if os.Getenv(ProjectEnv) != "" {
+		return ResolveIn("", "")
+	}
+	dir, err := os.Getwd()
+	if err != nil {
+		return Where{From: "working directory"}, err
+	}
+	return ResolveIn(dir, "working directory")
+}
+
+// ResolveIn finds the project for a session in dir, as Resolve does for
+// the working directory: $QUIVER_PROJECT wins when it is set. from says
+// where dir came from, for Where.From.
+func ResolveIn(dir, from string) (Where, error) {
 	w := Where{From: ProjectEnv}
-	dir := os.Getenv(ProjectEnv)
-	if dir == "" {
-		w.From = "working directory"
-		var err error
-		if dir, err = os.Getwd(); err != nil {
-			return w, err
-		}
+	if env := os.Getenv(ProjectEnv); env != "" {
+		dir = env
+	} else {
+		w.From = from
 	}
 	dir, err := fsutil.ExpandHome(dir)
 	if err != nil {

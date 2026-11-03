@@ -130,7 +130,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK52.2](TASK52.2-codex-hooks.md) | Codex hooks | TASK50 |
 | ✅ | ↳ [TASK52.3](TASK52.3-vs-code-copilot.md) | VS Code Copilot | TASK50 |
 | ✅ | ↳ [TASK52.4](TASK52.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
-|  | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
+| ✅ | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
 |  | [TASK54](TASK54-always-on-pointer-becomes-the-fallback.md) | Always-on pointer becomes the fallback | TASK53 |
 |  | [TASK55](TASK55-quiver-install.md) | `quiver install` | TASK53, TASK50 |
 |  | ↳ [TASK55.1](TASK55.1-rename-to-quiver-install-and-quiver-uninstall.md) | Rename to `quiver install` and `quiver uninstall` | TASK50 |

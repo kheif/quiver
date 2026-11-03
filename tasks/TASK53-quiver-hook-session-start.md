@@ -2,7 +2,7 @@
 
 **Phase:** Phase 6: Session-start delivery (v1.4)
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK52, TASK19
 
@@ -32,3 +32,11 @@ A command that a session-start hook runs: it prints the always-on skills of the 
 **Out of scope:** installing the hook (TASK55), per-prompt hooks.
 
 **Done when:** tests in `internal/cli` cover the order, an ID in both scopes, a removed skill, the block, the size limit, a folder outside any project, `QUIVER_PROJECT`, a broken `registry.json` (exit 0 and a log line), each output format and `subagent-start`.
+
+**Notes:**
+- `internal/cli/hook.go` and `server.AlwaysOnBlock` (`internal/server/alwayson.go`). `server.ResolveIn` resolves a given folder; `Resolve` now calls it with the working directory.
+- Order: global skills first, then the project's, each ID once (`Registry.AlwaysOnInOrder`). Within each scope the order is the registry's, which is alphabetical: the registry keeps every list sorted, and sync merges lists as sorted sets, so the order of marking is not kept anywhere.
+- The session's folder is the input's `cwd`, Cursor's `workspace_roots[0]` or Antigravity's `workspacePaths[0]`; without one, the hook's own working directory.
+- With no always-on skill the hook prints nothing. `subagent-start` takes `claude-code`, `codex` and `vscode`; for the others, like a wrong assistant name, it prints nothing, says why on stderr, logs it and exits 0.
+- The hook skips the root's auto-init and the update check, so it never writes the Quiver home or uses the network.
+- Checked end to end: Claude Code with `quiver hook session-start claude-code` as its `SessionStart` hook followed the B01 always-on skill; the hook logged `ms=0`.

@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 )
 
@@ -110,6 +111,22 @@ func (r *Registry) AlwaysOnServed(projectID string) []string {
 		ids = append(ids, p.AlwaysOn...)
 	}
 	return sortedSet(ids)
+}
+
+// AlwaysOnInOrder returns the always-on skills served in the project in the
+// order a session-start hook prints them: the global ones first, then the
+// project's own, each ID once. Within each scope the order is the
+// registry's, which keeps every list sorted.
+func (r *Registry) AlwaysOnInOrder(projectID string) []string {
+	ids := append([]string{}, r.AlwaysOn...)
+	if p, ok := r.Projects[projectID]; ok {
+		for _, id := range p.AlwaysOn {
+			if !slices.Contains(ids, id) {
+				ids = append(ids, id)
+			}
+		}
+	}
+	return ids
 }
 
 // Served returns the skills served in the project: the global skills plus
