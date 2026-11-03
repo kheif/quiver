@@ -305,6 +305,38 @@ func installClaude(out io.Writer, bin string) error {
 	if res != assistant.Unchanged {
 		fmt.Fprintln(out, "Start a new Claude Code session to use it.")
 	}
+	return installClaudeHook(out, bin)
+}
+
+// installClaudeHook adds or updates Quiver's session-start hooks in Claude
+// Code's settings file, so always-on skills reach it without a second load.
+func installClaudeHook(out io.Writer, bin string) error {
+	res, err := assistant.InstallClaudeHooks(bin)
+	if err != nil {
+		fmt.Fprintf(out, "Claude Code: the session-start hook was not added: %v\n", err)
+		return err
+	}
+	path, _ := assistant.ClaudeSettingsPath()
+	switch res {
+	case assistant.Installed:
+		fmt.Fprintf(out, "Added the session-start hook for always-on skills (%s).\n", path)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the session-start hook to %s (%s).\n", bin, path)
+	}
+	return nil
+}
+
+// uninstallClaudeHook removes Quiver's session-start hooks from Claude Code's
+// settings file.
+func uninstallClaudeHook(out io.Writer) error {
+	res, err := assistant.UninstallClaudeHooks()
+	if err != nil {
+		fmt.Fprintf(out, "Claude Code: the session-start hook was not removed: %v\n", err)
+		return err
+	}
+	if res == assistant.Removed {
+		fmt.Fprintln(out, "Removed the session-start hook from Claude Code.")
+	}
 	return nil
 }
 
@@ -331,6 +363,9 @@ func mcpUninstall(out io.Writer, ids []string) error {
 			if errors.Is(err, assistant.ErrNoClaude) {
 				fmt.Fprintf(out, "The claude command was not found. To remove Quiver from Claude Code, run:\n  %s\n", assistant.RemoveCommand())
 				continue
+			}
+			if hookErr := uninstallClaudeHook(out); hookErr != nil {
+				errs = append(errs, hookErr)
 			}
 		case codexID:
 			res, err = assistant.CodexUninstall()

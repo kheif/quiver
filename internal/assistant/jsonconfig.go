@@ -138,32 +138,58 @@ func (a *JSONAssistant) Uninstall() (Result, error) {
 }
 
 // change applies f to the mcpServers object of the config file and writes
-// the file when f changed it. The old file is copied to Path+".quiver-backup"
-// first. The file keeps its key order and indentation; a file that is not
-// valid JSON is never written.
+// the file when f changed it; see editJSONFile.
 func (a *JSONAssistant) change(f func([]member) ([]member, Result, error)) (Result, error) {
-	top, servers, err := readConfig(a.Path)
-	if err != nil {
-		return Unchanged, err
-	}
-	old, err := os.ReadFile(a.Path)
+	return editJSONFile(a.Path, func(top []member) ([]member, Result, error) {
+		var servers []member
+		if i := index(top, "mcpServers"); i >= 0 {
+			s, err := parseObject(top[i].value)
+			if err != nil {
+				return nil, Unchanged, fmt.Errorf("%s: mcpServers is not a JSON object, so the file was left as it is", a.Path)
+			}
+			servers = s
+			if servers == nil {
+				servers = []member{}
+			}
+		}
+		servers, res, err := f(servers)
+		if err != nil || res == Unchanged {
+			return top, res, err
+		}
+		return set(top, "mcpServers", encodeObject(servers)), res, nil
+	})
+}
+
+// editJSONFile applies f to the top-level object of the JSON file at path and
+// writes the file when f changed it. The old file is copied to
+// path+".quiver-backup" first. The file keeps its key order, indentation and
+// mode; a missing file starts from an empty object, and a file that is not
+// valid JSON is never written.
+func editJSONFile(path string, f func(top []member) ([]member, Result, error)) (Result, error) {
+	old, err := os.ReadFile(path)
 	exists := err == nil
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return Unchanged, err
 	}
-	servers, res, err := f(servers)
+	var top []member
+	if exists && len(bytes.TrimSpace(old)) > 0 {
+		top, err = parseObject(old)
+		if err != nil {
+			return Unchanged, fmt.Errorf("%s is not valid JSON, so it was left as it is: %w", path, err)
+		}
+	}
+	top, res, err := f(top)
 	if err != nil || res == Unchanged {
 		return Unchanged, err
 	}
-	top = set(top, "mcpServers", encodeObject(servers))
 
 	perm := os.FileMode(0o644)
 	if exists {
-		if info, err := os.Stat(a.Path); err == nil {
+		if info, err := os.Stat(path); err == nil {
 			perm = info.Mode().Perm()
 		}
-		if err := fsutil.WriteFileAtomic(a.Path+".quiver-backup", old, perm); err != nil {
-			return Unchanged, fmt.Errorf("back up %s: %w", a.Path, err)
+		if err := fsutil.WriteFileAtomic(path+".quiver-backup", old, perm); err != nil {
+			return Unchanged, fmt.Errorf("back up %s: %w", path, err)
 		}
 	}
 	var out bytes.Buffer
@@ -171,7 +197,7 @@ func (a *JSONAssistant) change(f func([]member) ([]member, Result, error)) (Resu
 		return Unchanged, err
 	}
 	out.WriteByte('\n')
-	if err := fsutil.WriteFileAtomic(a.Path, out.Bytes(), perm); err != nil {
+	if err := fsutil.WriteFileAtomic(path, out.Bytes(), perm); err != nil {
 		return Unchanged, err
 	}
 	return res, nil

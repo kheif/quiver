@@ -184,6 +184,60 @@ func TestMCPInstallDeprecated(t *testing.T) {
 	}
 }
 
+// install adds Quiver's session-start hooks to Claude Code's settings file,
+// and uninstall removes them.
+func TestInstallClaudeHook(t *testing.T) {
+	assistanttest.Install(t)
+	appHome(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "install", "claude-code")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Added the session-start hook for always-on skills") {
+		t.Errorf("no hook line:\n%s", out)
+	}
+	path, _ := assistant.ClaudeSettingsPath()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("settings: %v", err)
+	}
+	var m struct {
+		Hooks map[string][]struct {
+			Matcher string
+			Hooks   []struct {
+				Command string
+				Timeout int
+			}
+		}
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("settings JSON: %v\n%s", err, data)
+	}
+	ss := m.Hooks["SessionStart"]
+	if len(ss) != 1 || ss[0].Matcher != "startup|clear|compact" ||
+		ss[0].Hooks[0].Command != "/opt/bin/quiver hook session-start claude-code" || ss[0].Hooks[0].Timeout != 10 {
+		t.Errorf("SessionStart: %+v", ss)
+	}
+	sub := m.Hooks["SubagentStart"]
+	if len(sub) != 1 || sub[0].Matcher != "" ||
+		sub[0].Hooks[0].Command != "/opt/bin/quiver hook subagent-start claude-code" {
+		t.Errorf("SubagentStart: %+v", sub)
+	}
+
+	out, err = runIn(t, "", "uninstall", "claude-code")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Removed the session-start hook from Claude Code.") {
+		t.Errorf("no hook removal line:\n%s", out)
+	}
+	data, _ = os.ReadFile(path)
+	if strings.Contains(string(data), "quiver hook") {
+		t.Errorf("hook still in settings:\n%s", data)
+	}
+}
+
 func TestMCPInstallHidden(t *testing.T) {
 	f := assistanttest.Install(t)
 	appHome(t)
