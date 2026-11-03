@@ -35,7 +35,7 @@ func pointer(skills []servedSkill) string {
 	if len(ids) == 0 {
 		return ""
 	}
-	return "Always-on skills: " + strings.Join(ids, ", ") + ". Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n"
+	return "Always-on skills: " + strings.Join(ids, ", ") + ". If the conversation already has a <quiver-always-on> block, these skills are loaded: follow them. Otherwise call the get_skill tool of this server for each before your first reply and follow it for the whole conversation.\n\n"
 }
 
 // catalog lists the skills for the server's instructions, if the list fits

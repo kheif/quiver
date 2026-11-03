@@ -46,7 +46,7 @@ func TestInstructionsAlwaysOn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	const rule = ". Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n"
+	const rule = ". If the conversation already has a <quiver-always-on> block, these skills are loaded: follow them. Otherwise call the get_skill tool of this server for each before your first reply and follow it for the whole conversation.\n\n"
 	catalog := header + "- db-migration: Rules for database migrations.\n- pdf: Read, create and edit PDF files.\n\n" + createHint
 	got := connect(t, New(Options{Version: "dev", Log: discard, Where: w})).InitializeResult().Instructions
 	if want := "Always-on skills: db-migration, pdf" + rule + catalog; got != want {
@@ -69,7 +69,7 @@ func TestInstructionsTooManySkills(t *testing.T) {
 	}
 	got := buildInstructions(many)
 	want := "Always-on skills: source/skill-000, source/skill-001, source/skill-002. " +
-		"Before your first reply in this conversation, call the get_skill tool of this server for each always-on skill and follow it for the whole conversation.\n\n" +
+		"If the conversation already has a <quiver-always-on> block, these skills are loaded: follow them. Otherwise call the get_skill tool of this server for each before your first reply and follow it for the whole conversation.\n\n" +
 		listPointer(500) + "\n" + createHint
 	if got != want {
 		t.Errorf("got %q\nwant %q", got, want)
