@@ -4,7 +4,7 @@
 
 **Part of:** [TASK55](TASK55-quiver-install.md): `quiver install`
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK55.2
 
@@ -21,3 +21,11 @@ Users must see which assistants load always-on skills by themselves, so they do 
 4. **status.** A short section that lists each installed assistant and its level.
 
 **Done when:** tests cover every level, the warning with and without always-on skills, and the doctor checks.
+
+**Notes:**
+- `internal/assistant/delivery.go` adds a `Delivery` level (`DeliveryHook`, `DeliveryInstructions`, `DeliveryOnRequest`) with `HasHook`, `Level` and `Describe`. `JSONAssistant.OnRequest` became `Delivery`: Cursor `DeliveryInstructions`, Claude Desktop and Antigravity `DeliveryOnRequest`. Claude Code and Codex are `DeliveryHook` (in `mcpTarget.delivery`).
+- Install report: `deliveryReport` prints, after the per-assistant lines, one line per assistant with `Describe`, and for a non-hook assistant names the always-on skills (`assignedAlwaysOn`, the global ones plus the current project's). The old per-assistant on-request note was removed.
+- doctor: `checkClaudeHook` reports the Claude Code session-start hook (present, runs this binary, readable) via `assistant.ClaudeHookInstalled`; the Codex trust check (TASK55.3) stays; and each installed assistant without a hook, when always-on skills are assigned, gets a warning that names them.
+- status: a new "Assistants (how always-on skills reach them)" section lists each installed assistant and its level, in text and JSON (`statusAssistant`).
+- Tests: `TestMCPInstallEveryAssistant` covers all three levels in the report with no always-on assigned; `TestDeliveryReportNamesAlwaysOn` covers the report line and the doctor warning with an always-on skill; `TestStatusAssistants` covers the status section and the three level names; the doctor hook check is exercised through `registered` (hook installed → ok) and `TestDoctorClaudeRunsOtherQuiver`. Status golden/JSON tests isolate `PATH` so the assistant list is empty and deterministic.
+- README's MCP section updated: Codex moved from "on request" to the hook group, and the per-assistant delivery is described.

@@ -36,10 +36,17 @@ folder when it is set.`,
 
 // statusJSON is the JSON output of status.
 type statusJSON struct {
-	Folder   string         `json:"folder"`
-	Project  *statusProject `json:"project"` // null when the folder is not a project
-	Skills   []servedSkill  `json:"skills"`
-	Warnings []string       `json:"warnings"`
+	Folder     string           `json:"folder"`
+	Project    *statusProject   `json:"project"` // null when the folder is not a project
+	Skills     []servedSkill    `json:"skills"`
+	Assistants []statusAssistant `json:"assistants"`
+	Warnings   []string         `json:"warnings"`
+}
+
+// statusAssistant is one installed assistant and how always-on skills reach it.
+type statusAssistant struct {
+	Name     string `json:"name"`
+	Delivery string `json:"delivery"` // hook, instructions or on request
 }
 
 type statusProject struct {
@@ -84,7 +91,7 @@ func status(out io.Writer, asJSON bool) error {
 		copied = r.EnsureProject(p.ID, p.Root)
 	}
 	if asJSON {
-		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Warnings: []string{}}
+		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Assistants: installedAssistants(), Warnings: []string{}}
 		if p := w.Project; p != nil {
 			st.Project = &statusProject{ID: p.ID, Name: where, Root: p.Root}
 		}
@@ -134,5 +141,26 @@ func status(out io.Writer, asJSON bool) error {
 	if len(copies) > 0 {
 		fmt.Fprintln(out, "Run quiver doctor --fix to delete the copies.")
 	}
+	if as := installedAssistants(); len(as) > 0 {
+		fmt.Fprintln(out)
+		fmt.Fprintln(out, "Assistants (how always-on skills reach them):")
+		for _, a := range as {
+			fmt.Fprintf(out, "  %s: %s\n", a.Name, a.Delivery)
+		}
+	}
 	return nil
+}
+
+// installedAssistants lists the installed assistants and how always-on skills
+// reach each one. It is empty on an error or when none is installed.
+func installedAssistants() []statusAssistant {
+	ts, err := mcpTargets(nil)
+	if err != nil {
+		return nil
+	}
+	as := make([]statusAssistant, 0, len(ts))
+	for _, t := range ts {
+		as = append(as, statusAssistant{Name: t.name(), Delivery: t.delivery().Level()})
+	}
+	return as
 }

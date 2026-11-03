@@ -293,6 +293,42 @@ func TestInstallCodexHook(t *testing.T) {
 	}
 }
 
+// The install report and doctor name the always-on skills that do not load by
+// themselves in an assistant without a hook.
+func TestDeliveryReportNamesAlwaysOn(t *testing.T) {
+	f := listEnv(t) // pdf is a global always-on skill; HOME is a temp folder
+	assistanttest.Install(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	desktop, err := assistant.ClaudeDesktop()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(desktop.Dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(f.app)
+
+	out, err := runIn(t, "", "install", "claude-code", "claude-desktop")
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantLines(t, out,
+		"  Claude Code: always-on skills load from a session-start hook.",
+		"  Claude Desktop: no session-start hook. Quiver's skills are loaded when the model decides to.",
+		"    These always-on skills do not load by themselves there: pdf.",
+	)
+	// The hook assistant's line is not followed by the "do not load" note.
+	if i := strings.Index(out, "Claude Code: always-on"); i >= 0 {
+		rest := out[i:]
+		if before := strings.Index(rest, "do not load by themselves"); before >= 0 && before < strings.Index(rest, "Claude Desktop") {
+			t.Errorf("Claude Code got the always-on note:\n%s", out)
+		}
+	}
+
+	out, _ = runIn(t, "", "doctor")
+	wantLines(t, out, "Claude Desktop has no session-start hook, so these always-on skills do not load by themselves there: pdf")
+}
+
 func TestMCPInstallHidden(t *testing.T) {
 	f := assistanttest.Install(t)
 	appHome(t)
@@ -389,15 +425,19 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	cursor, desktop, agy := apps["cursor"], apps["claude-desktop"], apps["antigravity"]
 	wantLines(t, out,
 		"Registered with Claude Code: /opt/bin/quiver mcp",
-		"Registered with Codex: /opt/bin/quiver mcp\nStart a new Codex session to use it.\nCodex uses Quiver's skills only when you ask for them in the prompt",
+		"Registered with Codex: /opt/bin/quiver mcp\nStart a new Codex session to use it.",
 		"Registered with Cursor: /opt/bin/quiver mcp ("+cursor.Path+")\nRestart Cursor to use it.\n",
 		"Registered with Claude Desktop: /opt/bin/quiver mcp ("+desktop.Path+")",
-		"Claude Desktop does not start Quiver in a project folder, so it gets only the global skills.\nClaude Desktop uses Quiver's skills only when you ask for them in the prompt",
-		"Registered with Antigravity: /opt/bin/quiver mcp ("+agy.Path+")\nRestart Antigravity to use it.\nAntigravity uses Quiver's skills only when you ask for them in the prompt",
+		"Claude Desktop does not start Quiver in a project folder, so it gets only the global skills.",
+		"Registered with Antigravity: /opt/bin/quiver mcp ("+agy.Path+")\nRestart Antigravity to use it.",
+		// The delivery report, one line per assistant.
+		"How always-on skills reach each assistant:",
+		"  Claude Code: always-on skills load from a session-start hook.",
+		"  Codex: always-on skills load from a session-start hook.",
+		"  Cursor: no session-start hook. Quiver's skill list is sent up front, and the model loads the always-on skills itself.",
+		"  Claude Desktop: no session-start hook. Quiver's skills are loaded when the model decides to.",
+		"  Antigravity: no session-start hook. Quiver's skills are loaded when the model decides to.",
 	)
-	if strings.Contains(out, "Cursor uses") {
-		t.Errorf("Cursor gets the on-request note:\n%s", out)
-	}
 	if f.User() != "/opt/bin/quiver|mcp" {
 		t.Errorf("claude user %q", f.User())
 	}

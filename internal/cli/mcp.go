@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/kheif/quiver/internal/assistant"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/kheif/quiver/internal/server"
 	"github.com/spf13/cobra"
 )
@@ -90,6 +91,17 @@ func (t mcpTarget) name() string {
 		return "Codex"
 	}
 	return "Claude Code"
+}
+
+// delivery is how the assistant gets always-on skills. Claude Code and Codex
+// have a session-start hook; the JSON assistants carry their own level.
+func (t mcpTarget) delivery() assistant.Delivery {
+	switch t.id {
+	case claudeCode, codexID:
+		return assistant.DeliveryHook
+	default:
+		return t.json.Delivery
+	}
 }
 
 // assistantIDs returns the names install and uninstall take.
@@ -220,12 +232,42 @@ func mcpInstall(out io.Writer, ids []string) error {
 	if viaNpm {
 		fmt.Fprintln(out, "Installed with npm: the path depends on your Node version. After switching Node versions (nvm, fnm, volta), run quiver install again.")
 	}
+	deliveryReport(out, ts)
 	return errors.Join(errs...)
 }
 
-// onRequestNote says that name uses Quiver's skills only when asked.
-func onRequestNote(out io.Writer, name string) {
-	fmt.Fprintf(out, "%s uses Quiver's skills only when you ask for them in the prompt, such as \"check the quiver skills for this\".\n", name)
+// deliveryReport prints, per assistant, how always-on skills reach it. For an
+// assistant without a hook it names the always-on skills, which do not load by
+// themselves there, so the user does not take them for granted.
+func deliveryReport(out io.Writer, ts []mcpTarget) {
+	if len(ts) == 0 {
+		return
+	}
+	always := assignedAlwaysOn()
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "How always-on skills reach each assistant:")
+	for _, t := range ts {
+		d := t.delivery()
+		fmt.Fprintf(out, "  %s: %s\n", t.name(), d.Describe())
+		if !d.HasHook() && len(always) > 0 {
+			fmt.Fprintf(out, "    These always-on skills do not load by themselves there: %s.\n", strings.Join(always, ", "))
+		}
+	}
+}
+
+// assignedAlwaysOn returns the always-on skills of the current folder: the
+// global ones and those of the project here. It returns nil on any error, so
+// the report still prints.
+func assignedAlwaysOn() []string {
+	r, err := registry.Load()
+	if err != nil {
+		return nil
+	}
+	w, err := server.Resolve()
+	if err != nil {
+		return nil
+	}
+	return r.AlwaysOnServed(w.ProjectID())
 }
 
 func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
@@ -247,9 +289,6 @@ func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
 	}
 	if a.Global {
 		fmt.Fprintf(out, "%s does not start Quiver in a project folder, so it gets only the global skills.\n", a.Name)
-	}
-	if a.OnRequest {
-		onRequestNote(out, a.Name)
 	}
 	return nil
 }
@@ -277,7 +316,6 @@ func installCodex(out io.Writer, bin string) error {
 	if res != assistant.Unchanged {
 		fmt.Fprintln(out, "Start a new Codex session to use it.")
 	}
-	onRequestNote(out, "Codex")
 	return installCodexHook(out, bin)
 }
 

@@ -574,12 +574,40 @@ func (d *doc) checkMCP() {
 	}
 	hasCodex := assistant.HasCodex()
 	d.checkClaudeCode(bin, binErr == nil, hasCodex || len(installed) > 0)
+	d.checkClaudeHook(bin, binErr == nil)
 	appBin, appErr := appCommand()
 	if hasCodex {
 		d.checkCodex(appBin, appErr == nil)
 	}
 	for _, a := range installed {
 		d.checkJSONAssistant(a, appBin, appErr == nil)
+	}
+	// Name the always-on skills that do not load by themselves in the
+	// installed assistants without a hook, so they are not taken for granted.
+	if always := assignedAlwaysOn(); len(always) > 0 {
+		for _, a := range installed {
+			if !a.Delivery.HasHook() {
+				d.report("warn", fmt.Sprintf("%s has no session-start hook, so these always-on skills do not load by themselves there: %s", a.Name, strings.Join(always, ", ")))
+			}
+		}
+	}
+}
+
+// checkClaudeHook reports on Quiver's session-start hook in Claude Code.
+func (d *doc) checkClaudeHook(bin string, knowBin bool) {
+	if !assistant.HasClaude() {
+		return
+	}
+	present, current, err := assistant.ClaudeHookInstalled(bin)
+	switch {
+	case err != nil:
+		d.report("warn", "the Claude Code session-start hook could not be read", err.Error())
+	case !present:
+		d.report("warn", "no Quiver session-start hook in Claude Code; run: quiver install")
+	case knowBin && !current:
+		d.report("warn", "the Claude Code session-start hook runs another quiver; run: quiver install")
+	default:
+		d.report("ok", "Claude Code session-start hook")
 	}
 }
 

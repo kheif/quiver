@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kheif/quiver/internal/assistant"
 	"github.com/kheif/quiver/internal/assistant/assistanttest"
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/git"
@@ -21,6 +22,9 @@ func registered(t *testing.T) {
 	t.Helper()
 	assistanttest.Install(t).SetUser(t, "/opt/bin/quiver", "mcp")
 	fakeExecutable(t, "/opt/bin/quiver")
+	if _, err := assistant.InstallClaudeHooks("/opt/bin/quiver"); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func wantLines(t *testing.T, out string, lines ...string) {
@@ -201,6 +205,10 @@ func TestDoctorClaudeRunsOtherQuiver(t *testing.T) {
 	}
 	assistanttest.Install(t).SetUser(t, "/old/quiver", "mcp")
 	fakeExecutable(t, "/opt/bin/quiver")
+	// The hook is current, so only the MCP registration drifts.
+	if _, err := assistant.InstallClaudeHooks("/opt/bin/quiver"); err != nil {
+		t.Fatal(err)
+	}
 	out, err := runIn(t, "", "doctor")
 	if err != nil {
 		t.Errorf("a warning is not an error: %v", err)

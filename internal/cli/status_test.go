@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kheif/quiver/internal/assistant"
+	"github.com/kheif/quiver/internal/assistant/assistanttest"
 	"github.com/kheif/quiver/internal/server"
 )
 
@@ -32,6 +34,7 @@ func TestStatusGolden(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Chdir(c.dir)
 			t.Setenv(server.ProjectEnv, c.env)
+			t.Setenv("PATH", t.TempDir()) // no assistant installed, so the golden is stable
 			golden(t, c.name, f.run(t, "status"))
 		})
 	}
@@ -41,11 +44,48 @@ func TestStatusPossibleCopy(t *testing.T) {
 	f := listEnv(t)
 	cp := projectDir(t, "app-copy", "app-000001")
 	t.Chdir(cp)
+	t.Setenv("PATH", t.TempDir()) // no assistant installed, so the golden is stable
 	golden(t, "status-copy", f.run(t, "status"))
 	// status only reports; the registry keeps the one known path.
 	if p := loadRegistry(t).Projects["app-000001"]; len(p.Paths) != 1 {
 		t.Errorf("paths = %v", p.Paths)
 	}
+}
+
+// status lists each installed assistant and how always-on skills reach it.
+func TestStatusAssistants(t *testing.T) {
+	f := listEnv(t)
+	assistanttest.Install(t) // claude-code: a hook
+	for _, id := range []string{"cursor", "claude-desktop"} {
+		a := jsonAssistant(t, id)
+		if err := os.MkdirAll(a.Dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Chdir(f.app)
+	out := f.run(t, "status")
+	wantLines(t, out,
+		"Assistants (how always-on skills reach them):",
+		"  Claude Code: hook",
+		"  Cursor: instructions",
+		"  Claude Desktop: on request",
+	)
+}
+
+// jsonAssistant returns the JSON assistant with the given id.
+func jsonAssistant(t *testing.T, id string) *assistant.JSONAssistant {
+	t.Helper()
+	all, err := assistant.JSONAssistants()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range all {
+		if a.ID == id {
+			return a
+		}
+	}
+	t.Fatalf("no assistant %q", id)
+	return nil
 }
 
 func TestStatusMissingSkill(t *testing.T) {
@@ -77,6 +117,7 @@ func TestStatusJSON(t *testing.T) {
 	f := listEnv(t)
 	t.Setenv(server.ProjectEnv, "")
 	t.Chdir(f.app)
+	t.Setenv("PATH", t.TempDir()) // no assistant installed, so the list is empty
 	var got statusJSON
 	if err := json.Unmarshal([]byte(f.run(t, "status", "--json")), &got); err != nil {
 		t.Fatal(err)
@@ -89,7 +130,8 @@ func TestStatusJSON(t *testing.T) {
 			{ID: "pdf", Scope: "global", AlwaysOn: true, InLibrary: true},
 			{ID: "tdd", Scope: "project", InLibrary: true},
 		},
-		Warnings: []string{},
+		Assistants: []statusAssistant{},
+		Warnings:   []string{},
 	}
 	// f.run writes temp paths as <tmp>.
 	want.Folder, want.Project.Root = got.Folder, got.Project.Root

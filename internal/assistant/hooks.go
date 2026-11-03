@@ -3,6 +3,7 @@ package assistant
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -94,6 +95,48 @@ func UninstallCodexHooks() (Result, error) {
 		return Unchanged, err
 	}
 	return t.uninstall()
+}
+
+// ClaudeHookInstalled reports whether the Claude Code settings file has
+// Quiver's session-start hook, and whether it runs bin. An unreadable or
+// invalid file is an error.
+func ClaudeHookInstalled(bin string) (present, current bool, err error) {
+	t, err := claudeHookTarget()
+	if err != nil {
+		return false, false, err
+	}
+	data, err := os.ReadFile(t.path)
+	if os.IsNotExist(err) {
+		return false, false, nil
+	}
+	if err != nil {
+		return false, false, err
+	}
+	top, err := parseObject(data)
+	if err != nil {
+		return false, false, fmt.Errorf("%s is not valid JSON", t.path)
+	}
+	hooks, err := nestedObject(top, "hooks")
+	if err != nil {
+		return false, false, err
+	}
+	groups, _ := parseArray(hooks, "SessionStart")
+	for _, g := range groups {
+		entries, _, err := groupEntries(g)
+		if err != nil {
+			continue
+		}
+		for _, e := range entries {
+			em, err := parseObject(e)
+			if err != nil {
+				continue
+			}
+			if cmd, ok := stringMember(em, "command"); ok && t.isQuiverHook(cmd, "session-start") {
+				return true, cmd == t.command(bin, hookEvent{subcommand: "session-start"}), nil
+			}
+		}
+	}
+	return false, false, nil
 }
 
 // InstallClaudeHooks adds Quiver's SessionStart and SubagentStart hooks to the

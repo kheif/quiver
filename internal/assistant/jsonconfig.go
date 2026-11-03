@@ -24,10 +24,9 @@ type JSONAssistant struct {
 	// Global means the assistant starts servers outside any project, so
 	// Quiver serves only the global skills there.
 	Global bool
-	// OnRequest means the model sees Quiver's skill list and always-on
-	// skills only when the prompt asks for Quiver's skills, if at all
-	// (docs/spike-mcp-clients.md). install says so.
-	OnRequest bool
+	// Delivery is how always-on skills reach this assistant
+	// (docs/spike-hooks.md). install, doctor and status report it.
+	Delivery Delivery
 }
 
 // Cursor is Cursor's user-wide MCP config.
@@ -37,7 +36,7 @@ func Cursor() (*JSONAssistant, error) {
 		return nil, err
 	}
 	dir := filepath.Join(home, ".cursor")
-	return &JSONAssistant{ID: "cursor", Name: "Cursor", Dir: dir, Path: filepath.Join(dir, "mcp.json")}, nil
+	return &JSONAssistant{ID: "cursor", Name: "Cursor", Dir: dir, Path: filepath.Join(dir, "mcp.json"), Delivery: DeliveryInstructions}, nil
 }
 
 // ClaudeDesktop is Claude Desktop's config: in ~/Library/Application Support
@@ -48,7 +47,7 @@ func ClaudeDesktop() (*JSONAssistant, error) {
 		return nil, err
 	}
 	dir := filepath.Join(config, "Claude")
-	return &JSONAssistant{ID: "claude-desktop", Name: "Claude Desktop", Dir: dir, Path: filepath.Join(dir, "claude_desktop_config.json"), Global: true, OnRequest: true}, nil
+	return &JSONAssistant{ID: "claude-desktop", Name: "Claude Desktop", Dir: dir, Path: filepath.Join(dir, "claude_desktop_config.json"), Global: true, Delivery: DeliveryOnRequest}, nil
 }
 
 // Antigravity is the MCP config of the Antigravity CLI (agy). It keeps the
@@ -59,7 +58,7 @@ func Antigravity() (*JSONAssistant, error) {
 		return nil, err
 	}
 	dir := filepath.Join(home, ".gemini")
-	return &JSONAssistant{ID: "antigravity", Name: "Antigravity", Dir: filepath.Join(dir, "antigravity-cli"), Path: filepath.Join(dir, "config", "mcp_config.json"), OnRequest: true}, nil
+	return &JSONAssistant{ID: "antigravity", Name: "Antigravity", Dir: filepath.Join(dir, "antigravity-cli"), Path: filepath.Join(dir, "config", "mcp_config.json"), Delivery: DeliveryOnRequest}, nil
 }
 
 // JSONAssistants returns every assistant configured by JSON.
