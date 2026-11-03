@@ -10,10 +10,10 @@
 
 Users must see which assistants load always-on skills by themselves, so they do not take those skills for optional ones where they are not.
 
-1. **Model.** Replace `JSONAssistant.OnRequest` with a delivery level on every assistant (the levels of TASK52: hook, instructions, rules file, on request), set from `docs/spike-hooks.md`.
+1. **Model.** Replace `JSONAssistant.OnRequest` with a delivery level on every assistant (the levels of TASK52: hook, instructions, on request), set from `docs/spike-hooks.md`.
 2. **Install report.** After the per-assistant lines, print one line per assistant with its level. For every assistant without a hook, say that loading skills there is up to the model, and when always-on skills are assigned, name them:
    ```
-   Cursor: no session-start hook. Quiver's skills are loaded when the model decides to.
+   Claude Desktop: no session-start hook. Quiver's skills are loaded when the model decides to.
      These always-on skills do not load by themselves there: security-review, reply-style.
    ```
    The names come from the global always-on skills and those of the project in the current folder.

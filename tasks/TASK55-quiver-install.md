@@ -17,3 +17,5 @@ The current code is in `internal/cli/mcp.go` (`mcpTargets`, `mcpInstall`, `mcpUn
 - [TASK55.2](TASK55.2-claude-code-hook.md): Claude Code hook
 - [TASK55.3](TASK55.3-codex-hook.md): Codex hook
 - [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md): Delivery report, doctor and status
+- [TASK55.5](TASK55.5-cursor-hook.md): Cursor hook
+- [TASK55.6](TASK55.6-antigravity-hook.md): Antigravity hook

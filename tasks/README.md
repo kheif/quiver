@@ -125,11 +125,11 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-| 🚧 | [TASK52](TASK52-spike-session-start-hooks-per-assistant.md) | Spike: session-start hooks per assistant | TASK50 |
+| ✅ | [TASK52](TASK52-spike-session-start-hooks-per-assistant.md) | Spike: session-start hooks per assistant | TASK50 |
 | ✅ | ↳ [TASK52.1](TASK52.1-claude-code-hooks.md) | Claude Code hooks | TASK50 |
 | ✅ | ↳ [TASK52.2](TASK52.2-codex-hooks.md) | Codex hooks | TASK50 |
 | ✅ | ↳ [TASK52.3](TASK52.3-vs-code-copilot.md) | VS Code Copilot | TASK50 |
-|  | ↳ [TASK52.4](TASK52.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
+| ✅ | ↳ [TASK52.4](TASK52.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
 |  | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
 |  | [TASK54](TASK54-always-on-pointer-becomes-the-fallback.md) | Always-on pointer becomes the fallback | TASK53 |
 |  | [TASK55](TASK55-quiver-install.md) | `quiver install` | TASK53, TASK50 |
@@ -137,51 +137,52 @@ and every new assistant session follows caveman from the first message. Use Quiv
 |  | ↳ [TASK55.2](TASK55.2-claude-code-hook.md) | Claude Code hook | TASK52.1, TASK53, TASK55.1 |
 |  | ↳ [TASK55.3](TASK55.3-codex-hook.md) | Codex hook | TASK52.2, TASK53, TASK55.1 |
 |  | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
+|  | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
+|  | ↳ [TASK55.6](TASK55.6-antigravity-hook.md) | Antigravity hook | TASK52.4, TASK53, TASK55.1 |
 |  | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
-|  | [TASK57](TASK57-rules-file-pointer-for-assistants-without-hooks.md) | Rules-file pointer for assistants without hooks | TASK52.4, TASK55.4 |
-|  | [TASK58](TASK58-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56, TASK57 |
+|  | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
 
 ### Phase 7: TUI and slash commands (v1.5)
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK59](TASK59-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK45, TASK14 |
-|  | [TASK60](TASK60-background-update-checks.md) | Background update checks | TASK59, TASK15 |
-|  | [TASK61](TASK61-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20, TASK55.1 |
-|  | [TASK62](TASK62-release-v1-5-0.md) | Release v1.5.0 | TASK59, TASK60, TASK61 |
+|  | [TASK58](TASK58-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK45, TASK14 |
+|  | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58, TASK15 |
+|  | [TASK60](TASK60-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20, TASK55.1 |
+|  | [TASK61](TASK61-release-v1-5-0.md) | Release v1.5.0 | TASK58, TASK59, TASK60 |
 
 ### Phase 8: Test phase
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK63](TASK63-coverage-baseline.md) | Coverage baseline | TASK57 |
-|  | [TASK64](TASK64-end-to-end-user-journeys.md) | End-to-end user journeys | TASK57, TASK30 |
-|  | ↳ [TASK64.1](TASK64.1-journey-setup-and-delivery.md) | Journey: setup and delivery | TASK57, TASK30 |
-|  | ↳ [TASK64.2](TASK64.2-journey-library-lifecycle.md) | Journey: library lifecycle | TASK57, TASK30 |
-|  | ↳ [TASK64.3](TASK64.3-journey-two-machines.md) | Journey: two machines | TASK57, TASK30 |
-|  | ↳ [TASK64.4](TASK64.4-journey-failures.md) | Journey: failures | TASK57, TASK30 |
-|  | [TASK65](TASK65-windows.md) | Windows | TASK57 |
-|  | ↳ [TASK65.1](TASK65.1-fake-assistants-in-go.md) | Fake assistants in Go | TASK57 |
-|  | ↳ [TASK65.2](TASK65.2-hooks-and-paths-on-windows.md) | Hooks and paths on Windows | TASK65.1 |
-|  | ↳ [TASK65.3](TASK65.3-installed-binary-runs-the-hook.md) | Installed binary runs the hook | TASK65.1 |
-|  | [TASK66](TASK66-versioned-data-formats-and-migration.md) | Versioned data formats and migration | TASK57 |
-|  | [TASK67](TASK67-assistant-behaviour-benchmark.md) | Assistant behaviour benchmark | TASK57 |
-|  | ↳ [TASK67.1](TASK67.1-benchmark-runner.md) | Benchmark runner | TASK57 |
-|  | ↳ [TASK67.2](TASK67.2-assistant-adapters.md) | Assistant adapters | TASK67.1 |
-|  | ↳ [TASK67.3](TASK67.3-benchmark-cases.md) | Benchmark cases | TASK67.2 |
-|  | ↳ [TASK67.4](TASK67.4-baselines-and-reports.md) | Baselines and reports | TASK67.3 |
-|  | [TASK68](TASK68-robustness.md) | Robustness | TASK57 |
-|  | ↳ [TASK68.1](TASK68.1-fuzzing.md) | Fuzzing | TASK57 |
-|  | ↳ [TASK68.2](TASK68.2-parallel-processes.md) | Parallel processes | TASK57 |
-|  | ↳ [TASK68.3](TASK68.3-performance-budgets.md) | Performance budgets | TASK57 |
-|  | [TASK69](TASK69-security-review.md) | Security review | TASK57 |
-|  | [TASK70](TASK70-test-phase-review.md) | Test phase review | TASK63, TASK64, TASK65, TASK66, TASK67, TASK68, TASK69 |
+|  | [TASK62](TASK62-coverage-baseline.md) | Coverage baseline | TASK56 |
+|  | [TASK63](TASK63-end-to-end-user-journeys.md) | End-to-end user journeys | TASK56, TASK30 |
+|  | ↳ [TASK63.1](TASK63.1-journey-setup-and-delivery.md) | Journey: setup and delivery | TASK56, TASK30 |
+|  | ↳ [TASK63.2](TASK63.2-journey-library-lifecycle.md) | Journey: library lifecycle | TASK56, TASK30 |
+|  | ↳ [TASK63.3](TASK63.3-journey-two-machines.md) | Journey: two machines | TASK56, TASK30 |
+|  | ↳ [TASK63.4](TASK63.4-journey-failures.md) | Journey: failures | TASK56, TASK30 |
+|  | [TASK64](TASK64-windows.md) | Windows | TASK56 |
+|  | ↳ [TASK64.1](TASK64.1-fake-assistants-in-go.md) | Fake assistants in Go | TASK56 |
+|  | ↳ [TASK64.2](TASK64.2-hooks-and-paths-on-windows.md) | Hooks and paths on Windows | TASK64.1 |
+|  | ↳ [TASK64.3](TASK64.3-installed-binary-runs-the-hook.md) | Installed binary runs the hook | TASK64.1 |
+|  | [TASK65](TASK65-versioned-data-formats-and-migration.md) | Versioned data formats and migration | TASK56 |
+|  | [TASK66](TASK66-assistant-behaviour-benchmark.md) | Assistant behaviour benchmark | TASK56 |
+|  | ↳ [TASK66.1](TASK66.1-benchmark-runner.md) | Benchmark runner | TASK56 |
+|  | ↳ [TASK66.2](TASK66.2-assistant-adapters.md) | Assistant adapters | TASK66.1 |
+|  | ↳ [TASK66.3](TASK66.3-benchmark-cases.md) | Benchmark cases | TASK66.2 |
+|  | ↳ [TASK66.4](TASK66.4-baselines-and-reports.md) | Baselines and reports | TASK66.3 |
+|  | [TASK67](TASK67-robustness.md) | Robustness | TASK56 |
+|  | ↳ [TASK67.1](TASK67.1-fuzzing.md) | Fuzzing | TASK56 |
+|  | ↳ [TASK67.2](TASK67.2-parallel-processes.md) | Parallel processes | TASK56 |
+|  | ↳ [TASK67.3](TASK67.3-performance-budgets.md) | Performance budgets | TASK56 |
+|  | [TASK68](TASK68-security-review.md) | Security review | TASK56 |
+|  | [TASK69](TASK69-test-phase-review.md) | Test phase review | TASK62, TASK63, TASK64, TASK65, TASK66, TASK67, TASK68 |
 
 ### Phase 9: Enterprise
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK71](TASK71-enterprise.md) | Enterprise | TASK70 |
+|  | [TASK70](TASK70-enterprise.md) | Enterprise | TASK69 |
 
 ## Later (not yet planned in detail)
 

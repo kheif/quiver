@@ -97,7 +97,7 @@ Codex always defers MCP tools (`tool_search_always_defer_mcp_tools`): the model 
 
 ### Antigravity
 
-Measured on 2026-11-01 with the Antigravity CLI `agy` 1.4.12, default model, headless, with `QUIVER=$PWD/bin/quiver spike/b01/antigravity-run.sh <dir>` and `python3 spike/b01/antigravity-analyze.py <dir>/out`. `agy` reads MCP servers only from `~/.gemini/config/mcp_config.json`, so the script adds a `quiver` entry there and removes it at the end. Headless runs deny MCP calls unless `permissions.allow` has `mcp(quiver/*)`; the script passes it with `--settings` for each run.
+Measured on 2026-11-01 with the Antigravity CLI `agy` 1.4.12, default model, headless, with `QUIVER=$PWD/bin/quiver spike/b01/antigravity-run.sh <dir>` and `python3 spike/b01/antigravity-analyze.py <dir>/out`. `agy` reads MCP servers from `~/.gemini/config/mcp_config.json`, so the script adds a `quiver` entry there and removes it at the end. A workspace's `.agents/mcp_config.json` works too, as [spike-hooks.md](spike-hooks.md) found later. Headless runs deny MCP calls unless `permissions.allow` has `mcp(quiver/*)`; the script passes it with `--settings` for each run.
 
 Antigravity lists Quiver's tools directly, but writes the server's instructions to `~/.gemini/antigravity-cli/mcp/quiver/instructions.md` instead of the prompt. Asked for Quiver's skills, the model read that file and then called `get_skill(reply-style)`.
 

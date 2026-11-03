@@ -2,7 +2,7 @@
 
 Always-on skills reach the model through the MCP server's `instructions`, and only some assistants put those into the prompt (see [spike-mcp-clients.md](spike-mcp-clients.md)). A session-start hook runs a command when a session starts and adds its output to the model's context, so the skill text is there without the model deciding to load it. This spike checks, per assistant, whether such a hook exists and how it behaves.
 
-**Status:** Claude Code and Codex done on 2026-11-02, VS Code Copilot on 2026-11-03. Cursor and Antigravity are not measured yet.
+**Status:** Claude Code and Codex done on 2026-11-02; VS Code Copilot, Cursor, Antigravity and the global rules files on 2026-11-03. Every assistant measured has a hook whose text reaches the model.
 
 **Delivery levels.** Each assistant gets one:
 
@@ -16,8 +16,10 @@ Always-on skills reach the model through the MCP server's `instructions`, and on
 | Assistant | Hook event | User and managed config file | Input on stdin | Output format | Output reaches the model | Size limit | After compaction | Sub-agents | Trust or approval prompt | Command form on Windows | Global rules file | Delivery level |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Claude Code 2.1.308 | `SessionStart`, matcher on `source` | `~/.claude/settings.json` or `$CLAUDE_CONFIG_DIR/settings.json`; `managed-settings.json` in a system folder | JSON with `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `source`; interactive sessions add `model` and `scratchpad_dir` | Plain stdout or `additionalContext` | Yes, 10 of 10 | 10,000 characters per hook command; above that, a file path and a 2 KB preview | Fires again with `source` `compact` | `SessionStart` does not reach them; `SubagentStart` does | The folder's trust dialog, in interactive sessions only; no approval per hook | Documented: Git Bash, or PowerShell without Git Bash; `shell` chooses | Documented: `~/.claude/CLAUDE.md` | **hook** |
-| Codex 0.166.0 | `SessionStart`, matcher on `source`; runs when the first prompt is sent | `$CODEX_HOME/hooks.json` (`~/.codex/hooks.json`) or `[hooks]` in `config.toml`; managed: `[hooks]` in `requirements.toml`, or `/etc/codex/config.toml` and `/etc/codex/hooks.json` | JSON with `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`, `source` | Plain stdout or `additionalContext` | Yes, 10 of 10 | `additionalContextLimit` per hook command, default 2,500 tokens counted as 10,000 bytes; above that, the start and end and a file path; `0` turns it off | Fires again with `source` `compact`; compaction keeps no hook text | `SubagentStart` does; a sub-agent that starts with its parent's history, the default, has the text already | Every new or changed hook: "Hooks need review" in the TUI; `codex exec` skips it without a message | From source: `cmd.exe /C`, and `commandWindows` replaces `command` | From source: `AGENTS.override.md` or `AGENTS.md` in `$CODEX_HOME` | **hook** |
+| Codex 0.166.0 | `SessionStart`, matcher on `source`; runs when the first prompt is sent | `$CODEX_HOME/hooks.json` (`~/.codex/hooks.json`) or `[hooks]` in `config.toml`; managed: `[hooks]` in `requirements.toml`, or `/etc/codex/config.toml` and `/etc/codex/hooks.json` | JSON with `session_id`, `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`, `source` | Plain stdout or `additionalContext` | Yes, 10 of 10 | `additionalContextLimit` per hook command, default 2,500 tokens counted as 10,000 bytes; above that, the start and end and a file path; `0` turns it off | Fires again with `source` `compact`; compaction keeps no hook text | `SubagentStart` does; a sub-agent that starts with its parent's history, the default, has the text already | Every new or changed hook: "Hooks need review" in the TUI; `codex exec` skips it without a message | From source: `cmd.exe /C`, and `commandWindows` replaces `command` | `$CODEX_HOME/AGENTS.md`, or `AGENTS.override.md` there (from source) | **hook** |
 | VS Code 1.143.1, Copilot Chat 0.71.0 | `SessionStart`, when the first prompt starts a session; `source` is always `new` | `~/.copilot/hooks/*.json`, read by both harnesses; managed: `chat.hooks.allowManagedOnly`, and for the Copilot harness `/etc/github-copilot/policy.d/*.json` (documented) | JSON with `timestamp`, `hook_event_name`, `session_id`, `transcript_path`, `source`, `model`, `cwd` | JSON only: `hookSpecificOutput.additionalContext` in the Local harness, `additionalContext` at the top level in the Copilot harness; plain stdout is dropped | Yes, 10 of 10 | None up to 200,000 characters in the Local harness; 10 MiB documented for the Copilot harness | Not measured | `SubagentStart` does, `SessionStart` does not | None seen, with workspace trust off | Documented: a `windows` field (Local), `powershell` (Copilot harness) | `*.instructions.md` with `applyTo: "**"` in the profile's `prompts` folder, or `~/.copilot/instructions` | **hook** |
+| Cursor CLI 2026.10.22 | `sessionStart`, when a session starts | `~/.cursor/hooks.json`; managed: `/Library/Application Support/Cursor/hooks.json`, `/etc/cursor/hooks.json`, `C:\ProgramData\Cursor\hooks.json` (documented) | JSON with `session_id`, `conversation_id`, `workspace_roots`, `model`, `user_email`, `cursor_version` and others | `{"additional_context": "..."}` | Yes, 10 of 10 | Not measured | Not measured | Documented: `subagentStart` only allows or denies | Documented: project hooks need a trusted workspace | Documented: PowerShell in the app | Not checked | **hook** in the CLI; the app was not measured |
+| Antigravity CLI `agy` 1.4.12 | `SessionStart`, once per conversation | `~/.gemini/config/hooks.json`, shared by the Antigravity products; workspace `.agents/hooks.json` | JSON with `conversationId`, `workspacePaths`, `transcriptPath`, `artifactDirectoryPath`, `modelName`, `lastUserInput` | `injectSteps` with a `systemMessage`, `userMessage` or `ephemeralMessage`; plain stdout is dropped | Yes, 10 of 10 | About 48,900 bytes; the rest is dropped with a note | Not measured | Each sub-agent conversation runs `SessionStart` | None seen | Documented: `cmd /c` | `~/.gemini/config/GEMINI.md` or `AGENTS.md`, and `~/.gemini/GEMINI.md` | **hook** |
 
 ## Claude Code
 
@@ -375,3 +377,99 @@ A file `quiver.instructions.md` in the profile's `prompts` folder, with `applyTo
 ### Trust and managed hooks
 
 No hook asked for approval, but workspace trust was off, so trust was not measured. The documentation says agent-scoped hooks need a trusted workspace. From the settings: `chat.useHooks` (on by default, policy `ChatHooks`) turns the Local harness's hooks off, and `chat.hooks.allowManagedOnly` (policy `ChatAllowManagedHooksOnly`) allows only managed ones. For the Copilot harness, GitHub documents policy hooks in `/etc/github-copilot/policy.d/*.json` on macOS and Linux, `C:\ProgramData\GitHub\Copilot\policy.d\*.json` and `HKLM\Software\Policies\GitHub\Copilot` on Windows; they need no trust and cannot be turned off by the user. None of this was measured.
+
+## Cursor
+
+Measured on 2026-11-03 with the Cursor CLI (`cursor-agent` 2026.10.22-27dcf5f, model Auto), headless. The run script is `spike/b01/cursor-hooks-run.sh`, and `spike/b01/cursor-hooks-analyze.py` summarizes its output:
+
+```sh
+QUIVER=$PWD/bin/quiver spike/b01/cursor-hooks-run.sh /tmp/quiver-cursor-hooks
+python3 spike/b01/cursor-hooks-analyze.py /tmp/quiver-cursor-hooks
+```
+
+Each check has its own workspace with the server in `.cursor/mcp.json` and the hook in `.cursor/hooks.json`, so `~/.cursor` is not changed. The Cursor app was not measured. Cursor already passes the server's `instructions` to the model, and always-on applied in 10 of 10 without a hook ([spike-mcp-clients.md](spike-mcp-clients.md)).
+
+### The 10 prompts
+
+With a `sessionStart` hook that prints `{"additional_context": "<text>"}`, and `reply-style` not assigned in Quiver:
+
+| Always-on | Fitting skills | Other skills loaded | `get_skill` for `reply-style` |
+|---|---|---|---|
+| 10 of 10 | 6 of 6 | 0 of 4 | 0 of 10 |
+
+### Hook files and events
+
+| Hook | Ran | Rule followed |
+|---|---|---|
+| `.cursor/hooks.json`, `sessionStart` with `additional_context` | 2 of 2 | 2 of 2 |
+| `.cursor/hooks.json`, `beforeSubmitPrompt` with `additional_context` | 0 of 2 | 0 of 2 |
+| `.claude/settings.json`, Claude Code's `SessionStart` with `hookSpecificOutput.additionalContext` | 0 of 2 | 0 of 2 |
+| None | – | 0 of 2 |
+
+The file is `{"version": 1, "hooks": {"sessionStart": [{"command": "..."}]}}`. The hook's input is `conversation_id`, `generation_id`, `session_id`, `model`, `is_background_agent`, `hook_event_name`, `cursor_version`, `workspace_roots`, `user_email` and `transcript_path` (null in the CLI). The CLI ran `--trust`, so the documented rule that project hooks need a trusted workspace was not exercised.
+
+From the documentation, not measured: user hooks live in `~/.cursor/hooks.json`; managed ones in `/Library/Application Support/Cursor/hooks.json` on macOS, `/etc/cursor/hooks.json` on Linux and WSL and `C:\ProgramData\Cursor\hooks.json` on Windows, and they take precedence over project and user hooks; the desktop app runs hook commands through PowerShell on Windows; `subagentStart` can only allow or deny a sub-agent; exit code 2 blocks and other failures let the action proceed. The documentation calls `sessionStart` fire-and-forget and does not say whether its context reaches the first prompt in the app.
+
+## Antigravity
+
+Measured on 2026-11-03 with the Antigravity CLI `agy` 1.4.12, default model, headless. The hook contract comes from the documentation built into `agy`. The run script is `spike/b01/antigravity-hooks-run.sh`, and `spike/b01/antigravity-hooks-analyze.py` summarizes its output:
+
+```sh
+QUIVER=$PWD/bin/quiver spike/b01/antigravity-hooks-run.sh /tmp/quiver-agy-hooks prompts forms size subagents
+HOME=/private/tmp/agyhome agy    # sign in once, then /exit
+AGY_HOME=/private/tmp/agyhome QUIVER=$PWD/bin/quiver spike/b01/antigravity-hooks-run.sh /tmp/quiver-agy-hooks global
+python3 spike/b01/antigravity-hooks-analyze.py /tmp/quiver-agy-hooks
+```
+
+`agy` reads hooks, MCP servers and rules from customization roots: the global one, `~/.gemini/config/`, and the workspace's `.agents/` folder. Each check has its own workspace with the server in `.agents/mcp_config.json` and the hook in `.agents/hooks.json`, so `~/.gemini` is not changed. (TASK50 put the server into the global `mcp_config.json`, since it found no other place; the workspace's file works too.) The global check runs `agy` with a throwaway home folder, signed in once, and writes that home's files. The home must be given by its resolved path (`/private/tmp/...` on macOS); with `/tmp/...`, `agy` refused to read its own folder in it. Headless `agy` ends a session without an answer when a tool needs a permission it cannot ask for, so the runs allow Quiver's tools, `ls` and `pwd`.
+
+### The 10 prompts
+
+With a `SessionStart` hook that injects the skill as a system message, and `reply-style` not assigned in Quiver:
+
+| Always-on | Fitting skills | Other skills loaded | `get_skill` for `reply-style` |
+|---|---|---|---|
+| 10 of 10 | 0 of 6 | 0 of 4 | 0 of 10 |
+
+Without the hook, always-on applied in 0 of 10 and fitting skills in 1 of 6 ([spike-mcp-clients.md](spike-mcp-clients.md)); the model rarely reads the server's instructions, which `agy` writes to a file.
+
+### Hook file and output
+
+`hooks.json` maps a hook name to its events: `{"quiver": {"SessionStart": [{"type": "command", "command": "..."}]}}`. `SessionStart` runs once when a conversation starts; the events with a tool `matcher` are `PreToolUse` and `PostToolUse`, and the others are `PreInvocation`, `PostInvocation` and `Stop`. The command runs with `sh -c` (`cmd /c` on Windows) in the folder that holds `hooks.json`, and the default timeout is 30 seconds. The input is `conversationId`, `workspacePaths`, `transcriptPath`, `artifactDirectoryPath`, `modelName` and `lastUserInput`, in camelCase.
+
+| Hook output | Rule followed |
+|---|---|
+| `{"injectSteps": [{"systemMessage": {"systemMessage": "<text>"}}]}` | 10 of 10 (the prompts above) |
+| `{"injectSteps": [{"userMessage": "<text>"}]}` | 2 of 2 |
+| `{"injectSteps": [{"ephemeralMessage": "<text>"}]}` | 2 of 2 |
+| The system message from `PreInvocation`, which runs before every model call | 2 of 2 |
+| Plain stdout | 0 of 2 |
+| The system message, then exit 1 | 0 of 2 |
+| No hook | 0 of 2 |
+
+The model gets the text as a system message that begins "The following is a <SYSTEM_MESSAGE> not actually sent by the user."
+
+### Size
+
+The text is cut after about 48,900 bytes: the start stays, the rest is replaced with `<truncated N bytes>` and "NOTE: The output was truncated because it was too long." 20,000 bytes arrived whole; of 50,000 the last 1,092 bytes were dropped, and of 200,000 everything after the start. One session each.
+
+### Sub-agents
+
+A sub-agent started with `invoke_subagent` is a conversation of its own, and `SessionStart` runs for it too, with an empty `lastUserInput`. The sub-agent followed the rule in 2 of 2.
+
+### Global hook and the app
+
+A hook in the global `~/.gemini/config/hooks.json` ran and the rule was followed in 6 of 6 sessions. From the built-in documentation, not measured: the global `mcp_config.json` "applies to all sessions", and the customization root is the same for the CLI, Antigravity 2.0 and the IDE, which keep only their sessions in separate folders (`~/.gemini/antigravity-cli/`, `antigravity/`, `antigravity-ide/`). The Antigravity app was not installed.
+
+## Global rules files
+
+A pointer in a rules file that every session loads: "Before your first reply, load the tools of the quiver MCP server and follow its instructions." TASK50 put it into the workspace; here it is in the global file only, with `reply-style` assigned as always-on in Quiver and nothing in the workspace.
+
+| Assistant and file | Always-on | Fitting skills | Other skills loaded | `get_skill` for `reply-style` |
+|---|---|---|---|---|
+| Codex 0.166.0, `$CODEX_HOME/AGENTS.md` | 10 of 10 | 6 of 6 | 0 of 4 | 10 of 10 |
+| Antigravity `agy` 1.4.12, `~/.gemini/config/GEMINI.md` | 7 of 10 | 3 of 6 | 0 of 4 | 10 of 10 |
+
+In Antigravity the model loaded `reply-style` in 10 of 10, and 3 sessions ended without an answer when the model went on to read a skill file outside the workspace or to run `find`, which headless `agy` cannot allow. The same pointer in `~/.gemini/config/AGENTS.md` and in `~/.gemini/GEMINI.md` worked too, 2 of 2 each. Codex reads `AGENTS.override.md` instead of `AGENTS.md` in `$CODEX_HOME` when it exists (from source).
+
+A project's own file adds to the global one: with "Start every reply with the line [global-rule]." in the global file and "End every reply with the line [project-rule]." in the workspace's `AGENTS.md`, both were followed in 2 of 2 in Codex and 6 of 6 in Antigravity. Codex joins the two with a `--- project-doc ---` line (from source).

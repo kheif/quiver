@@ -2,7 +2,8 @@
 # usage: antigravity-run.sh <dir>
 # Runs every prompt of prompts.txt in a headless Antigravity CLI session
 # (agy -p) against the real `quiver mcp`, with the fixture home of
-# gui-setup.sh. agy reads MCP servers only from ~/.gemini/config/mcp_config.json,
+# gui-setup.sh. agy reads MCP servers from ~/.gemini/config/mcp_config.json
+# (a workspace's .agents/mcp_config.json works too, see docs/spike-hooks.md),
 # so this adds a quiver entry there and removes it at the end; the tool
 # permission is given for the session only. Writes <dir>/ws, the workspace,
 # and one <dir>/out/<id>.jsonl per prompt. Needs $QUIVER and an agy login.

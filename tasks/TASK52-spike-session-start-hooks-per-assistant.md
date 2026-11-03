@@ -2,7 +2,7 @@
 
 **Phase:** Phase 6: Session-start delivery (v1.4)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done
 
 **Depends on:** TASK50
 
@@ -13,7 +13,7 @@ A session-start hook solves this where an assistant has one: the assistant runs 
 **Delivery levels.** Each assistant gets one:
 - **hook:** the always-on skills' text is added at session start (TASK53).
 - **instructions:** the model gets Quiver's `instructions` up front and loads the always-on skills itself (Cursor, 10 of 10 in TASK37).
-- **rules file:** a pointer in a file the assistant always loads makes the model load Quiver (TASK57).
+- **rules file:** a pointer in a file the assistant always loads makes the model load Quiver (measured in TASK52.4; no installed assistant needs it).
 - **on request:** skills load only when the prompt asks for them (Claude Desktop).
 
 **How to run.** Use the B01 fixture skills and prompts: `spike/b01/gui-setup.sh` builds a throwaway Quiver home whose always-on skill `reply-style` ends every reply with `[always-on]`, and the fitting skills end their answer with `[used:<id>]`; `spike/b01/prompts.txt` has 6 fitting and 4 other prompts. Put hooks into a throwaway workspace's project config where the assistant reads one, or into a throwaway config folder; never change the user's own config. The existing runners (`codex-run.sh`, `cursor-run.sh`, `antigravity-run.sh`, `run-real.sh`) show how each assistant is run headless.
