@@ -5,11 +5,17 @@ package server
 import (
 	"context"
 	"log/slog"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/kheif/quiver/internal/project"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+// rootsTimeout bounds the roots request Quiver makes to a client after
+// initialization.
+const rootsTimeout = 10 * time.Second
 
 // Options configure a server.
 type Options struct {
@@ -28,17 +34,24 @@ func New(opts Options) *mcp.Server {
 
 // newServer is New, plus what watch needs to keep the server up to date.
 func newServer(opts Options) (*mcp.Server, *session, *prompts) {
-	s := mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{
+	sess := &session{where: opts.Where}
+	var p *prompts
+	var s *mcp.Server
+	s = mcp.NewServer(&mcp.Implementation{Name: "quiver", Version: opts.Version}, &mcp.ServerOptions{
 		Logger:       opts.Log,
 		Instructions: instructions(opts),
+		// resolveRoots sends a server-to-client request, so it runs off the
+		// session's receiving goroutine to avoid blocking it.
+		InitializedHandler: func(_ context.Context, req *mcp.InitializedRequest) {
+			go sess.resolveRoots(req, s, p, opts.Log)
+		},
 	})
 	s.AddReceivingMiddleware(recoverPanics(opts.Log))
-	sess := &session{where: opts.Where}
 	addSkillTools(s, sess)
 	addCreateTool(s, sess)
 	addUpdateTool(s)
 	addSearchTool(s, sess)
-	p := &prompts{}
+	p = &prompts{}
 	if _, err := p.sync(s, sess.projectID()); err != nil {
 		opts.Log.Warn("no skill prompts", "err", err)
 	}
@@ -51,6 +64,67 @@ func newServer(opts Options) (*mcp.Server, *session, *prompts) {
 type session struct {
 	mu    sync.Mutex
 	where Where
+}
+
+// resolveRoots serves the project of an MCP root when the server started
+// outside a project, for a client that sends the workspace as a root (VS
+// Code). $QUIVER_PROJECT wins, and a working directory already in a project is
+// kept, so roots are read only when neither names a project. It never fails
+// the session: on any trouble the global skills are still served.
+func (s *session) resolveRoots(req *mcp.InitializedRequest, srv *mcp.Server, p *prompts, log *slog.Logger) {
+	if os.Getenv(ProjectEnv) != "" {
+		return
+	}
+	s.mu.Lock()
+	has := s.where.Project != nil
+	s.mu.Unlock()
+	if has {
+		return
+	}
+	caps := req.Session.InitializeParams().Capabilities
+	// Roots are deprecated upstream (SEP-2577) but stay functional through a
+	// year-plus window, and they are how VS Code hands the server its
+	// workspace (docs/spike-hooks.md), so Quiver still reads them.
+	if caps == nil || (caps.RootsV2 == nil && !caps.Roots.ListChanged) { //nolint:staticcheck // SA1019: roots is the only workspace signal VS Code sends
+		return // the client has no roots to ask for
+	}
+	// The notification's context ends when the handler returns, so use a
+	// fresh, bounded one for the server-to-client request.
+	ctx, cancel := context.WithTimeout(context.Background(), rootsTimeout)
+	defer cancel()
+	res, err := req.Session.ListRoots(ctx, nil) //nolint:staticcheck // SA1019: see above
+	if err != nil {
+		log.Warn("could not read the client's roots", "err", err)
+		return
+	}
+	uris := make([]string, 0, len(res.Roots))
+	for _, r := range res.Roots {
+		uris = append(uris, r.URI)
+	}
+	s.applyRoots(srv, p, uris, log)
+}
+
+// applyRoots serves the project of the first root URI that is in one: it sets
+// the session's folder, records the project's path and resyncs the prompts.
+// It returns whether a project was served.
+func (s *session) applyRoots(srv *mcp.Server, p *prompts, uris []string, log *slog.Logger) bool {
+	w, ok := ResolveRoots(uris)
+	if !ok {
+		return false
+	}
+	s.mu.Lock()
+	s.where = w
+	s.mu.Unlock()
+	if _, err := recordPath(w.Project); err != nil {
+		log.Warn("could not record the project folder", "err", err)
+	}
+	if p != nil && srv != nil {
+		if _, err := p.sync(srv, w.ProjectID()); err != nil {
+			log.Warn("no skill prompts for the root project", "err", err)
+		}
+	}
+	log.Info("served the project from an MCP root", "dir", w.Dir, "project", w.ProjectID())
+	return true
 }
 
 // projectID returns the served project's ID. While there is none, it looks

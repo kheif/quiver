@@ -2,7 +2,7 @@
 
 **Phase:** Phase 6: Session-start delivery (v1.4)
 
-**Status:** Todo
+**Status:** Done
 
 **Depends on:** TASK52.3, TASK53, TASK55.1
 

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"slices"
@@ -37,10 +38,14 @@ func (w Where) ProjectID() string {
 	return w.Project.ID
 }
 
-// Resolve finds the project to serve. It does not use MCP roots: Claude
-// Code starts the server in the project folder, and roots cannot be asked
-// for while a request is served (see docs/spike-b01-results.md). On error,
-// Project is nil, so the server still serves the global skills.
+// Resolve finds the project to serve at startup, from $QUIVER_PROJECT or the
+// working directory. Clients that start the server in the project folder, such
+// as Claude Code, are served from here. VS Code starts the server in the home
+// folder and sends the workspace as an MCP root once the session is
+// initialized; when $QUIVER_PROJECT is unset and the working directory is in
+// no project, ResolveRoots then serves the project of the first root that is in
+// one (docs/spike-hooks.md). On error, Project is nil, so the server still
+// serves the global skills.
 func Resolve() (Where, error) {
 	if os.Getenv(ProjectEnv) != "" {
 		return ResolveIn("", "")
@@ -86,6 +91,45 @@ func ResolveIn(dir, from string) (Where, error) {
 	}
 	w.Project = p
 	return w, nil
+}
+
+// ResolveRoots returns the Where of the first root URI that is inside a
+// project, for a client that starts the server outside the project and sends
+// the workspace as a root (VS Code). Roots that are not file URIs, are missing,
+// or are in no project are skipped. ok is false when no root is in a project,
+// so the caller keeps serving the global skills. $QUIVER_PROJECT still wins and
+// is applied by the caller before the roots are read.
+func ResolveRoots(uris []string) (Where, bool) {
+	for _, uri := range uris {
+		dir, err := fileURIPath(uri)
+		if err != nil {
+			continue
+		}
+		w, err := ResolveIn(dir, "MCP root")
+		if err == nil && w.Project != nil {
+			return w, true
+		}
+	}
+	return Where{}, false
+}
+
+// fileURIPath returns the local path of a file:// URI. A URI without the
+// file scheme is an error.
+func fileURIPath(uri string) (string, error) {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme != "file" {
+		return "", fmt.Errorf("not a file URI: %q", uri)
+	}
+	p := u.Path
+	// A Windows file URI is file:///C:/dir, so url.Path is /C:/dir; drop the
+	// leading slash before the drive letter.
+	if len(p) >= 3 && p[0] == '/' && p[2] == ':' {
+		p = p[1:]
+	}
+	return filepath.FromSlash(p), nil
 }
 
 // errUnchanged stops registry.Update from writing when nothing changed.

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,6 +84,27 @@ func TestResolveErrors(t *testing.T) {
 	t.Setenv(ProjectEnv, root)
 	if w, err := Resolve(); err == nil || w.Project != nil {
 		t.Errorf("broken .quiver.json: %+v, %v", w, err)
+	}
+}
+
+func TestResolveRoots(t *testing.T) {
+	root, sub, p := projectDir(t)
+	outside := t.TempDir()
+	uri := func(dir string) string { return (&url.URL{Scheme: "file", Path: dir}).String() }
+
+	// The first root in a project wins; a non-file URI and a root outside a
+	// project are skipped.
+	w, ok := ResolveRoots([]string{"http://example.com", uri(outside), uri(sub)})
+	if !ok || w.ProjectID() != p.ID || w.Project.Root != root || w.From != "MCP root" {
+		t.Errorf("got %+v ok=%v", w, ok)
+	}
+
+	// No root in a project: ok is false, so the caller keeps global skills.
+	if _, ok := ResolveRoots([]string{uri(outside)}); ok {
+		t.Error("a root outside any project resolved")
+	}
+	if _, ok := ResolveRoots(nil); ok {
+		t.Error("no roots resolved")
 	}
 }
 

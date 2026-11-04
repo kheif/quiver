@@ -581,8 +581,11 @@ func (d *doc) checkMCP() {
 	}
 	for _, a := range installed {
 		d.checkJSONAssistant(a, appBin, appErr == nil)
-		if a.ID == "antigravity" {
+		switch a.ID {
+		case "antigravity":
 			d.checkAntigravityHook(appBin, appErr == nil)
+		case "vscode":
+			d.checkVSCodeHook(appBin, appErr == nil)
 		}
 	}
 	// Name the always-on skills that do not load by themselves in the
@@ -626,6 +629,21 @@ func (d *doc) checkAntigravityHook(bin string, knowBin bool) {
 		d.report("warn", "the Antigravity session-start hook runs another quiver; run: quiver install antigravity")
 	default:
 		d.report("ok", "Antigravity session-start hook")
+	}
+}
+
+// checkVSCodeHook reports on Quiver's session-start hook file for VS Code.
+func (d *doc) checkVSCodeHook(bin string, knowBin bool) {
+	present, current, err := assistant.VSCodeHookInstalled(bin)
+	switch {
+	case err != nil:
+		d.report("warn", "the VS Code session-start hook could not be read", err.Error())
+	case !present:
+		d.report("warn", "no Quiver session-start hook in VS Code; run: quiver install vscode")
+	case knowBin && !current:
+		d.report("warn", "the VS Code session-start hook runs another quiver; run: quiver install vscode")
+	default:
+		d.report("ok", "VS Code session-start hook")
 	}
 }
 

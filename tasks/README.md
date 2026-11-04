@@ -139,7 +139,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
 | ✅ | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.6](TASK55.6-antigravity-hook.md) | Antigravity hook | TASK52.4, TASK53, TASK55.1 |
-|  | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
+| ✅ | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
 |  | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
 
 ### Phase 7: TUI and slash commands (v1.5)

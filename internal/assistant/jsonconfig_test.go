@@ -198,6 +198,50 @@ func TestJSONBrokenFile(t *testing.T) {
 	}
 }
 
+// An assistant with a custom servers key and extra entry fields (VS Code)
+// writes under that key, with the extra fields, and keeps them up to date.
+func TestJSONServersKeyAndExtra(t *testing.T) {
+	dir := t.TempDir()
+	a := &JSONAssistant{ID: "vscode", Name: "VS Code", Dir: dir, Path: filepath.Join(dir, "mcp.json"), ServersKey: "servers", Extra: []member{{"type", mustMarshal("stdio")}}}
+	if res, err := a.Install("/opt/bin/quiver"); err != nil || res != Installed {
+		t.Fatalf("install: %v %v", res, err)
+	}
+	want := `{
+  "servers": {
+    "quiver": {
+      "command": "/opt/bin/quiver",
+      "args": [
+        "mcp"
+      ],
+      "type": "stdio"
+    }
+  }
+}
+`
+	if got := read(t, a.Path); got != want {
+		t.Errorf("file:\n%s", got)
+	}
+	reg, err := a.Get()
+	if err != nil || reg == nil || reg.Command != "/opt/bin/quiver" || reg.Args != "mcp" {
+		t.Errorf("get: %+v %v", reg, err)
+	}
+	if res, err := a.Install("/opt/bin/quiver"); err != nil || res != Unchanged {
+		t.Errorf("second install: %v %v", res, err)
+	}
+	if res, err := a.Install("/new/quiver"); err != nil || res != Updated {
+		t.Errorf("update: %v %v", res, err)
+	}
+	if got := read(t, a.Path); !strings.Contains(got, `"command": "/new/quiver"`) || !strings.Contains(got, `"type": "stdio"`) {
+		t.Errorf("after update:\n%s", got)
+	}
+	if res, err := a.Uninstall(); err != nil || res != Removed {
+		t.Errorf("uninstall: %v %v", res, err)
+	}
+	if got := read(t, a.Path); strings.Contains(got, "quiver") {
+		t.Errorf("after uninstall:\n%s", got)
+	}
+}
+
 func TestIndentOf(t *testing.T) {
 	for in, want := range map[string]string{
 		"":                     "  ",

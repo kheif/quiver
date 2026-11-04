@@ -27,6 +27,31 @@ type JSONAssistant struct {
 	// Delivery is how always-on skills reach this assistant
 	// (docs/spike-hooks.md). install, doctor and status report it.
 	Delivery Delivery
+	// ServersKey is the top-level key that holds the servers object. It is
+	// "mcpServers" for most assistants and "servers" for VS Code; an empty
+	// value means "mcpServers".
+	ServersKey string
+	// Extra are members added to Quiver's entry, after command and args, such
+	// as VS Code's "type": "stdio". They are kept up to date on install.
+	Extra []member
+}
+
+// serversKey is the top-level key that holds the servers object.
+func (a *JSONAssistant) serversKey() string {
+	if a.ServersKey != "" {
+		return a.ServersKey
+	}
+	return "mcpServers"
+}
+
+// entry is Quiver's server entry for the config file: command, args and the
+// assistant's extra members.
+func (a *JSONAssistant) entry(bin string) []member {
+	e := []member{
+		{"command", mustMarshal(bin)},
+		{"args", mustMarshal([]string{"mcp"})},
+	}
+	return append(e, a.Extra...)
 }
 
 // Cursor is Cursor's user-wide MCP config.
@@ -61,10 +86,39 @@ func Antigravity() (*JSONAssistant, error) {
 	return &JSONAssistant{ID: "antigravity", Name: "Antigravity", Dir: filepath.Join(dir, "antigravity-cli"), Path: filepath.Join(dir, "config", "mcp_config.json"), Delivery: DeliveryHook}, nil
 }
 
+// VSCode is VS Code's user-wide MCP config. The server lives under the key
+// "servers" with "type": "stdio", in the user folder's mcp.json:
+// ~/Library/Application Support/Code/User on macOS, %APPDATA%\Code\User on
+// Windows, ~/.config/Code/User on Linux (docs/spike-hooks.md). VS Code starts
+// the server in the home folder, so Global would serve only global skills;
+// instead the server asks for the workspace through MCP roots (server.Resolve),
+// so Global stays off. VS Code Insiders keeps its files under "Code - Insiders";
+// when only Insiders is installed, that folder is used. Always-on skills reach
+// VS Code through the ~/.copilot hook (vscodehooks.go), so Delivery is a hook.
+func VSCode() (*JSONAssistant, error) {
+	config, err := os.UserConfigDir()
+	if err != nil {
+		return nil, err
+	}
+	user := filepath.Join(config, "Code", "User")
+	if !isDir(user) {
+		if ins := filepath.Join(config, "Code - Insiders", "User"); isDir(ins) {
+			user = ins
+		}
+	}
+	return &JSONAssistant{ID: "vscode", Name: "VS Code", Dir: user, Path: filepath.Join(user, "mcp.json"), ServersKey: "servers", Extra: []member{{"type", mustMarshal("stdio")}}, Delivery: DeliveryHook}, nil
+}
+
+// isDir reports whether path is a directory.
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
+}
+
 // JSONAssistants returns every assistant configured by JSON.
 func JSONAssistants() ([]*JSONAssistant, error) {
 	var all []*JSONAssistant
-	for _, f := range []func() (*JSONAssistant, error){Cursor, ClaudeDesktop, Antigravity} {
+	for _, f := range []func() (*JSONAssistant, error){Cursor, ClaudeDesktop, Antigravity, VSCode} {
 		a, err := f()
 		if err != nil {
 			return nil, err
@@ -83,7 +137,7 @@ func (a *JSONAssistant) Installed() bool {
 // Get returns the quiver entry of the config file, or nil if there is none.
 // Scope is the file's path.
 func (a *JSONAssistant) Get() (*Registration, error) {
-	_, servers, err := readConfig(a.Path)
+	_, servers, err := readConfig(a.Path, a.serversKey())
 	if err != nil || servers == nil {
 		return nil, err
 	}
@@ -103,23 +157,25 @@ func (a *JSONAssistant) Get() (*Registration, error) {
 // fields of the entry, such as env, are kept.
 func (a *JSONAssistant) Install(bin string) (Result, error) {
 	return a.change(func(servers []member) ([]member, Result, error) {
+		want := a.entry(bin)
 		i := index(servers, ServerName)
 		if i < 0 {
-			value, _ := json.Marshal(serverEntry{bin, []string{"mcp"}})
-			return append(servers, member{ServerName, value}), Installed, nil
+			return append(servers, member{ServerName, encodeObject(want)}), Installed, nil
 		}
 		entry, err := parseObject(servers[i].value)
 		if err != nil {
 			entry = nil // not an object: replace it
 		}
-		command, _ := json.Marshal(bin)
-		args, _ := json.Marshal([]string{"mcp"})
-		if j := index(entry, "command"); j >= 0 && same(entry[j].value, command) {
-			if k := index(entry, "args"); k >= 0 && same(entry[k].value, args) {
-				return servers, Unchanged, nil
+		changed := false
+		for _, m := range want {
+			if j := index(entry, m.key); j < 0 || !same(entry[j].value, m.value) {
+				changed = true
 			}
+			entry = set(entry, m.key, m.value)
 		}
-		entry = set(set(entry, "command", command), "args", args)
+		if !changed {
+			return servers, Unchanged, nil
+		}
 		servers[i].value = encodeObject(entry)
 		return servers, Updated, nil
 	})
@@ -139,12 +195,13 @@ func (a *JSONAssistant) Uninstall() (Result, error) {
 // change applies f to the mcpServers object of the config file and writes
 // the file when f changed it; see editJSONFile.
 func (a *JSONAssistant) change(f func([]member) ([]member, Result, error)) (Result, error) {
+	key := a.serversKey()
 	return editJSONFile(a.Path, func(top []member) ([]member, Result, error) {
 		var servers []member
-		if i := index(top, "mcpServers"); i >= 0 {
+		if i := index(top, key); i >= 0 {
 			s, err := parseObject(top[i].value)
 			if err != nil {
-				return nil, Unchanged, fmt.Errorf("%s: mcpServers is not a JSON object, so the file was left as it is", a.Path)
+				return nil, Unchanged, fmt.Errorf("%s: %s is not a JSON object, so the file was left as it is", a.Path, key)
 			}
 			servers = s
 			if servers == nil {
@@ -155,7 +212,7 @@ func (a *JSONAssistant) change(f func([]member) ([]member, Result, error)) (Resu
 		if err != nil || res == Unchanged {
 			return top, res, err
 		}
-		return set(top, "mcpServers", encodeObject(servers)), res, nil
+		return set(top, key, encodeObject(servers)), res, nil
 	})
 }
 
@@ -202,10 +259,10 @@ func editJSONFile(path string, f func(top []member) ([]member, Result, error)) (
 	return res, nil
 }
 
-// readConfig reads the config file's top-level object and its mcpServers
-// object. A missing or empty file is an empty object; servers is nil when
-// there is no mcpServers key.
-func readConfig(path string) (top, servers []member, err error) {
+// readConfig reads the config file's top-level object and its servers object
+// under key. A missing or empty file is an empty object; servers is nil when
+// there is no such key.
+func readConfig(path, key string) (top, servers []member, err error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) || (err == nil && len(bytes.TrimSpace(data)) == 0) {
 		return nil, nil, nil
@@ -217,13 +274,13 @@ func readConfig(path string) (top, servers []member, err error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s is not valid JSON, so it was left as it is: %w", path, err)
 	}
-	i := index(top, "mcpServers")
+	i := index(top, key)
 	if i < 0 {
 		return top, nil, nil
 	}
 	servers, err = parseObject(top[i].value)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%s: mcpServers is not a JSON object, so the file was left as it is", path)
+		return nil, nil, fmt.Errorf("%s: %s is not a JSON object, so the file was left as it is", path, key)
 	}
 	if servers == nil {
 		servers = []member{}

@@ -333,6 +333,84 @@ func TestInstallAntigravityHook(t *testing.T) {
 	}
 }
 
+// install registers VS Code under the "servers" key with "type": "stdio",
+// writes Quiver's whole hook file, and reports a hook; doctor is ok; uninstall
+// removes both.
+func TestInstallVSCode(t *testing.T) {
+	assistanttest.Install(t) // stub claude, so doctor does not run the real one
+	apps := appHome(t, "vscode")
+	fakeExecutable(t, "/opt/bin/quiver")
+	vsc := apps["vscode"]
+	out, err := runIn(t, "", "install", "vscode")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Registered with VS Code: /opt/bin/quiver mcp") ||
+		!strings.Contains(out, "Added the VS Code session-start hook for always-on skills") {
+		t.Errorf("install output:\n%s", out)
+	}
+	// The MCP entry is under "servers" with "type": "stdio".
+	var cfg struct {
+		Servers map[string]struct {
+			Command string
+			Args    []string
+			Type    string
+		}
+	}
+	data, err := os.ReadFile(vsc.Path)
+	if err != nil {
+		t.Fatalf("mcp.json: %v", err)
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		t.Fatalf("mcp.json JSON: %v\n%s", err, data)
+	}
+	if e := cfg.Servers["quiver"]; e.Command != "/opt/bin/quiver" || len(e.Args) != 1 || e.Args[0] != "mcp" || e.Type != "stdio" {
+		t.Errorf("servers.quiver: %+v", cfg.Servers)
+	}
+
+	// The hook file has SessionStart and SubagentStart flat entries.
+	path, _ := assistant.VSCodeHooksPath()
+	hdata, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("hooks file: %v", err)
+	}
+	var hooks map[string][]struct {
+		Type       string
+		Command    string
+		TimeoutSec int
+	}
+	if err := json.Unmarshal(hdata, &hooks); err != nil {
+		t.Fatalf("hooks JSON: %v\n%s", err, hdata)
+	}
+	if ss := hooks["SessionStart"]; len(ss) != 1 || ss[0].Type != "command" ||
+		ss[0].Command != "/opt/bin/quiver hook session-start vscode" || ss[0].TimeoutSec != 10 {
+		t.Errorf("SessionStart: %+v", hooks["SessionStart"])
+	}
+	if sub := hooks["SubagentStart"]; len(sub) != 1 || sub[0].Command != "/opt/bin/quiver hook subagent-start vscode" {
+		t.Errorf("SubagentStart: %+v", hooks["SubagentStart"])
+	}
+
+	// A second install changes nothing.
+	out, err = runIn(t, "", "install", "vscode")
+	if err != nil || strings.Contains(out, "Restart") || strings.Contains(out, "Added the VS Code") {
+		t.Errorf("second install: %v\n%s", err, out)
+	}
+
+	out, _ = runIn(t, "", "doctor")
+	wantLines(t, out, "ok     registered with VS Code", "ok     VS Code session-start hook")
+
+	out, err = runIn(t, "", "uninstall", "vscode")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Removed from VS Code.") || !strings.Contains(out, "Removed the session-start hook from VS Code.") {
+		t.Errorf("uninstall output:\n%s", out)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("hook file still there: %v", err)
+	}
+}
+
 // install adds Quiver's hooks to Codex's hooks file and trusts them; uninstall
 // removes them.
 func TestInstallCodexHook(t *testing.T) {
@@ -510,14 +588,14 @@ func TestMCPInstallNpm(t *testing.T) {
 // the others alone.
 func TestMCPInstallEveryAssistant(t *testing.T) {
 	f := assistanttest.Install(t)
-	apps := appHome(t, "cursor", "claude-desktop", "antigravity")
+	apps := appHome(t, "cursor", "claude-desktop", "antigravity", "vscode")
 	cx := assistanttest.InstallCodex(t)
 	fakeExecutable(t, "/opt/bin/quiver")
 	out, err := runIn(t, "", "mcp", "install")
 	if err != nil {
 		t.Fatal(err)
 	}
-	cursor, desktop, agy := apps["cursor"], apps["claude-desktop"], apps["antigravity"]
+	cursor, desktop, agy, vsc := apps["cursor"], apps["claude-desktop"], apps["antigravity"], apps["vscode"]
 	wantLines(t, out,
 		"Registered with Claude Code: /opt/bin/quiver mcp",
 		"Registered with Codex: /opt/bin/quiver mcp\nStart a new Codex session to use it.",
@@ -525,6 +603,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 		"Registered with Claude Desktop: /opt/bin/quiver mcp ("+desktop.Path+")",
 		"Claude Desktop does not start Quiver in a project folder, so it gets only the global skills.",
 		"Registered with Antigravity: /opt/bin/quiver mcp ("+agy.Path+")\nRestart Antigravity to use it.",
+		"Registered with VS Code: /opt/bin/quiver mcp ("+vsc.Path+")\nRestart VS Code to use it.",
 		// The delivery report, one line per assistant.
 		"How always-on skills reach each assistant:",
 		"  Claude Code: always-on skills load from a session-start hook.",
@@ -532,6 +611,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 		"  Cursor: always-on skills load from a session-start hook.",
 		"  Claude Desktop: no session-start hook. Quiver's skills are loaded when the model decides to.",
 		"  Antigravity: always-on skills load from a session-start hook.",
+		"  VS Code: always-on skills load from a session-start hook.",
 	)
 	if f.User() != "/opt/bin/quiver|mcp" {
 		t.Errorf("claude user %q", f.User())
@@ -539,14 +619,14 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	if cx.User() != "/opt/bin/quiver|mcp|" {
 		t.Errorf("codex user %q", cx.User())
 	}
-	for _, a := range []*assistant.JSONAssistant{cursor, desktop, agy} {
+	for _, a := range []*assistant.JSONAssistant{cursor, desktop, agy, vsc} {
 		if reg, err := a.Get(); err != nil || reg == nil || reg.Command != "/opt/bin/quiver" {
 			t.Errorf("%s: %+v %v", a.ID, reg, err)
 		}
 	}
 
 	out, _ = runIn(t, "", "doctor")
-	wantLines(t, out, "ok     registered with Claude Code", "ok     registered with Codex", "ok     registered with Cursor", "ok     registered with Claude Desktop", "ok     registered with Antigravity")
+	wantLines(t, out, "ok     registered with Claude Code", "ok     registered with Codex", "ok     registered with Cursor", "ok     registered with Claude Desktop", "ok     registered with Antigravity", "ok     registered with VS Code", "ok     VS Code session-start hook")
 
 	out, err = runIn(t, "", "mcp", "install")
 	if err != nil || strings.Contains(out, "Restart") || strings.Contains(out, "Start a new") {
@@ -565,7 +645,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantLines(t, out, "Removed from Claude Code.", "Removed from Codex.", "Removed from Cursor.", "Removed from Claude Desktop.", "Removed from Antigravity.")
+	wantLines(t, out, "Removed from Claude Code.", "Removed from Codex.", "Removed from Cursor.", "Removed from Claude Desktop.", "Removed from Antigravity.", "Removed from VS Code.")
 	out, _ = runIn(t, "", "doctor")
 	wantLines(t, out,
 		"warn   Codex is installed, but Quiver is not registered with it; run: quiver install codex",

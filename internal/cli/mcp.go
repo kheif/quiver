@@ -295,6 +295,39 @@ func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
 		return installCursorHook(out, bin)
 	case "antigravity":
 		return installAntigravityHook(out, bin)
+	case "vscode":
+		return installVSCodeHook(out, bin)
+	}
+	return nil
+}
+
+// installVSCodeHook writes Quiver's hook file that VS Code's harnesses read,
+// so always-on skills reach them and their sub-agents without a second load.
+func installVSCodeHook(out io.Writer, bin string) error {
+	res, err := assistant.InstallVSCodeHooks(bin)
+	if err != nil {
+		fmt.Fprintf(out, "VS Code: the session-start hook was not added: %v\n", err)
+		return err
+	}
+	path, _ := assistant.VSCodeHooksPath()
+	switch res {
+	case assistant.Installed:
+		fmt.Fprintf(out, "Added the VS Code session-start hook for always-on skills (%s).\n", path)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the VS Code session-start hook to %s (%s).\n", bin, path)
+	}
+	return nil
+}
+
+// uninstallVSCodeHook removes Quiver's hook file that VS Code reads.
+func uninstallVSCodeHook(out io.Writer) error {
+	res, err := assistant.UninstallVSCodeHooks()
+	if err != nil {
+		fmt.Fprintf(out, "VS Code: the session-start hook was not removed: %v\n", err)
+		return err
+	}
+	if res == assistant.Removed {
+		fmt.Fprintln(out, "Removed the session-start hook from VS Code.")
 	}
 	return nil
 }
@@ -534,6 +567,10 @@ func mcpUninstall(out io.Writer, ids []string) error {
 				}
 			case "antigravity":
 				if hookErr := uninstallAntigravityHook(out); hookErr != nil {
+					errs = append(errs, hookErr)
+				}
+			case "vscode":
+				if hookErr := uninstallVSCodeHook(out); hookErr != nil {
 					errs = append(errs, hookErr)
 				}
 			}
