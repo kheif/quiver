@@ -100,6 +100,7 @@ func appHome(t *testing.T, installed ...string) map[string]*assistant.JSONAssist
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // os.UserHomeDir reads USERPROFILE on Windows
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
 	t.Setenv("APPDATA", filepath.Join(home, "AppData"))
 	all, err := assistant.JSONAssistants()
