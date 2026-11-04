@@ -514,6 +514,7 @@ Measured on 2026-11-04 with the final binary, `quiver install`'s hooks given to 
 | Claude Code | one always-on skill with an unreadable folder | the other 4 skills arrived, and the model quoted the notice naming the skill and the error |
 | Cursor CLI | the 26 skills above (3 commands) | 26 of 26 |
 | Antigravity `agy` | the 26 skills above (7 commands) | 26 of 26 |
+| VS Code 1.144.1, Copilot Chat 0.72.0 (Local harness, `gpt-5.6-luna`) | the 26 skills above, 3 `SessionStart` and 3 `SubagentStart` commands in the workspace's `.github/hooks/quiver.json` | 26 of 26 tokens in the main chat's context and answer, and 26 of 26 in a sub-agent's reply |
 | Codex 0.166.0 (`gpt-6.1-sol`) | the 26 skills above, 7 commands for each of `SessionStart` and `SubagentStart` | 26 of 26 distinct tokens, every code correct; `quiver install codex` trusted all 14 hooks through `codex app-server` |
 
-VS Code with several commands was not run in a session.
+In VS Code the commands were run from the workspace, in the form `{"hooks": {...}}` that the workspace location reads (a file in the flat form without the wrapper was ignored there); Quiver's own file is the flat `~/.copilot/hooks/quiver.json`, which the profile of this run could not use without touching the real home folder, and which TASK52.3 measured in 10 of 10 sessions.
