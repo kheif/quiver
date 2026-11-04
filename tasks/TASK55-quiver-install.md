@@ -2,7 +2,7 @@
 
 **Phase:** Phase 6: Session-start delivery (v1.4)
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK53, TASK50
 
@@ -19,3 +19,5 @@ The current code is in `internal/cli/mcp.go` (`mcpTargets`, `mcpInstall`, `mcpUn
 - [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md): Delivery report, doctor and status
 - [TASK55.5](TASK55.5-cursor-hook.md): Cursor hook
 - [TASK55.6](TASK55.6-antigravity-hook.md): Antigravity hook
+- [TASK55.7](TASK55.7-hook-text-in-parts.md): Hook text in parts
+- [TASK55.8](TASK55.8-delivery-failures-and-review-gaps.md): Delivery failures and review gaps

@@ -23,7 +23,7 @@ func vscodeHome(t *testing.T) string {
 
 func TestInstallVSCodeHooks(t *testing.T) {
 	path := vscodeHome(t)
-	res, err := InstallVSCodeHooks("/opt/bin/quiver")
+	res, err := InstallVSCodeHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -49,11 +49,11 @@ func TestInstallVSCodeHooks(t *testing.T) {
 	}
 
 	// Writing the same content again changes nothing.
-	if res, err := InstallVSCodeHooks("/opt/bin/quiver"); err != nil || res != Unchanged {
+	if res, err := InstallVSCodeHooks("/opt/bin/quiver", 1); err != nil || res != Unchanged {
 		t.Errorf("second install: %v %v", res, err)
 	}
 	// A new binary updates the file.
-	if res, err := InstallVSCodeHooks("/new/quiver"); err != nil || res != Updated {
+	if res, err := InstallVSCodeHooks("/new/quiver", 1); err != nil || res != Updated {
 		t.Errorf("update: %v %v", res, err)
 	}
 
@@ -87,7 +87,7 @@ func TestInstallVSCodeHooksCreatesFolder(t *testing.T) {
 	if _, err := os.Stat(filepath.Dir(path)); !os.IsNotExist(err) {
 		t.Fatalf("folder already there: %v", err)
 	}
-	if _, err := InstallVSCodeHooks("/opt/bin/quiver"); err != nil {
+	if _, err := InstallVSCodeHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatalf("install: %v", err)
 	}
 	if _, err := os.Stat(path); err != nil {

@@ -247,8 +247,11 @@ func deliveryReport(out io.Writer, ts []mcpTarget) {
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "How always-on skills reach each assistant:")
 	for _, t := range ts {
-		d := t.delivery()
+		d, missing := t.actualDelivery()
 		fmt.Fprintf(out, "  %s: %s\n", t.name(), d.Describe())
+		if missing {
+			fmt.Fprintf(out, "    Its session-start hook is not in place (see above); quiver doctor says why.\n")
+		}
 		if !d.HasHook() && len(always) > 0 {
 			fmt.Fprintf(out, "    These always-on skills do not load by themselves there: %s.\n", strings.Join(always, ", "))
 		}
@@ -284,6 +287,9 @@ func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
 	default:
 		fmt.Fprintf(out, "Registered with %s: %s mcp (%s)\n", a.Name, bin, a.Path)
 	}
+	if a.CommentsDropped {
+		fmt.Fprintf(out, "%s held comments, which are not kept; the old file is at %s.quiver-backup.\n", a.Path, a.Path)
+	}
 	if res != assistant.Unchanged {
 		fmt.Fprintf(out, "Restart %s to use it.\n", a.Name)
 	}
@@ -304,7 +310,7 @@ func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
 // installVSCodeHook writes Quiver's hook file that VS Code's harnesses read,
 // so always-on skills reach them and their sub-agents without a second load.
 func installVSCodeHook(out io.Writer, bin string) error {
-	res, err := assistant.InstallVSCodeHooks(bin)
+	res, err := assistant.InstallVSCodeHooks(bin, neededHookParts("vscode"))
 	if err != nil {
 		fmt.Fprintf(out, "VS Code: the session-start hook was not added: %v\n", err)
 		return err
@@ -336,7 +342,7 @@ func uninstallVSCodeHook(out io.Writer) error {
 // Antigravity's global hooks file, so always-on skills reach it and its
 // sub-agents without a second load.
 func installAntigravityHook(out io.Writer, bin string) error {
-	res, err := assistant.InstallAntigravityHooks(bin)
+	res, err := assistant.InstallAntigravityHooks(bin, neededHookParts("antigravity"))
 	if err != nil {
 		fmt.Fprintf(out, "Antigravity: the session-start hook was not added: %v\n", err)
 		return err
@@ -368,7 +374,7 @@ func uninstallAntigravityHook(out io.Writer) error {
 // installCursorHook adds or updates Quiver's sessionStart hook in Cursor's
 // hooks file, so always-on skills reach it without a second load.
 func installCursorHook(out io.Writer, bin string) error {
-	res, err := assistant.InstallCursorHooks(bin)
+	res, err := assistant.InstallCursorHooks(bin, neededHookParts("cursor"))
 	if err != nil {
 		fmt.Fprintf(out, "Cursor: the session-start hook was not added: %v\n", err)
 		return err
@@ -427,7 +433,7 @@ func installCodex(out io.Writer, bin string) error {
 // trusts them through codex app-server, so Codex runs them with no review
 // dialog.
 func installCodexHook(out io.Writer, bin string) error {
-	res, err := assistant.InstallCodexHooks(bin)
+	res, err := assistant.InstallCodexHooks(bin, neededHookParts(codexID))
 	if err != nil {
 		fmt.Fprintf(out, "Codex: the session-start hook was not added: %v\n", err)
 		return err
@@ -493,7 +499,7 @@ func installClaude(out io.Writer, bin string) error {
 // installClaudeHook adds or updates Quiver's session-start hooks in Claude
 // Code's settings file, so always-on skills reach it without a second load.
 func installClaudeHook(out io.Writer, bin string) error {
-	res, err := assistant.InstallClaudeHooks(bin)
+	res, err := assistant.InstallClaudeHooks(bin, neededHookParts(claudeCode))
 	if err != nil {
 		fmt.Fprintf(out, "Claude Code: the session-start hook was not added: %v\n", err)
 		return err

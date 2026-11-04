@@ -34,6 +34,13 @@ type JSONAssistant struct {
 	// Extra are members added to Quiver's entry, after command and args, such
 	// as VS Code's "type": "stdio". They are kept up to date on install.
 	Extra []member
+	// Commented means the config file is JSON with comments, as VS Code's
+	// mcp.json is. Install reads it, and writes it without the comments,
+	// after saving the old file next to it.
+	Commented bool
+	// CommentsDropped is set by Install or Uninstall when they rewrote a
+	// file that held comments.
+	CommentsDropped bool
 }
 
 // serversKey is the top-level key that holds the servers object.
@@ -106,7 +113,7 @@ func VSCode() (*JSONAssistant, error) {
 			user = ins
 		}
 	}
-	return &JSONAssistant{ID: "vscode", Name: "VS Code", Dir: user, Path: filepath.Join(user, "mcp.json"), ServersKey: "servers", Extra: []member{{"type", mustMarshal("stdio")}}, Delivery: DeliveryHook}, nil
+	return &JSONAssistant{ID: "vscode", Name: "VS Code", Dir: user, Path: filepath.Join(user, "mcp.json"), ServersKey: "servers", Extra: []member{{"type", mustMarshal("stdio")}}, Delivery: DeliveryHook, Commented: true}, nil
 }
 
 // isDir reports whether path is a directory.
@@ -137,7 +144,7 @@ func (a *JSONAssistant) Installed() bool {
 // Get returns the quiver entry of the config file, or nil if there is none.
 // Scope is the file's path.
 func (a *JSONAssistant) Get() (*Registration, error) {
-	_, servers, err := readConfig(a.Path, a.serversKey())
+	_, servers, err := readConfig(a.Path, a.serversKey(), a.Commented)
 	if err != nil || servers == nil {
 		return nil, err
 	}
@@ -196,7 +203,7 @@ func (a *JSONAssistant) Uninstall() (Result, error) {
 // the file when f changed it; see editJSONFile.
 func (a *JSONAssistant) change(f func([]member) ([]member, Result, error)) (Result, error) {
 	key := a.serversKey()
-	return editJSONFile(a.Path, func(top []member) ([]member, Result, error) {
+	return editJSONFileOpts(a.Path, a.Commented, &a.CommentsDropped, func(top []member) ([]member, Result, error) {
 		var servers []member
 		if i := index(top, key); i >= 0 {
 			s, err := parseObject(top[i].value)
@@ -222,14 +229,22 @@ func (a *JSONAssistant) change(f func([]member) ([]member, Result, error)) (Resu
 // mode; a missing file starts from an empty object, and a file that is not
 // valid JSON is never written.
 func editJSONFile(path string, f func(top []member) ([]member, Result, error)) (Result, error) {
+	return editJSONFileOpts(path, false, nil, f)
+}
+
+// editJSONFileOpts is editJSONFile for a file that may hold comments when
+// commented is set: they are read past and not written back, which is said
+// by *dropped when it is not nil.
+func editJSONFileOpts(path string, commented bool, dropped *bool, f func(top []member) ([]member, Result, error)) (Result, error) {
 	old, err := os.ReadFile(path)
 	exists := err == nil
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return Unchanged, err
 	}
 	var top []member
+	var hadComments bool
 	if exists && len(bytes.TrimSpace(old)) > 0 {
-		top, err = parseObject(old)
+		top, hadComments, err = parseConfigObject(old, commented)
 		if err != nil {
 			return Unchanged, fmt.Errorf("%s is not valid JSON, so it was left as it is: %w", path, err)
 		}
@@ -256,13 +271,84 @@ func editJSONFile(path string, f func(top []member) ([]member, Result, error)) (
 	if err := fsutil.WriteFileAtomic(path, out.Bytes(), perm); err != nil {
 		return Unchanged, err
 	}
+	if dropped != nil {
+		*dropped = hadComments
+	}
 	return res, nil
+}
+
+// parseConfigObject is parseObject for a config file. With commented set, a
+// file that is not plain JSON is read again without its comments and trailing
+// commas; withComments tells that this was needed.
+func parseConfigObject(data []byte, commented bool) (members []member, withComments bool, err error) {
+	members, err = parseObject(data)
+	if err == nil || !commented {
+		return members, false, err
+	}
+	plain := stripComments(data)
+	if m, perr := parseObject(plain); perr == nil {
+		return m, true, nil
+	}
+	return nil, false, err
+}
+
+// stripComments removes // and /* */ comments and trailing commas from JSON
+// with comments, leaving strings as they are.
+func stripComments(data []byte) []byte {
+	out := make([]byte, 0, len(data))
+	comma := -1 // where the last comma is, while only spaces follow it
+	inString := false
+	for i := 0; i < len(data); i++ {
+		c := data[i]
+		if inString {
+			out = append(out, c)
+			switch c {
+			case '\\':
+				if i+1 < len(data) {
+					i++
+					out = append(out, data[i])
+				}
+			case '"':
+				inString = false
+			}
+			continue
+		}
+		switch {
+		case c == '/' && i+1 < len(data) && data[i+1] == '/':
+			for i < len(data) && data[i] != '\n' {
+				i++
+			}
+			i--
+		case c == '/' && i+1 < len(data) && data[i+1] == '*':
+			end := bytes.Index(data[i+2:], []byte("*/"))
+			if end < 0 {
+				return data // not closed: leave it to fail
+			}
+			i += end + 3
+			out = append(out, ' ')
+		case c == ' ' || c == '\t' || c == '\n' || c == '\r':
+			out = append(out, c)
+		default:
+			if (c == '}' || c == ']') && comma >= 0 {
+				out[comma] = ' '
+			}
+			comma = -1
+			if c == ',' {
+				comma = len(out)
+			}
+			if c == '"' {
+				inString = true
+			}
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 // readConfig reads the config file's top-level object and its servers object
 // under key. A missing or empty file is an empty object; servers is nil when
 // there is no such key.
-func readConfig(path, key string) (top, servers []member, err error) {
+func readConfig(path, key string, commented bool) (top, servers []member, err error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) || (err == nil && len(bytes.TrimSpace(data)) == 0) {
 		return nil, nil, nil
@@ -270,7 +356,7 @@ func readConfig(path, key string) (top, servers []member, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	top, err = parseObject(data)
+	top, _, err = parseConfigObject(data, commented)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s is not valid JSON, so it was left as it is: %w", path, err)
 	}

@@ -174,12 +174,16 @@ func skillText(sk *skill.Skill) (string, error) {
 		return "", err
 	}
 	var b strings.Builder
-	b.WriteString(strings.TrimSpace(sk.Body))
+	b.WriteString(clean(strings.TrimSpace(sk.Body)))
 	b.WriteString("\n\n---\n")
 	if len(files) > 0 {
-		fmt.Fprintf(&b, "Extra files (load with get_skill_file): %s\n", strings.Join(files, ", "))
+		names := make([]string, len(files))
+		for i, f := range files {
+			names[i] = oneLine(f)
+		}
+		fmt.Fprintf(&b, "Extra files (load with get_skill_file): %s\n", strings.Join(names, ", "))
 	}
-	fmt.Fprintf(&b, "Scripts and files referenced by this skill are in %s. Use absolute paths.\n", sk.Dir)
+	fmt.Fprintf(&b, "Scripts and files referenced by this skill are in %s. Use absolute paths.\n", oneLine(sk.Dir))
 	return b.String(), nil
 }
 

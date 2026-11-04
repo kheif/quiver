@@ -473,3 +473,47 @@ A pointer in a rules file that every session loads: "Before your first reply, lo
 In Antigravity the model loaded `reply-style` in 10 of 10, and 3 sessions ended without an answer when the model went on to read a skill file outside the workspace or to run `find`, which headless `agy` cannot allow. The same pointer in `~/.gemini/config/AGENTS.md` and in `~/.gemini/GEMINI.md` worked too, 2 of 2 each. Codex reads `AGENTS.override.md` instead of `AGENTS.md` in `$CODEX_HOME` when it exists (from source).
 
 A project's own file adds to the global one: with "Start every reply with the line [global-rule]." in the global file and "End every reply with the line [project-rule]." in the workspace's `AGENTS.md`, both were followed in 2 of 2 in Codex and 6 of 6 in Antigravity. Codex joins the two with a `--- project-doc ---` line (from source).
+
+## One text in several hook commands
+
+An assistant passes only so much text from one hook command (Claude Code 10,000 characters, Antigravity about 48,900 bytes), and always-on skills must arrive whole whatever their size. Quiver therefore splits its text (the always-on skills in full, then the ID and description of every other skill) over several hook commands of one event, each printing one part (`quiver hook session-start <assistant> [part]`). Measured on 2026-11-04 with throwaway workspaces, and then with the real `quiver install`:
+
+| Assistant | One command | Several commands | Order of the parts |
+|---|---|---|---|
+| Claude Code 2.1.308 | 10,000 characters | 5 commands of 9,900 and 12 of 9,900 (118,800 characters) arrived whole | The order the commands finish. Parts that sleep for different times arrived in finishing order, never in file order. |
+| Cursor CLI 2026.10.22 | 200,000 characters arrived whole from one command | 5 commands of 9,900 arrived whole | File order, also when the first commands are slower: they run one after another. |
+| Antigravity `agy` 1.4.12 | 40,000 bytes arrived whole, 60,000 lost its end | 3 commands of 30,000 and 6 of 30,000 (180,000 bytes) arrived whole | File order, also when the first commands are slower. |
+
+- The limit is per command everywhere, so the text of any size reaches the model; only the context window bounds it.
+- Because Claude Code runs the commands at the same time, a part waits 50 ms times its number minus one before it prints (later: 50 ms for each of the first 20 parts, 10 ms after that, 3 s at most, so that hundreds of parts still arrive inside the 10 s hook limit). Without the wait, 2 of 3 runs added the parts in the order 5, 6, 3, 4, 1, 2; with it, 8 of 8 runs added them in order, while 8 sessions ran at once. Every part names itself (`part="2/4"`), and a section that continues from the previous part says so, so a model can put the parts in order when they arrive out of it.
+- With the real binary and a new `quiver install`, in Claude Code: 6 always-on skills of about 4,100 characters each (4 parts) and 15 other skills were all in the context in 3 of 3 sessions, and so was a project's own always-on skill. A sub-agent got the same text from its `SubagentStart` commands in 3 of 3.
+- Cursor (2 parts) and Antigravity (4 parts) with 12 always-on skills of about 12,000 characters each: all 12 skills arrived, in order, in 1 of 1 session each.
+- A hook command takes about 10 ms plus the 50 ms steps; four commands finish within 0.2 s.
+- Codex: `additionalContextLimit` 0 turns its limit off and 50,000 bytes arrived whole from one command (TASK52.2); Quiver splits at 40,000 bytes there. The Codex and VS Code hooks with several commands were not run in a session here; Codex needs every command trusted, which `quiver install` does through `codex app-server`.
+
+### Many parts at once
+
+Measured on 2026-11-04 with the Quiver binary and a library of 2,000 skills (47 MB; 100 always-on, 2.1 MB of text, 231 parts of 10,000 characters), starting all 231 commands at once and killing each after 10 s, as Claude Code's hook timeout does:
+
+| | Delivered | Killed | Wall time |
+|---|---|---|---|
+| Each command reads the library and builds the text | 48 of 231 | 183 | 30 s |
+| Part 1 builds and leaves the parts in `~/.quiver/cache/hook`; the others read them | 231 of 231 (2,055,674 characters) | 0 | 3.5 s |
+
+The same library with 500 projects: `quiver add` took 21 s while it rebuilt every project's text to count its parts, and 1 s when each skill's text, size and catalog line is built once and parts are only counted.
+
+### Real sessions after the delivery changes
+
+Measured on 2026-11-04 with the final binary, `quiver install`'s hooks given to each assistant through its own per-run or per-project hook file, a throwaway Quiver home, and unique random tokens at the start and end of each skill:
+
+| Assistant | Text | Result |
+|---|---|---|
+| Claude Code 2.1.308 | 6 always-on skills (4 parts), a project always-on skill, 15 other skills | 7 of 7 tokens and all 15 catalog entries in 3 of 3 sessions; parts 2 to 4 read the cache part 1 wrote |
+| Claude Code, sub-agent | the same | 7 of 7 tokens in the sub-agent's context, from 4 `SubagentStart` commands |
+| Claude Code | 25 always-on skills of 9,000 characters and a project skill (26 parts) | 26 of 26 tokens; part 1 took 137 ms |
+| Claude Code | one always-on skill with an unreadable folder | the other 4 skills arrived, and the model quoted the notice naming the skill and the error |
+| Cursor CLI | the 26 skills above (3 commands) | 26 of 26 |
+| Antigravity `agy` | the 26 skills above (7 commands) | 26 of 26 |
+| Codex 0.166.0 (`gpt-6.1-sol`) | the 26 skills above, 7 commands for each of `SessionStart` and `SubagentStart` | 26 of 26 distinct tokens, every code correct; `quiver install codex` trusted all 14 hooks through `codex app-server` |
+
+VS Code with several commands was not run in a session.

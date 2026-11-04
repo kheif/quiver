@@ -141,3 +141,28 @@ func TestCheckEditable(t *testing.T) {
 		}
 	}
 }
+
+// LoadFor reads only the skills it is asked for: the others are neither
+// parsed nor warned about.
+func TestLoadForReadsOnlyTheSkillsAskedFor(t *testing.T) {
+	fixture(t)
+	l, err := LoadFor([]string{"pdf", "broken", "absent"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ids []string
+	for _, s := range l.All() {
+		ids = append(ids, s.ID)
+	}
+	if got := strings.Join(ids, ","); got != "pdf" {
+		t.Errorf("ids %s", got)
+	}
+	// broken was asked for, so its problem is known; no-desc was not.
+	all := strings.Join(l.Warnings, "\n")
+	if !strings.Contains(all, "skipped broken") || strings.Contains(all, "no-desc") {
+		t.Errorf("warnings:\n%s", all)
+	}
+	if _, err := l.Get("db-migration"); err == nil {
+		t.Error("a skill that was not asked for is in the library")
+	}
+}

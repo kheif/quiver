@@ -73,4 +73,4 @@ case ":$PATH:" in
 	;;
 esac
 echo
-echo "Next: quiver mcp install"
+echo "Next: quiver install"

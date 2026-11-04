@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/kheif/quiver/internal/library"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -27,7 +29,7 @@ type UpdateResult struct {
 }
 
 // addUpdateTool registers update_skill.
-func addUpdateTool(s *mcp.Server) {
+func addUpdateTool(s *mcp.Server, sess *session) {
 	notDestructive := false
 	mcp.AddTool(s, &mcp.Tool{
 		Name: "update_skill",
@@ -37,11 +39,29 @@ func addUpdateTool(s *mcp.Server) {
 			`The change is committed in the library, and get_skill returns the new version right away.`,
 		Annotations: &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: &notDestructive},
 	}, func(_ context.Context, _ *mcp.CallToolRequest, in updateIn) (*mcp.CallToolResult, UpdateResult, error) {
-		return updateSkill(in)
+		return updateSkill(in, sess.projectID())
 	})
 }
 
-func updateSkill(in updateIn) (*mcp.CallToolResult, UpdateResult, error) {
+// checkChangeable refuses a change to a skill the session is not served, and
+// to an always-on skill. An assistant that follows a prompt injection could
+// otherwise rewrite the rules of another project, or the text that every
+// later session starts with. Those are changed with quiver edit.
+func checkChangeable(projectID, id string) error {
+	r, err := registry.Load()
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(r.Served(projectID), id) {
+		return fmt.Errorf("%s is not served in this project, so update_skill does not change it. The user can assign it with \"quiver add %s\", or change it with \"quiver edit %s\"", id, id, id)
+	}
+	if slices.Contains(r.AlwaysOnServed(projectID), id) {
+		return fmt.Errorf("%s is always-on: every session starts with its text, so it is changed by the user, with \"quiver edit %s\", not through the assistant", id, id)
+	}
+	return nil
+}
+
+func updateSkill(in updateIn, projectID string) (*mcp.CallToolResult, UpdateResult, error) {
 	local, err := library.LocalDir()
 	if err != nil {
 		return nil, UpdateResult{}, err
@@ -57,6 +77,9 @@ func updateSkill(in updateIn) (*mcp.CallToolResult, UpdateResult, error) {
 		}
 	} else if _, serr := os.Stat(filepath.Join(local, in.ID)); strings.ContainsAny(in.ID, `/\`) || serr != nil {
 		// An invalid local skill is not in the library, but can be fixed.
+		return nil, UpdateResult{}, err
+	}
+	if err := checkChangeable(projectID, in.ID); err != nil {
 		return nil, UpdateResult{}, err
 	}
 	out := UpdateResult{ID: in.ID, Path: filepath.Join(local, in.ID)}

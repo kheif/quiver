@@ -123,7 +123,7 @@ func TestRealCodexTrust(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res, err := InstallCodexHooks("/opt/bin/quiver"); err != nil || res != Installed {
+	if res, err := InstallCodexHooks("/opt/bin/quiver", 1); err != nil || res != Installed {
 		t.Fatalf("install hooks: %v %v", res, err)
 	}
 	need, err := CodexHooksNeedTrust()
@@ -138,7 +138,7 @@ func TestRealCodexTrust(t *testing.T) {
 	}
 
 	// Moving the binary changes the hooks, so they need trust again.
-	if res, err := InstallCodexHooks("/new/quiver"); err != nil || res != Updated {
+	if res, err := InstallCodexHooks("/new/quiver", 1); err != nil || res != Updated {
 		t.Fatalf("update hooks: %v %v", res, err)
 	}
 	if need, err := CodexHooksNeedTrust(); err != nil || len(need) != 2 {

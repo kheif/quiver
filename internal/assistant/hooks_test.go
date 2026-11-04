@@ -57,7 +57,7 @@ func quiverHooks(t *testing.T, m map[string]any, event, subcommand string) (comm
 
 func TestClaudeHooksMissingFile(t *testing.T) {
 	path := hookSettings(t)
-	res, err := InstallClaudeHooks("/opt/bin/quiver")
+	res, err := InstallClaudeHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -83,7 +83,7 @@ func TestClaudeHooksMissingFile(t *testing.T) {
 	}
 
 	// A second identical install changes nothing.
-	if res, err := InstallClaudeHooks("/opt/bin/quiver"); err != nil || res != Unchanged {
+	if res, err := InstallClaudeHooks("/opt/bin/quiver", 1); err != nil || res != Unchanged {
 		t.Errorf("second install: %v %v", res, err)
 	}
 }
@@ -105,7 +105,7 @@ func TestClaudeHooksKeepsOtherSettings(t *testing.T) {
 	if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	res, err := InstallClaudeHooks("/opt/bin/quiver")
+	res, err := InstallClaudeHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -135,10 +135,10 @@ func TestClaudeHooksKeepsOtherSettings(t *testing.T) {
 
 func TestClaudeHooksUpdateAfterMove(t *testing.T) {
 	hookSettings(t)
-	if _, err := InstallClaudeHooks("/old/quiver"); err != nil {
+	if _, err := InstallClaudeHooks("/old/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
-	res, err := InstallClaudeHooks("/new/quiver")
+	res, err := InstallClaudeHooks("/new/quiver", 1)
 	if err != nil || res != Updated {
 		t.Fatalf("move: %v %v", res, err)
 	}
@@ -163,7 +163,7 @@ func TestClaudeHooksRemove(t *testing.T) {
 	if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := InstallClaudeHooks("/opt/bin/quiver"); err != nil {
+	if _, err := InstallClaudeHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
 	res, err := UninstallClaudeHooks()
@@ -199,7 +199,7 @@ func TestClaudeHooksInvalidJSON(t *testing.T) {
 	if err := os.WriteFile(path, []byte(broken), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := InstallClaudeHooks("/opt/bin/quiver"); err == nil {
+	if _, err := InstallClaudeHooks("/opt/bin/quiver", 1); err == nil {
 		t.Errorf("no error on invalid JSON")
 	}
 	data, _ := os.ReadFile(path)

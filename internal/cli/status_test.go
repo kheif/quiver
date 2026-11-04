@@ -63,9 +63,18 @@ func TestStatusAssistants(t *testing.T) {
 		}
 	}
 	t.Chdir(f.app)
+	// Without their hooks, the assistants say so instead of claiming one.
 	out := f.run(t, "status")
 	wantLines(t, out,
 		"Assistants (how always-on skills reach them):",
+		"  Claude Code: instructions (the session-start hook is missing; run quiver doctor)",
+		"  Cursor: instructions (the session-start hook is missing; run quiver doctor)",
+		"  Claude Desktop: on request",
+	)
+	fakeExecutable(t, "/opt/bin/quiver")
+	f.run(t, "install")
+	out = f.run(t, "status")
+	wantLines(t, out,
 		"  Claude Code: hook",
 		"  Cursor: hook",
 		"  Claude Desktop: on request",

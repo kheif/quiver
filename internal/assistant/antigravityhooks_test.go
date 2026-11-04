@@ -35,7 +35,7 @@ func quiverSessionStart(t *testing.T, m map[string]any) (command string, timeout
 
 func TestAntigravityHooksMissingFile(t *testing.T) {
 	path := antigravityHooksHome(t)
-	res, err := InstallAntigravityHooks("/opt/bin/quiver")
+	res, err := InstallAntigravityHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -56,7 +56,7 @@ func TestAntigravityHooksMissingFile(t *testing.T) {
 	}
 
 	// A second identical install changes nothing.
-	if res, err := InstallAntigravityHooks("/opt/bin/quiver"); err != nil || res != Unchanged {
+	if res, err := InstallAntigravityHooks("/opt/bin/quiver", 1); err != nil || res != Unchanged {
 		t.Errorf("second install: %v %v", res, err)
 	}
 }
@@ -77,7 +77,7 @@ func TestAntigravityHooksKeepsOtherHooks(t *testing.T) {
 	if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	res, err := InstallAntigravityHooks("/opt/bin/quiver")
+	res, err := InstallAntigravityHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -98,10 +98,10 @@ func TestAntigravityHooksKeepsOtherHooks(t *testing.T) {
 
 func TestAntigravityHooksUpdateAfterMove(t *testing.T) {
 	antigravityHooksHome(t)
-	if _, err := InstallAntigravityHooks("/old/quiver"); err != nil {
+	if _, err := InstallAntigravityHooks("/old/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
-	res, err := InstallAntigravityHooks("/new/quiver")
+	res, err := InstallAntigravityHooks("/new/quiver", 1)
 	if err != nil || res != Updated {
 		t.Fatalf("move: %v %v", res, err)
 	}
@@ -133,7 +133,7 @@ func TestAntigravityHooksRemove(t *testing.T) {
 	if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := InstallAntigravityHooks("/opt/bin/quiver"); err != nil {
+	if _, err := InstallAntigravityHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
 	res, err := UninstallAntigravityHooks()
@@ -170,7 +170,7 @@ func TestAntigravityHooksInvalidJSON(t *testing.T) {
 	if err := os.WriteFile(path, []byte(broken), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := InstallAntigravityHooks("/opt/bin/quiver"); err == nil {
+	if _, err := InstallAntigravityHooks("/opt/bin/quiver", 1); err == nil {
 		t.Errorf("no error on invalid JSON")
 	}
 	data, _ := os.ReadFile(path)

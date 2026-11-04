@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -156,9 +157,13 @@ func parents(dir, home string) func(yield func(string) bool) {
 	}
 }
 
+// maxFile is the largest .quiver.json Quiver reads. The file holds an ID, and
+// a repository can put anything at that path, such as a link to /dev/zero.
+const maxFile = 64 * 1024
+
 // readFile reads .quiver.json with all its keys.
 func readFile(path string) (map[string]json.RawMessage, error) {
-	data, err := os.ReadFile(path)
+	data, err := readSmall(path)
 	if err != nil {
 		return nil, err
 	}
@@ -192,4 +197,28 @@ func readID(path string) (string, error) {
 
 func validID(id string) bool {
 	return id != "" && !strings.ContainsAny(id, " \t\r\n/\\")
+}
+
+// readSmall reads a regular file of at most maxFile bytes.
+func readSmall(path string) ([]byte, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("%s: not a regular file", path)
+	}
+	data, err := io.ReadAll(io.LimitReader(f, maxFile+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > maxFile {
+		return nil, fmt.Errorf("%s: larger than %d KB; it should hold only an id", path, maxFile/1024)
+	}
+	return data, nil
 }

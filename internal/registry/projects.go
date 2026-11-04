@@ -55,6 +55,27 @@ func (r *Registry) EnsureProject(id, root string) *PossibleCopy {
 	return nil
 }
 
+// OtherFolders returns the folders other than root where the project was seen
+// and that still hold the same .quiver.json, apart from other worktrees of
+// root's repository. When it returns any, root is probably a copy that
+// shares the project's ID, and gets the original's skills.
+func (r *Registry) OtherFolders(id, root string) []string {
+	p, ok := r.Projects[id]
+	if !ok {
+		return nil
+	}
+	var out []string
+	for _, old := range p.Paths {
+		if samePath(old, root) || SameRepository(old, root) {
+			continue
+		}
+		if found, err := project.Find(old); err == nil && found.ID == id && samePath(found.Root, old) {
+			out = append(out, old)
+		}
+	}
+	return out
+}
+
 // SameRepository reports whether a and b are worktrees of one git
 // repository. Folders outside git are never the same repository.
 func SameRepository(a, b string) bool {

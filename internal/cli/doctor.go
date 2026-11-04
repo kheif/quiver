@@ -582,12 +582,15 @@ func (d *doc) checkMCP() {
 	for _, a := range installed {
 		d.checkJSONAssistant(a, appBin, appErr == nil)
 		switch a.ID {
+		case "cursor":
+			d.checkCursorHook(appBin, appErr == nil)
 		case "antigravity":
 			d.checkAntigravityHook(appBin, appErr == nil)
 		case "vscode":
 			d.checkVSCodeHook(appBin, appErr == nil)
 		}
 	}
+	d.checkHookParts(installed, hasCodex)
 	// Name the always-on skills that do not load by themselves in the
 	// installed assistants without a hook, so they are not taken for granted.
 	if always := assignedAlwaysOn(); len(always) > 0 {
@@ -595,6 +598,33 @@ func (d *doc) checkMCP() {
 			if !a.Delivery.HasHook() {
 				d.report("warn", fmt.Sprintf("%s has no session-start hook, so these always-on skills do not load by themselves there: %s", a.Name, strings.Join(always, ", ")))
 			}
+		}
+	}
+}
+
+// checkHookParts warns about each assistant whose Quiver hook has fewer
+// commands than the text of the skills takes: what is past the last command
+// does not load.
+func (d *doc) checkHookParts(installed []*assistant.JSONAssistant, hasCodex bool) {
+	ids := []string{}
+	if assistant.HasClaude() {
+		ids = append(ids, claudeCode)
+	}
+	if hasCodex {
+		ids = append(ids, codexID)
+	}
+	for _, a := range installed {
+		if _, ok := hookLimits[a.ID]; ok {
+			ids = append(ids, a.ID)
+		}
+	}
+	for _, id := range ids {
+		have, err := hookParts(id)
+		if err != nil || have == 0 {
+			continue // no hook, or unreadable: its own check says so
+		}
+		if need := neededHookParts(id); have < need {
+			d.report("warn", fmt.Sprintf("the %s session-start hook has %s, but the text of your skills takes %d, so the rest does not load; run: quiver install %s", assistantName(id), plural(have, "command"), need, id))
 		}
 	}
 }
@@ -614,6 +644,21 @@ func (d *doc) checkClaudeHook(bin string, knowBin bool) {
 		d.report("warn", "the Claude Code session-start hook runs another quiver; run: quiver install")
 	default:
 		d.report("ok", "Claude Code session-start hook")
+	}
+}
+
+// checkCursorHook reports on Quiver's session-start hook in Cursor.
+func (d *doc) checkCursorHook(bin string, knowBin bool) {
+	present, current, err := assistant.CursorHookInstalled(bin)
+	switch {
+	case err != nil:
+		d.report("warn", "the Cursor session-start hook could not be read", err.Error())
+	case !present:
+		d.report("warn", "no Quiver session-start hook in Cursor; run: quiver install cursor")
+	case knowBin && !current:
+		d.report("warn", "the Cursor session-start hook runs another quiver; run: quiver install cursor")
+	default:
+		d.report("ok", "Cursor session-start hook")
 	}
 }
 

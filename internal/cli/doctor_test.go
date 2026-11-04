@@ -22,7 +22,7 @@ func registered(t *testing.T) {
 	t.Helper()
 	assistanttest.Install(t).SetUser(t, "/opt/bin/quiver", "mcp")
 	fakeExecutable(t, "/opt/bin/quiver")
-	if _, err := assistant.InstallClaudeHooks("/opt/bin/quiver"); err != nil {
+	if _, err := assistant.InstallClaudeHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -206,7 +206,7 @@ func TestDoctorClaudeRunsOtherQuiver(t *testing.T) {
 	assistanttest.Install(t).SetUser(t, "/old/quiver", "mcp")
 	fakeExecutable(t, "/opt/bin/quiver")
 	// The hook is current, so only the MCP registration drifts.
-	if _, err := assistant.InstallClaudeHooks("/opt/bin/quiver"); err != nil {
+	if _, err := assistant.InstallClaudeHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
 	out, err := runIn(t, "", "doctor")

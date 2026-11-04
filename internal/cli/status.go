@@ -160,7 +160,12 @@ func installedAssistants() []statusAssistant {
 	}
 	as := make([]statusAssistant, 0, len(ts))
 	for _, t := range ts {
-		as = append(as, statusAssistant{Name: t.name(), Delivery: t.delivery().Level()})
+		d, missing := t.actualDelivery()
+		level := d.Level()
+		if missing {
+			level += " (the session-start hook is missing; run quiver doctor)"
+		}
+		as = append(as, statusAssistant{Name: t.name(), Delivery: level})
 	}
 	return as
 }

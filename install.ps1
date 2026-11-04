@@ -133,5 +133,5 @@
 		Write-Host "Added $full to your PATH. Open a new terminal to use quiver there."
 	}
 	Write-Host ''
-	Write-Host 'Next: quiver mcp install'
+	Write-Host 'Next: quiver install'
 }

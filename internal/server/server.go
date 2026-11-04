@@ -49,7 +49,7 @@ func newServer(opts Options) (*mcp.Server, *session, *prompts) {
 	s.AddReceivingMiddleware(recoverPanics(opts.Log))
 	addSkillTools(s, sess)
 	addCreateTool(s, sess)
-	addUpdateTool(s)
+	addUpdateTool(s, sess)
 	addSearchTool(s, sess)
 	p = &prompts{}
 	if _, err := p.sync(s, sess.projectID()); err != nil {
@@ -141,28 +141,17 @@ func (s *session) projectID() string {
 	return s.where.ProjectID()
 }
 
-// instructions returns the text the assistant adds to its system prompt:
-// the pointer to the always-on skills, the catalog of skills served in the
-// project, then the pointer to create_skill. It is built once, so skills
-// assigned later reach it in the next session.
+// instructions returns the text the assistant adds to its system prompt: how
+// to use the server, the pointer to the always-on skills, then the pointer to
+// create_skill. The skills themselves come from the session-start hook. It is
+// built once, so skills assigned later reach it in the next session.
 func instructions(opts Options) string {
 	_, skills, err := loadServed(opts.Where.ProjectID())
 	if err != nil {
-		opts.Log.Warn("no skill catalog in the instructions", "err", err)
-		return createHint
+		opts.Log.Warn("no always-on pointer in the instructions", "err", err)
+		return usage + createHint
 	}
-	return buildInstructions(skills)
-}
-
-// buildInstructions joins the parts of the instructions within
-// maxInstructions.
-func buildInstructions(skills []servedSkill) string {
-	p := pointer(skills)
-	c := catalog(skills, maxInstructions-len(p)-len(createHint)-1)
-	if c != "" {
-		c += "\n"
-	}
-	return p + c + createHint
+	return usage + pointer(skills) + createHint
 }
 
 // Run serves MCP over stdin and stdout until the client disconnects.

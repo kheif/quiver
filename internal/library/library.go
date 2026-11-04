@@ -26,10 +26,33 @@ type Library struct {
 	// Warnings lists skills that were skipped or look wrong. They never stop
 	// a load.
 	Warnings []string
+	// only, when it is not nil, is the set of IDs whose files are read.
+	only map[string]bool
+}
+
+// wants reports whether the skill with the ID is to be read.
+func (l *Library) wants(id string) bool {
+	return l.only == nil || l.only[id]
 }
 
 // Load scans ~/.quiver/local and every source in the config.
 func Load() (*Library, error) {
+	return load(nil)
+}
+
+// LoadFor is Load for a program that needs only some skills, such as a
+// session-start hook, which runs at the start of every session: it finds
+// every skill but reads the files of the skills in ids alone. The others are
+// not in the library.
+func LoadFor(ids []string) (*Library, error) {
+	only := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		only[id] = true
+	}
+	return load(only)
+}
+
+func load(only map[string]bool) (*Library, error) {
 	home, err := fsutil.QuiverHome()
 	if err != nil {
 		return nil, err
@@ -38,7 +61,7 @@ func Load() (*Library, error) {
 	if err != nil {
 		return nil, err
 	}
-	l := &Library{skills: map[string]*skill.Skill{}, pins: map[string]string{}}
+	l := &Library{skills: map[string]*skill.Skill{}, pins: map[string]string{}, only: only}
 	if err := l.addLocal(filepath.Join(home, "local")); err != nil {
 		return nil, err
 	}
@@ -61,6 +84,10 @@ func Load() (*Library, error) {
 // skill never changes without notice.
 func (l *Library) addPinned(cfg *config.Config, source string) {
 	for _, id := range pinIDs(cfg, source) {
+		if !l.wants(id) {
+			delete(l.skills, id)
+			continue
+		}
 		p := cfg.Pins[id]
 		delete(l.skills, id)
 		at, err := PinDir(source, p.Commit)
@@ -135,6 +162,9 @@ func (l *Library) addRemote(dir, name string, ids map[string]string) error {
 
 // addSkill loads and validates one skill folder. Problems become warnings.
 func (l *Library) addSkill(dir, source, id string) {
+	if !l.wants(id) {
+		return
+	}
 	s, err := skill.Load(dir)
 	if err != nil {
 		l.Warnings = append(l.Warnings, fmt.Sprintf("skipped %s: %v", id, err))

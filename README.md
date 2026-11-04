@@ -104,7 +104,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver source remove <name>` | Delete a source. Refuses while its skills are assigned, unless `--force`. |
 | `quiver update [<name>...]` | Download the latest skills of all or some sources and show what would change: the changed files of each assigned skill, with scripts marked "needs review". Asks before it applies changes to assigned skills (`--yes` does not ask, `--diff` shows the whole change). Pinned skills stay at their commit. |
 | `quiver pin <source/skill> [<commit>]` | Keep a source skill at its current commit, or the one given, so `quiver update` leaves it alone. `quiver unpin` goes back to the source's current version. |
-| `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. |
+| `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. Before it pulls changes that make a skill always-on, change an always-on skill's files or add a source, it lists them and asks (`--yes` takes them). |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
 | `quiver install [assistant...]` | Register the MCP server with every supported assistant that is installed, or only with the assistants named. See [MCP server](#mcp-server). |
@@ -140,6 +140,10 @@ An assistant counts as installed when its command (`claude`, `codex`) is on `PAT
 
 **Claude Code, Codex, Cursor, Antigravity and VS Code** get a session-start hook that adds the always-on skills' text at the start of every session, so they always reach the model. Claude Code, Codex, Antigravity and VS Code also run it for each sub-agent; Cursor's sub-agent event cannot add text, so it has only the session-start hook. VS Code's hook is one file Quiver owns, `~/.copilot/hooks/quiver.json`, which both its harnesses read. Codex's hooks are trusted automatically through `codex app-server`; if that fails, `quiver install` prints the "Review hooks" step. `quiver doctor` reports a Claude Code, Codex, Antigravity or VS Code hook that is missing, runs another binary, or (Codex) needs review.
 
+The hook passes the always-on skills in full, global ones first, and then the ID and description of every other skill served in the folder. An assistant takes only so much text from one hook command (Claude Code 10,000 characters, Antigravity about 48,900 bytes), so Quiver splits the text over as many hook commands as the assistant needs and nothing is left out. Each part says which one it is, and a skill is cut between parts only when it is longer than one. `quiver install`, and every command that changes skills, sets the number of commands to what your skills take (a project's own always-on skills count too); `quiver doctor` warns when an assistant has fewer commands than the text takes. The parts of one session start share one text: the first command builds it and the others read it, so a skill edited meanwhile cannot give them different texts.
+
+A session never starts silently without its skills. A skill that cannot be read is left out and named, and so is anything else the hook could not do (an unreadable registry, a `.quiver.json` that is not a small file, a folder that has the project ID of another folder, as a copied repository does); the assistant is told in a `<quiver-notice>` block and tells you. Text that reaches the model is cleaned: hidden characters are dropped and a skill cannot write Quiver's own tags. `~/.quiver/logs/hook.log` records each run with a hash of the text it passed.
+
 **Claude Desktop** uses Quiver's skills only when you ask for them in the prompt, such as "check the quiver skills for this"; `quiver install` says so, because Claude Desktop drops the server's instructions. Antigravity starts the server in the project folder, so project skills work there. VS Code starts it in your home folder and sends the workspace as an MCP root, which Quiver reads after startup to serve that project's skills. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
 
 For any other assistant, `quiver mcp config` prints the entry:
@@ -152,7 +156,7 @@ The server serves the project of the folder it is started in, or of `$QUIVER_PRO
 
 Claude Code starts the server in the project folder. Other assistants may start it somewhere else, such as your home folder; there it serves only the global skills, unless the assistant sends its workspace as an MCP root (VS Code), which Quiver reads to find the project. Cursor starts it in the workspace folder. Claude Desktop never starts it in a project. Set `QUIVER_PROJECT` in that assistant's MCP config to serve a project's skills.
 
-**Instructions.** When a session starts, the server tells the assistant which skills exist here: their IDs and descriptions, the always-on skills, and that new skills are saved with `create_skill`.
+**Instructions.** The server's instructions stay short: how to use its tools (`get_skill`, `get_skill_file`, `list_skills`, `search_skills`), that new skills are saved with `create_skill`, and the names of the always-on skills, which an assistant without a session-start hook loads with `get_skill`. The skills themselves come from the hook above: the always-on skills in full and the others as ID and description.
 
 **Tools:**
 
@@ -167,13 +171,13 @@ Claude Code starts the server in the project folder. Other assistants may start 
 
 **Prompts.** Every served skill is also an MCP prompt. In Claude Code it appears as `/quiver:<id>`; text after the command is passed to the skill as the task.
 
-**Live updates.** While a session runs, the server watches the library. Skills you add, remove or change show up in `list_skills` and the prompts right away. The skill list in the instructions is built once, so it changes from the next session on.
+**Live updates.** While a session runs, the server watches the library. Skills you add, remove or change show up in `list_skills` and the prompts right away. The hook's text is built when a session starts, so it changes from the next session on.
 
 ## Always-on skills: limits
 
-- Changes take effect in the next session, because the instructions cannot change during a session.
+- Changes take effect in the next session, because the hook runs when a session starts.
 - Only the skill's text is delivered. Plugin hooks, such as a per-message reminder, are not run.
-- Subagents are not reliable: in testing, one of two subagents followed the always-on skill.
+- Sub-agents get the text from the sub-agent hook, in the assistants that have one (Claude Code, Codex, Antigravity, VS Code); Cursor has none.
 
 ## Security
 
@@ -182,16 +186,19 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - Add only sources you trust, and read their skills before you assign them.
 - `quiver update` downloads new commits before it applies them, lists the changed files of every assigned skill, marks scripts and executable files "needs review", and asks before it applies the changes. Read them with `quiver update --diff`; answering no leaves the source as it was. To review changes to a skill before it reaches your sessions, pin it with `quiver pin` and move the pin when you have read them.
 - Source skills are read-only in Quiver. To change one, fork it into your own skills with `quiver fork`.
+- `quiver sync` takes in what another machine pushed, so it lists changes that make a skill always-on, change an always-on skill or add a source, and asks first; use a private remote.
+- `get_skill` and `search_skills` read the whole library, not only the skills assigned to the project; assign only what you want a project's sessions to see by name.
+- `update_skill` changes only skills served in the session's project, and never an always-on skill: change those yourself with `quiver edit`.
 - `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`. Every change is a commit in `~/.quiver/local` (in `~/.quiver` once you use `quiver sync`), so `git -C ~/.quiver/local log -p` shows it and `git revert` undoes it.
 
 To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).
 
 ## Uninstall
 
-The last command deletes your own skills too. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
+The last command deletes your own skills too. `quiver init` and `quiver import` moved the skills you had in `~/.claude/skills` and in projects' `.claude/skills` into `~/.quiver/local`, so that folder holds the only copy of them. To keep them, first push `~/.quiver/local` somewhere: it is a git repository.
 
 ```sh
-quiver uninstall          # remove the MCP server from every assistant
+quiver uninstall          # remove the MCP server and the session-start hooks from every assistant
 rm "$(command -v quiver)" # remove the binary; with npm: npm uninstall -g @kheif/quiver
 rm -rf ~/.quiver          # delete the library
 ```

@@ -255,3 +255,60 @@ func TestIndentOf(t *testing.T) {
 		}
 	}
 }
+
+// VS Code's mcp.json is JSON with comments. Install reads it, keeps the other
+// servers, writes plain JSON and keeps the old file.
+func TestJSONCommentedFile(t *testing.T) {
+	content := `{
+  // servers VS Code starts
+  "servers": {
+    "other": { "command": "x", "args": ["a", "//not-a-comment", "b,}"], }, /* kept */
+  },
+  "inputs": [],
+}
+`
+	a := testAssistant(t, content)
+	a.ServersKey = "servers"
+	a.Commented = true
+	if _, err := a.Install("/opt/bin/quiver"); err != nil {
+		t.Fatal(err)
+	}
+	if !a.CommentsDropped {
+		t.Error("the dropped comments are not reported")
+	}
+	got := read(t, a.Path)
+	for _, want := range []string{`"other"`, `"//not-a-comment"`, `"b,}"`, `"quiver"`, `"inputs"`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("%s missing in:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "servers VS Code starts") || strings.Contains(got, "kept */") {
+		t.Errorf("comments left in:\n%s", got)
+	}
+	if backup := read(t, a.Path+".quiver-backup"); backup != content {
+		t.Errorf("backup:\n%s", backup)
+	}
+	reg, err := a.Get()
+	if err != nil || reg == nil || reg.Command != "/opt/bin/quiver" {
+		t.Errorf("Get = %+v, %v", reg, err)
+	}
+
+	// A file without comments says nothing about them, and one that is
+	// plainly broken is left alone.
+	b := testAssistant(t, `{"servers": {}}`)
+	b.ServersKey, b.Commented = "servers", true
+	if _, err := b.Install("/opt/bin/quiver"); err != nil || b.CommentsDropped {
+		t.Errorf("plain file: %v, dropped %v", err, b.CommentsDropped)
+	}
+	c := testAssistant(t, `{"servers": `)
+	c.ServersKey, c.Commented = "servers", true
+	if _, err := c.Install("/opt/bin/quiver"); err == nil {
+		t.Error("a broken file was written")
+	}
+	// Assistants whose files are not JSON with comments still refuse them.
+	d := testAssistant(t, content)
+	d.ServersKey = "servers"
+	if _, err := d.Install("/opt/bin/quiver"); err == nil {
+		t.Error("a file with comments was written for an assistant that does not allow them")
+	}
+}

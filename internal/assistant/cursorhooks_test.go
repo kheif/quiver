@@ -35,7 +35,7 @@ func cursorSessionStartHook(t *testing.T, m map[string]any) (command string, tim
 
 func TestCursorHooksMissingFile(t *testing.T) {
 	path := cursorHooksHome(t)
-	res, err := InstallCursorHooks("/opt/bin/quiver")
+	res, err := InstallCursorHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -54,7 +54,7 @@ func TestCursorHooksMissingFile(t *testing.T) {
 	}
 
 	// A second identical install changes nothing.
-	if res, err := InstallCursorHooks("/opt/bin/quiver"); err != nil || res != Unchanged {
+	if res, err := InstallCursorHooks("/opt/bin/quiver", 1); err != nil || res != Unchanged {
 		t.Errorf("second install: %v %v", res, err)
 	}
 }
@@ -79,7 +79,7 @@ func TestCursorHooksKeepsOtherHooks(t *testing.T) {
 	if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	res, err := InstallCursorHooks("/opt/bin/quiver")
+	res, err := InstallCursorHooks("/opt/bin/quiver", 1)
 	if err != nil || res != Installed {
 		t.Fatalf("install: %v %v", res, err)
 	}
@@ -106,10 +106,10 @@ func TestCursorHooksKeepsOtherHooks(t *testing.T) {
 
 func TestCursorHooksUpdateAfterMove(t *testing.T) {
 	cursorHooksHome(t)
-	if _, err := InstallCursorHooks("/old/quiver"); err != nil {
+	if _, err := InstallCursorHooks("/old/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
-	res, err := InstallCursorHooks("/new/quiver")
+	res, err := InstallCursorHooks("/new/quiver", 1)
 	if err != nil || res != Updated {
 		t.Fatalf("move: %v %v", res, err)
 	}
@@ -138,7 +138,7 @@ func TestCursorHooksRemove(t *testing.T) {
 	if err := os.WriteFile(path, []byte(existing), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := InstallCursorHooks("/opt/bin/quiver"); err != nil {
+	if _, err := InstallCursorHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
 	res, err := UninstallCursorHooks()
@@ -171,7 +171,7 @@ func TestCursorHooksRemove(t *testing.T) {
 // hooks keys, leaving version.
 func TestCursorHooksRemoveOnlyEntry(t *testing.T) {
 	path := cursorHooksHome(t)
-	if _, err := InstallCursorHooks("/opt/bin/quiver"); err != nil {
+	if _, err := InstallCursorHooks("/opt/bin/quiver", 1); err != nil {
 		t.Fatal(err)
 	}
 	if res, err := UninstallCursorHooks(); err != nil || res != Removed {
@@ -195,7 +195,7 @@ func TestCursorHooksInvalidJSON(t *testing.T) {
 	if err := os.WriteFile(path, []byte(broken), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := InstallCursorHooks("/opt/bin/quiver"); err == nil {
+	if _, err := InstallCursorHooks("/opt/bin/quiver", 1); err == nil {
 		t.Errorf("no error on invalid JSON")
 	}
 	data, _ := os.ReadFile(path)

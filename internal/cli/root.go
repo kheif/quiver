@@ -75,11 +75,32 @@ Get started:
 			}
 			return setup.EnsureInit()
 		},
+		// A command that changes skills can change how many hook commands
+		// the assistants need, so give them as many as the text takes.
+		PersistentPostRun: func(cmd *cobra.Command, _ []string) {
+			if changesSkills(cmd) {
+				syncHooks(cmd.ErrOrStderr())
+			}
+		},
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print more details")
 	cmd.SetVersionTemplate("quiver {{.Version}}\n")
 	cmd.AddCommand(newInitCmd(), newSourceCmd(), newNewCmd(), newEditCmd(), newDeleteCmd(), newImportCmd(), newForkCmd(), newPinCmd(), newUnpinCmd(), newListCmd(), newShowCmd(), newSearchCmd(), newAddCmd(), newRemoveCmd(), newStatusCmd(), newWhereCmd(), newProjectsCmd(), newUpdateCmd(), newDoctorCmd(), newSyncCmd(), newInstallCmd(), newUninstallCmd(), newMCPCmd(), newHookCmd())
 	return cmd
+}
+
+// skillCommands are the commands that change which skills there are, which
+// are always-on or what they say.
+var skillCommands = []string{"add", "remove", "new", "edit", "delete", "import", "fork", "pin", "unpin", "update", "source", "sync", "projects"}
+
+// changesSkills reports whether cmd is one of skillCommands, or below one.
+func changesSkills(cmd *cobra.Command) bool {
+	for c := cmd; c != nil && c.HasParent(); c = c.Parent() {
+		if !c.Parent().HasParent() {
+			return slices.Contains(skillCommands, c.Name())
+		}
+	}
+	return false
 }
 
 // overview prints three lines for quiver without arguments: the project
