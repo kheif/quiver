@@ -30,7 +30,7 @@ Next to the MCP server, `quiver install` sets up a session-start hook for Claude
 | Cursor | `cursor` | Adds `quiver` to `mcpServers` in `~/.cursor/mcp.json`, and adds the session-start hook. |
 | Claude Desktop | `claude-desktop` | Adds `quiver` to `mcpServers` in `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). It has no hook. |
 | Antigravity | `antigravity` | Adds `quiver` to `mcpServers` in `~/.gemini/config/mcp_config.json`, which the Antigravity CLI (`agy`) reads, and adds the session-start and sub-agent hooks. |
-| VS Code (Copilot) | `vscode` | Adds `quiver` to `servers` in `~/Library/Application Support/Code/User/mcp.json` (macOS; `%APPDATA%\Code\User\mcp.json` on Windows, `~/.config/Code/User/mcp.json` on Linux), with `"type": "stdio"`, and adds the session-start and sub-agent hooks in `~/.copilot/hooks/quiver.json`. |
+| VS Code Copilot | `vscode` | Adds `quiver` to `servers` in `~/Library/Application Support/Code/User/mcp.json` (macOS; `%APPDATA%\Code\User\mcp.json` on Windows, `~/.config/Code/User/mcp.json` on Linux), with `"type": "stdio"`, and adds the session-start and sub-agent hooks in `~/.copilot/hooks/quiver.json`. |
 
 An assistant counts as installed when its command (`claude`, `codex`) is on `PATH`, or when its config folder exists (`~/.gemini/antigravity-cli` for Antigravity, VS Code's user folder for VS Code; VS Code Insiders keeps its files under `Code - Insiders`).
 

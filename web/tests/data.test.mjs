@@ -53,8 +53,10 @@ test('no docs page but the generated CLI reference names quiver mcp install', ()
 		readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? files(join(dir, n)) : [join(dir, n)]));
 	for (const f of files(root)) {
 		if (f.endsWith('reference/cli.md')) continue;
-		// A Next release note may say what v1.2.0 users run instead.
-		const body = readFileSync(f, 'utf8').replace(/:::note\[Next release\][\s\S]*?:::/g, '');
+		// A Next release note, as a ::: block or an Aside, may say what v1.3.0 users run instead.
+		const body = readFileSync(f, 'utf8')
+			.replace(/:::note\[Next release\][\s\S]*?:::/g, '')
+			.replace(/<Aside [^>]*title="Next release"[^>]*>[\s\S]*?<\/Aside>/g, '');
 		assert.ok(!/quiver mcp (un)?install/.test(body), `${f} names quiver mcp install`);
 	}
 });
