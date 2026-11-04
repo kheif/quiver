@@ -290,6 +290,41 @@ func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
 	if a.Global {
 		fmt.Fprintf(out, "%s does not start Quiver in a project folder, so it gets only the global skills.\n", a.Name)
 	}
+	if a.ID == "cursor" {
+		return installCursorHook(out, bin)
+	}
+	return nil
+}
+
+// installCursorHook adds or updates Quiver's sessionStart hook in Cursor's
+// hooks file, so always-on skills reach it without a second load.
+func installCursorHook(out io.Writer, bin string) error {
+	res, err := assistant.InstallCursorHooks(bin)
+	if err != nil {
+		fmt.Fprintf(out, "Cursor: the session-start hook was not added: %v\n", err)
+		return err
+	}
+	path, _ := assistant.CursorHooksPath()
+	switch res {
+	case assistant.Installed:
+		fmt.Fprintf(out, "Added the Cursor session-start hook for always-on skills (%s).\n", path)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the Cursor session-start hook to %s (%s).\n", bin, path)
+	}
+	return nil
+}
+
+// uninstallCursorHook removes Quiver's sessionStart hook from Cursor's hooks
+// file.
+func uninstallCursorHook(out io.Writer) error {
+	res, err := assistant.UninstallCursorHooks()
+	if err != nil {
+		fmt.Fprintf(out, "Cursor: the session-start hook was not removed: %v\n", err)
+		return err
+	}
+	if res == assistant.Removed {
+		fmt.Fprintln(out, "Removed the session-start hook from Cursor.")
+	}
 	return nil
 }
 
@@ -456,6 +491,11 @@ func mcpUninstall(out io.Writer, ids []string) error {
 			}
 		default:
 			res, err = t.json.Uninstall()
+			if t.id == "cursor" {
+				if hookErr := uninstallCursorHook(out); hookErr != nil {
+					errs = append(errs, hookErr)
+				}
+			}
 		}
 		switch {
 		case err != nil:

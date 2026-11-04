@@ -67,7 +67,7 @@ func TestStatusAssistants(t *testing.T) {
 	wantLines(t, out,
 		"Assistants (how always-on skills reach them):",
 		"  Claude Code: hook",
-		"  Cursor: instructions",
+		"  Cursor: hook",
 		"  Claude Desktop: on request",
 	)
 }

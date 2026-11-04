@@ -238,6 +238,57 @@ func TestInstallClaudeHook(t *testing.T) {
 	}
 }
 
+// install adds Quiver's sessionStart hook to Cursor's hooks file; uninstall
+// removes it.
+func TestInstallCursorHook(t *testing.T) {
+	appHome(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "install", "cursor")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Added the Cursor session-start hook for always-on skills") {
+		t.Errorf("install output:\n%s", out)
+	}
+	path, _ := assistant.CursorHooksPath()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("hooks file: %v", err)
+	}
+	var m struct {
+		Version int
+		Hooks   map[string][]struct {
+			Command string
+			Timeout int
+		}
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("hooks JSON: %v\n%s", err, data)
+	}
+	if m.Version != 1 {
+		t.Errorf("version %d, want 1", m.Version)
+	}
+	ss := m.Hooks["sessionStart"]
+	if len(ss) != 1 || ss[0].Command != "/opt/bin/quiver hook session-start cursor" || ss[0].Timeout != 10 {
+		t.Errorf("sessionStart: %+v", ss)
+	}
+	if _, has := m.Hooks["subagentStart"]; has {
+		t.Errorf("Cursor has no sub-agent hook, but one was written: %v", m.Hooks["subagentStart"])
+	}
+
+	out, err = runIn(t, "", "uninstall", "cursor")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Removed the session-start hook from Cursor.") {
+		t.Errorf("uninstall output:\n%s", out)
+	}
+	data, _ = os.ReadFile(path)
+	if strings.Contains(string(data), "quiver hook") {
+		t.Errorf("hook still in file:\n%s", data)
+	}
+}
+
 // install adds Quiver's hooks to Codex's hooks file and trusts them; uninstall
 // removes them.
 func TestInstallCodexHook(t *testing.T) {
@@ -434,7 +485,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 		"How always-on skills reach each assistant:",
 		"  Claude Code: always-on skills load from a session-start hook.",
 		"  Codex: always-on skills load from a session-start hook.",
-		"  Cursor: no session-start hook. Quiver's skill list is sent up front, and the model loads the always-on skills itself.",
+		"  Cursor: always-on skills load from a session-start hook.",
 		"  Claude Desktop: no session-start hook. Quiver's skills are loaded when the model decides to.",
 		"  Antigravity: no session-start hook. Quiver's skills are loaded when the model decides to.",
 	)

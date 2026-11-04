@@ -36,7 +36,7 @@ func Cursor() (*JSONAssistant, error) {
 		return nil, err
 	}
 	dir := filepath.Join(home, ".cursor")
-	return &JSONAssistant{ID: "cursor", Name: "Cursor", Dir: dir, Path: filepath.Join(dir, "mcp.json"), Delivery: DeliveryInstructions}, nil
+	return &JSONAssistant{ID: "cursor", Name: "Cursor", Dir: dir, Path: filepath.Join(dir, "mcp.json"), Delivery: DeliveryHook}, nil
 }
 
 // ClaudeDesktop is Claude Desktop's config: in ~/Library/Application Support

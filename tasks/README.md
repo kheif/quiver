@@ -137,7 +137,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK55.2](TASK55.2-claude-code-hook.md) | Claude Code hook | TASK52.1, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.3](TASK55.3-codex-hook.md) | Codex hook | TASK52.2, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
-|  | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
+| ✅ | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
 |  | ↳ [TASK55.6](TASK55.6-antigravity-hook.md) | Antigravity hook | TASK52.4, TASK53, TASK55.1 |
 |  | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
 |  | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
