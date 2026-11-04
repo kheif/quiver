@@ -12,6 +12,7 @@ func antigravityHooksHome(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	t.Setenv("HOME", dir)
+	t.Setenv("USERPROFILE", dir) // os.UserHomeDir reads USERPROFILE on Windows
 	return filepath.Join(dir, ".gemini", "config", "hooks.json")
 }
 
