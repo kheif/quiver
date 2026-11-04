@@ -226,3 +226,30 @@ func TestStabilizeFolderTaken(t *testing.T) {
 		t.Errorf("skills = %+v, ids = %v", d.Skills, ids)
 	}
 }
+
+// A skill folder that is a symlink to another folder of the repo would
+// change when only the target changes, which update's file list would not
+// show as a change of the skill.
+func TestDiscoverMarketplaceSymlinkedSkill(t *testing.T) {
+	root := t.TempDir()
+	writeSkill(t, filepath.Join(root, "shared", "impl"))
+	writeSkill(t, filepath.Join(root, "skills", "plain"))
+	if err := os.Symlink("../shared/impl", filepath.Join(root, "skills", "linked")); err != nil {
+		t.Skip("symlinks are not available:", err)
+	}
+	writeManifest(t, root, `{"plugins":[{"name":"p","source":"./","skills":["skills/linked","skills/plain"]}]}`)
+	d := discover(t, root)
+	if want := []Found{{ID: "plain", Dir: "skills/plain", Plugin: "p"}}; !reflect.DeepEqual(d.Skills, want) {
+		t.Errorf("got %+v", d.Skills)
+	}
+	if len(d.Warnings) == 0 {
+		t.Error("want a warning about the symlink")
+	}
+
+	// The same through a folder of skills.
+	writeManifest(t, root, `{"plugins":[{"name":"p","source":"./"}]}`)
+	d = discover(t, root)
+	if want := []Found{{ID: "plain", Dir: "skills/plain", Plugin: "p"}}; !reflect.DeepEqual(d.Skills, want) {
+		t.Errorf("folder of skills: got %+v", d.Skills)
+	}
+}

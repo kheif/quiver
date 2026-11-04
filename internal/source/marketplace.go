@@ -91,7 +91,7 @@ func pluginSkills(root, pluginDir string, p plugin, d *Discovery) []string {
 		return nil
 	}
 	if paths == nil {
-		return skillsIn(root, filepath.Join(pluginDir, "skills"))
+		return skillsIn(root, filepath.Join(pluginDir, "skills"), d)
 	}
 	var out []string
 	for _, rel := range paths {
@@ -99,10 +99,12 @@ func pluginSkills(root, pluginDir string, p plugin, d *Discovery) []string {
 		switch {
 		case !ok:
 			d.warn("plugin %q: skill path %q is outside the repository; skipped", p.Name, rel)
+		case linked(root, dir):
+			d.warn("plugin %q: skill path %q goes through a symlink; skipped", p.Name, rel)
 		case isFile(filepath.Join(root, dir, skill.FileName)):
 			out = append(out, filepath.ToSlash(dir))
 		default:
-			found := skillsIn(root, dir)
+			found := skillsIn(root, dir, d)
 			if len(found) == 0 {
 				d.warn("plugin %q: no skill at %q", p.Name, rel)
 			}
@@ -113,7 +115,14 @@ func pluginSkills(root, pluginDir string, p plugin, d *Discovery) []string {
 }
 
 // skillsIn returns dir/*/ folders that hold a SKILL.md, relative to root.
-func skillsIn(root, dir string) []string {
+// A folder reached through a symlink is skipped: "quiver update" tells what
+// changed in a skill from the files git reports inside its folder, so a
+// folder that shows another one's files would change unseen.
+func skillsIn(root, dir string, d *Discovery) []string {
+	if linked(root, dir) {
+		d.warn("%s goes through a symlink; skipped", filepath.ToSlash(dir))
+		return nil
+	}
 	entries, err := os.ReadDir(filepath.Join(root, dir))
 	if err != nil {
 		return nil
@@ -124,11 +133,31 @@ func skillsIn(root, dir string) []string {
 			continue
 		}
 		sub, ok := inside(root, filepath.Join(dir, e.Name()))
-		if ok && isFile(filepath.Join(root, sub, skill.FileName)) {
-			out = append(out, filepath.ToSlash(sub))
+		if !ok || !isFile(filepath.Join(root, sub, skill.FileName)) {
+			continue
 		}
+		if e.Type()&os.ModeSymlink != 0 {
+			d.warn("%s is a symlink; skipped", filepath.ToSlash(sub))
+			continue
+		}
+		out = append(out, filepath.ToSlash(sub))
 	}
 	return out
+}
+
+// linked reports whether any part of rel, below root, is a symlink.
+func linked(root, rel string) bool {
+	p := root
+	for _, part := range strings.Split(filepath.ToSlash(filepath.Clean(rel)), "/") {
+		if part == "." || part == "" {
+			continue
+		}
+		p = filepath.Join(p, part)
+		if info, err := os.Lstat(p); err == nil && info.Mode()&os.ModeSymlink != 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // inside cleans rel and reports whether it stays inside root, also after
