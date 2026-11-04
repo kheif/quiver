@@ -151,7 +151,8 @@ func TestSessionContextSkillLongerThanAPart(t *testing.T) {
 			t.Fatalf("%+v: %d parts", limit, len(sc.Parts))
 		}
 		all := joined(sc.Parts)
-		if got := strings.Count(all, "~"); got != 25000 {
+		// A Windows temp folder can have a "~" in its name, as in RUNNER~1.
+		if got := strings.Count(strings.ReplaceAll(all, os.Getenv("QUIVER_HOME"), ""), "~"); got != 25000 {
 			t.Errorf("%+v: %d of 25000 body characters arrived", limit, got)
 		}
 		if !strings.Contains(all, "START-s00\n") || !strings.Contains(all, "END-s00\n") {
@@ -421,7 +422,7 @@ func TestPartsNeededBuildsEachSkillOnce(t *testing.T) {
 	err := registry.Update(func(r *registry.Registry) error {
 		for i := range 40 {
 			id := fmt.Sprintf("p%02d", i)
-			r.EnsureProject(id, filepath.Join(t.TempDir(), id))
+			_ = r.EnsureProject(id, filepath.Join(t.TempDir(), id))
 			if err := r.Assign(id, "s01"); err != nil {
 				return err
 			}
