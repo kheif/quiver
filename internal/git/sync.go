@@ -218,3 +218,22 @@ func Add(dir string, paths ...string) error {
 	_, err := run(dir, append([]string{"add", "--"}, paths...)...)
 	return err
 }
+
+// Show returns the content of path at rev, or nil when rev has no such file.
+func Show(dir, rev, path string) ([]byte, error) {
+	spec := rev + ":" + path
+	if _, err := run(dir, "cat-file", "-e", spec); err != nil {
+		return nil, nil
+	}
+	out, err := run(dir, "show", spec)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(out), nil
+}
+
+// MergeBase returns the best common ancestor of two commits, or an error
+// when their histories are unrelated.
+func MergeBase(dir, a, b string) (string, error) {
+	return run(dir, "merge-base", a, b)
+}

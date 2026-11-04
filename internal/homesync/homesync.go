@@ -38,6 +38,29 @@ const gitignore = `# Written by quiver sync init. Only these are synced: sources
 // holds its history, so a failed init can put it back.
 const localBackup = ".sync-local-git"
 
+// ErrDeclined is returned when the changes that would come in were not
+// accepted. Nothing was pulled.
+var ErrDeclined = errors.New("the incoming changes were not accepted, so nothing was pulled")
+
+// Confirm is asked before changes come in that alter what sessions start
+// with. It returns whether to take them. A nil Confirm takes them.
+type Confirm func(Incoming) bool
+
+// ask applies confirm to what upstream would change.
+func (c Confirm) ask(home, upstream string) error {
+	if c == nil {
+		return nil
+	}
+	in, err := review(home, upstream)
+	if err != nil {
+		return err
+	}
+	if !in.Empty() && !c(in) {
+		return ErrDeclined
+	}
+	return nil
+}
+
 // Result tells what a sync did.
 type Result struct {
 	Remote string
@@ -54,7 +77,7 @@ type Result struct {
 // Init turns the Quiver home into a git repository that syncs with remote,
 // and pushes it. When the remote already holds a synced home, from another
 // machine, the two are merged first. On failure nothing is changed.
-func Init(remote string) (*Result, error) {
+func Init(remote string, confirm Confirm) (*Result, error) {
 	if strings.HasPrefix(remote, "-") {
 		return nil, fmt.Errorf("invalid git remote %q", remote)
 	}
@@ -74,14 +97,14 @@ func Init(remote string) (*Result, error) {
 	if branch == "" {
 		res.Branch = "main"
 	}
-	err = fsutil.WithLock(func() error { return initRepo(home, res, branch != "") })
+	err = fsutil.WithLock(func() error { return initRepo(home, res, branch != "", confirm) })
 	if err != nil {
 		return nil, err
 	}
 	return res, restore(res)
 }
 
-func initRepo(home string, res *Result, join bool) (err error) {
+func initRepo(home string, res *Result, join bool, confirm Confirm) (err error) {
 	if err := pathsOut(); err != nil {
 		return err
 	}
@@ -138,6 +161,9 @@ func initRepo(home string, res *Result, join bool) (err error) {
 			return err
 		}
 		upstream := "origin/" + res.Branch
+		if err := confirm.ask(home, upstream); err != nil {
+			return err
+		}
 		res.Pulled = true
 		err := git.MergeUnrelated(home, upstream, "Join the synced Quiver home")
 		if errors.Is(err, git.ErrConflict) {
@@ -158,7 +184,7 @@ func initRepo(home string, res *Result, join bool) (err error) {
 // Changes to registry.json and config.json on both machines are merged; any
 // other conflict stops the sync with nothing pulled or pushed. Afterwards
 // sources that are in the config but not downloaded are cloned.
-func Sync() (*Result, error) {
+func Sync(confirm Confirm) (*Result, error) {
 	home, err := fsutil.QuiverHome()
 	if err != nil {
 		return nil, err
@@ -173,13 +199,13 @@ func Sync() (*Result, error) {
 	if res.Branch, err = git.Branch(home); err != nil {
 		return nil, fmt.Errorf("the repository in %s is not on a branch: check it out with git, then run quiver sync again", home)
 	}
-	if err := fsutil.WithLock(func() error { return syncRepo(home, res) }); err != nil {
+	if err := fsutil.WithLock(func() error { return syncRepo(home, res, confirm) }); err != nil {
 		return nil, err
 	}
 	return res, restore(res)
 }
 
-func syncRepo(home string, res *Result) error {
+func syncRepo(home string, res *Result, confirm Confirm) error {
 	if git.Rebasing(home) {
 		return fmt.Errorf("a rebase in %s is not finished: finish it with git rebase --continue or undo it with git rebase --abort, then run quiver sync again", home)
 	}
@@ -209,6 +235,10 @@ func syncRepo(home string, res *Result) error {
 		return err
 	}
 	if res.Pulled = behind > 0; res.Pulled {
+		if err := confirm.ask(home, upstream); err != nil {
+			res.Pulled = false
+			return err
+		}
 		if err := rebase(home, upstream, res); err != nil {
 			return err
 		}

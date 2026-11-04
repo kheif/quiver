@@ -9,7 +9,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// syncConfirm lists the incoming changes that alter what sessions start with
+// and asks before they come in. yes takes them without asking.
+func syncConfirm(in io.Reader, out io.Writer, yes bool) homesync.Confirm {
+	return func(inc homesync.Incoming) bool {
+		fmt.Fprintln(out, "The other machine's changes alter what your sessions start with:")
+		for _, id := range inc.AlwaysOn {
+			fmt.Fprintf(out, "  becomes always-on: %s\n", id)
+		}
+		for _, id := range inc.Changed {
+			fmt.Fprintf(out, "  always-on skill with changed files: %s (see quiver show %s)\n", id, id)
+		}
+		for _, s := range inc.Sources {
+			fmt.Fprintf(out, "  source added or changed: %s\n", s)
+		}
+		if yes {
+			return true
+		}
+		return confirm(in, out, "Take them?")
+	}
+}
+
 func newSyncCmd() *cobra.Command {
+	var yes bool
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Sync your skills and assignments with your other machines",
@@ -24,6 +46,11 @@ assigned. Any other conflict stops the sync with nothing pulled or pushed,
 and says how to resolve it. Sources added on another machine are cloned
 afterwards.
 
+Whatever another machine pushed becomes live here, so when it makes a skill
+always-on, changes the files of an always-on skill or adds a source, sync
+lists those changes and asks before it pulls. --yes takes them without
+asking; without a terminal and without --yes, sync pulls nothing.
+
 Only local/, config.json and registry.json are synced. sources/ is cloned
 again from config.json, and the folders where each project was seen stay
 on each machine.`,
@@ -32,7 +59,7 @@ on each machine.`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			res, err := homesync.Sync()
+			res, err := homesync.Sync(syncConfirm(cmd.InOrStdin(), cmd.OutOrStdout(), yes))
 			if err != nil {
 				return err
 			}
@@ -40,7 +67,7 @@ on each machine.`,
 			return nil
 		},
 	}
-	cmd.AddCommand(&cobra.Command{
+	initCmd := &cobra.Command{
 		Use:   "init <git-remote>",
 		Short: "Start syncing the Quiver home with a git remote",
 		Long: `Turn the Quiver home into a git repository with <git-remote> as its remote,
@@ -55,7 +82,7 @@ changes nothing.`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			res, err := homesync.Init(args[0])
+			res, err := homesync.Init(args[0], syncConfirm(cmd.InOrStdin(), cmd.OutOrStdout(), yes))
 			if err != nil {
 				return err
 			}
@@ -65,7 +92,10 @@ changes nothing.`,
 			fmt.Fprintln(out, "Run quiver sync to send and get changes; on another machine, start with quiver sync init.")
 			return nil
 		},
-	})
+	}
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "take changes to always-on skills and sources without asking")
+	initCmd.Flags().BoolVarP(&yes, "yes", "y", false, "take changes to always-on skills and sources without asking")
+	cmd.AddCommand(initCmd)
 	return cmd
 }
 
