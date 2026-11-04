@@ -19,11 +19,15 @@ This guide takes you from a fresh install to a skill your assistant uses in one 
 
    This creates the library in `~/.quiver`. In a terminal, it then offers three steps, one at a time. Each can be skipped and run later:
 
-   - register the MCP server with your assistants (`quiver install`),
+   - register the MCP server and the session-start hooks with your assistants (`quiver install`),
    - import the skills in `~/.claude/skills`, for every folder,
    - import the skills in the current project's `.claude/skills`.
 
    `quiver init --yes`, or a run outside a terminal, only creates `~/.quiver`.
+
+   <Aside type="note" title="Next release">
+   In v1.3.0 this step is `quiver mcp install`, which registers only the MCP server. In the next release `quiver install` also adds a session-start hook for Claude Code, Codex, Cursor, Antigravity and VS Code, which is how always-on skills and the skill list reach the model.
+   </Aside>
 
 2. **Write a skill for a project.**
 
@@ -65,7 +69,7 @@ This guide takes you from a fresh install to a skill your assistant uses in one 
 
 5. **Use it.**
 
-   Start Claude Code in `~/code/app` and ask for the task, such as *"write the release notes for this version"*. The assistant sees `release-notes` in Quiver's skill list and loads it.
+   Start Claude Code in `~/code/app` and ask for the task, such as *"write the release notes for this version"*. The assistant sees `release-notes` in Quiver's skill list and loads it. Restart the assistant first if it was already running when you registered the server.
 
    You can also run the skill yourself as a prompt: `/quiver:release-notes`. Text after the command is passed to the skill as the task.
 

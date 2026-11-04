@@ -31,12 +31,22 @@ It commits the changes on this machine, pulls the others with rebase, and pushes
 - Any other conflict stops the sync with nothing pulled or pushed, and says how to resolve it.
 - Sources added on another machine are cloned afterwards.
 
+### Changes that ask first
+
+Whatever another machine pushed becomes live here, so `quiver sync` lists some changes and asks before it pulls them: a change that makes a skill always-on, a change to the files of an always-on skill, and a source that is added or changed. `quiver sync --yes` takes them without asking. Without a terminal and without `--yes`, `quiver sync` pulls nothing.
+
+`quiver sync init` asks the same when it merges another machine's home, and takes `--yes` too. Use a private repository: whoever can push to it can change what your assistants are told.
+
+:::note[Next release]
+The question is new in the next release. In v1.3.0 `quiver sync` pulls what the remote holds without asking.
+:::
+
 ## What is synced
 
 | Synced | Not synced |
 | --- | --- |
 | `local/`: your skills | `sources/`: cloned again from `config.json` |
 | `config.json`: your sources | `state/`: the folders where each project was seen |
-| `registry.json`: your assignments | `logs/` |
+| `registry.json`: your assignments | `logs/` and `cache/` |
 
 Projects carry their ID in `.quiver.json`, so assignments carry over as they are, even when a project lives in a different folder on each machine.

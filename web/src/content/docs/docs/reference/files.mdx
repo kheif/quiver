@@ -5,7 +5,11 @@ description: Every file Quiver writes, in the Quiver home and in projects.
 
 import { FileTree } from '@astrojs/starlight/components';
 
-Quiver writes to two places: the Quiver home, `~/.quiver` (or `$QUIVER_HOME`), and one `.quiver.json` per project. It changes assistant config files only when you run `quiver install` or `quiver uninstall`.
+Quiver writes to two places: the Quiver home, `~/.quiver` (or `$QUIVER_HOME`), and one `.quiver.json` per project. It changes assistant config files when you run `quiver install` or `quiver uninstall`. A command that changes skills also adjusts the number of hook commands in the hooks that already run this `quiver`, and says so on stderr when it does.
+
+:::note[Next release]
+The hooks, `cache/hook` and `logs/hook.log` are new in the next release. v1.3.0 changes assistant config files only for `quiver mcp install` and `quiver mcp uninstall`.
+:::
 
 ## The Quiver home
 
@@ -19,6 +23,8 @@ Quiver writes to two places: the Quiver home, `~/.quiver` (or `$QUIVER_HOME`), a
     - version-check.json the latest release, checked once a day
   - logs/
     - mcp.log the MCP server's log
+    - hook.log what each session-start hook run passed, with a hash of the text
+  - cache/hook/ the parts of a session-start text, shared by its hook commands
   - local/ your own skills, a git repository
     - release-notes/
       - SKILL.md

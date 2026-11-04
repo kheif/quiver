@@ -132,6 +132,53 @@ quiver fork anthropic/pdf
 quiver fork acme/review --as team-review
 ```
 
+## quiver hook
+
+Print the always-on skills of a session's folder for an assistant's hook. Assistants run these commands from their hooks when a session or a sub-agent starts; you do not need to run them yourself.
+
+The command reads the hook's JSON on stdin, finds the project of the session's folder (or of $QUIVER\_PROJECT) and prints the text of its always-on skills, global ones first, and then the id and description of its other skills, in the assistant's format. An assistant passes only so much text from one hook, so the text is split into parts: the hook of part N prints part N, and quiver install gives the assistant as many hooks as the text takes. It never fails a session: on an error it prints what it knows and logs to ~/.quiver/logs/hook.log.
+
+```sh
+quiver hook [command]
+```
+
+**Examples**
+
+```sh
+# What Claude Code's SessionStart hook runs
+echo '{"cwd": "'"$PWD"'"}' | quiver hook session-start claude-code
+```
+
+## quiver hook session-start
+
+Print the always-on skills for the assistant's SessionStart hook, in its format. \<assistant\> is one of: antigravity, claude-code, codex, cursor, vscode. \[part\] is the number of the part to print, 1 when it is left out. The hook's JSON comes on stdin; its folder is the session's.
+
+```sh
+quiver hook session-start <assistant> [part] [flags]
+```
+
+**Examples**
+
+```sh
+# What Claude Code's SessionStart hook runs
+echo '{"cwd": "'"$PWD"'"}' | quiver hook session-start claude-code
+```
+
+## quiver hook subagent-start
+
+Print the always-on skills for the assistant's SubagentStart hook, in its format. \<assistant\> is one of: antigravity, claude-code, codex, cursor, vscode. \[part\] is the number of the part to print, 1 when it is left out. The hook's JSON comes on stdin; its folder is the session's.
+
+```sh
+quiver hook subagent-start <assistant> [part] [flags]
+```
+
+**Examples**
+
+```sh
+# What Claude Code's SubagentStart hook runs
+echo '{"cwd": "'"$PWD"'"}' | quiver hook subagent-start claude-code
+```
+
 ## quiver import
 
 Move skills into the library and assign them to the project of the current folder, or to every folder.
@@ -184,7 +231,7 @@ Create the Quiver home and anything missing in it. Existing files are never over
 In a terminal it then offers the rest of the setup, one step at a time; each can be skipped:
 
 ```text
-1. register the MCP server with your assistants (quiver mcp install)
+1. register the MCP server with your assistants (quiver install)
 2. import the skills in ~/.claude/skills, for every folder
 3. import the skills in the .claude/skills of the project in this folder
 ```
@@ -206,6 +253,30 @@ quiver init
 
 # Only create the home
 quiver init --yes
+```
+
+## quiver install
+
+Register the MCP server with every supported assistant that is installed, or only with the assistants named. Some assistants use Quiver's skills only when you ask for them in the prompt; quiver install says which. For any other assistant, add the entry that quiver mcp config prints to its MCP config.
+
+Supported assistants: claude-code, codex, cursor, claude-desktop, antigravity, vscode
+
+Run it again after moving the quiver binary: a registration that points to another binary is replaced. In the assistants' JSON files, every other key is kept, and the old file is saved next to it with the suffix .quiver-backup.
+
+```sh
+quiver install [assistant...] [flags]
+```
+
+**Examples**
+
+```sh
+quiver install
+
+# Only Cursor
+quiver install cursor
+
+# Claude Code and Claude Desktop
+quiver install claude-code claude-desktop
 ```
 
 ## quiver list
@@ -235,7 +306,7 @@ quiver list --json
 
 ## quiver mcp
 
-Run the MCP server on stdin and stdout. Assistants start this command; you do not need to run it yourself. Register it once with: quiver mcp install
+Run the MCP server on stdin and stdout. Assistants start this command; you do not need to run it yourself. Register it once with: quiver install
 
 The server serves the skills of the project in its working directory, or in $QUIVER\_PROJECT when that is set. It logs to ~/.quiver/logs.
 
@@ -247,13 +318,13 @@ quiver mcp [command]
 **Examples**
 
 ```sh
-# What Claude Code runs after quiver mcp install
+# What Claude Code runs after quiver install
 quiver mcp
 ```
 
 ## quiver mcp config
 
-Print the mcpServers entry that starts this quiver, for an assistant that quiver mcp install does not set up. Add it to that assistant's MCP config. Nothing is changed.
+Print the mcpServers entry that starts this quiver, for an assistant that quiver install does not set up. Add it to that assistant's MCP config. Nothing is changed.
 
 ```sh
 quiver mcp config [flags]
@@ -263,49 +334,6 @@ quiver mcp config [flags]
 
 ```sh
 quiver mcp config
-```
-
-## quiver mcp install
-
-Register the MCP server with every supported assistant that is installed, or only with the assistants named. Some assistants use Quiver's skills only when you ask for them in the prompt; mcp install says which. For any other assistant, add the entry that quiver mcp config prints to its MCP config.
-
-Supported assistants: claude-code, codex, cursor, claude-desktop, antigravity
-
-Run it again after moving the quiver binary: a registration that points to another binary is replaced. In the assistants' JSON files, every other key is kept, and the old file is saved next to it with the suffix .quiver-backup.
-
-```sh
-quiver mcp install [assistant...] [flags]
-```
-
-**Examples**
-
-```sh
-quiver mcp install
-
-# Only Cursor
-quiver mcp install cursor
-
-# Claude Code and Claude Desktop
-quiver mcp install claude-code claude-desktop
-```
-
-## quiver mcp uninstall
-
-Remove the MCP server from every supported assistant that is installed, or only from the assistants named. The Quiver home and its skills are not touched.
-
-Supported assistants: claude-code, codex, cursor, claude-desktop, antigravity
-
-```sh
-quiver mcp uninstall [assistant...] [flags]
-```
-
-**Examples**
-
-```sh
-quiver mcp uninstall
-
-# Only Claude Desktop
-quiver mcp uninstall claude-desktop
 ```
 
 ## quiver new
@@ -595,12 +623,18 @@ Sync the Quiver home with a git remote, so every machine has the same local skil
 
 quiver sync commits the changes on this machine, pulls the others with rebase and pushes. When registry.json or config.json changed on both machines, the changes are merged: a skill assigned on either machine stays assigned. Any other conflict stops the sync with nothing pulled or pushed, and says how to resolve it. Sources added on another machine are cloned afterwards.
 
+Whatever another machine pushed becomes live here, so when it makes a skill always-on, changes the files of an always-on skill or adds a source, sync lists those changes and asks before it pulls. --yes takes them without asking; without a terminal and without --yes, sync pulls nothing.
+
 Only local/, config.json and registry.json are synced. sources/ is cloned again from config.json, and the folders where each project was seen stay on each machine.
 
 ```sh
 quiver sync [flags]
 quiver sync [command]
 ```
+
+| Flag | Description |
+| --- | --- |
+| `-y, --yes` | take changes to always-on skills and sources without asking |
 
 **Examples**
 
@@ -619,10 +653,33 @@ Run it on every machine with the same remote. When the remote already holds anot
 quiver sync init <git-remote> [flags]
 ```
 
+| Flag | Description |
+| --- | --- |
+| `-y, --yes` | take changes to always-on skills and sources without asking |
+
 **Examples**
 
 ```sh
 quiver sync init git@github.com:me/quiver-home.git
+```
+
+## quiver uninstall
+
+Remove the MCP server from every supported assistant that is installed, or only from the assistants named. The Quiver home and its skills are not touched.
+
+Supported assistants: claude-code, codex, cursor, claude-desktop, antigravity, vscode
+
+```sh
+quiver uninstall [assistant...] [flags]
+```
+
+**Examples**
+
+```sh
+quiver uninstall
+
+# Only Claude Desktop
+quiver uninstall claude-desktop
 ```
 
 ## quiver unpin

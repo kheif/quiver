@@ -12,8 +12,23 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - **Pin what you depend on.** `quiver pin` keeps a skill at a commit you reviewed. Move the pin when you have read the changes.
 - **Fork to change.** Source skills are read-only in Quiver. `quiver fork` copies one into your own skills.
 - **Watch global skills.** `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`.
+- **Review what a sync brings.** `quiver sync` takes in what another machine pushed. It lists changes that make a skill always-on, change the files of an always-on skill or add or change a source, and asks before it pulls. Use a private remote.
+- **Know what the whole library exposes.** `get_skill` and `search_skills` read the whole library, not only the skills assigned to the project. Assign only what you want a project's sessions to see by name.
+- **Always-on skills are changed by you.** `update_skill` changes only skills served in the session's project, and never an always-on skill: every session starts with that text, so change it yourself with `quiver edit`.
 
 Every change to your own skills is a commit in `~/.quiver/local` (in `~/.quiver` once you use `quiver sync`). `git -C ~/.quiver/local log -p` shows them, and `git revert` undoes one.
+
+## What reaches the model
+
+The session-start hook passes the text of your always-on skills and the ID and description of your other skills to the model. A skill that cannot be read is left out and named in a `<quiver-notice>` block, so a session does not start silently without it. Text that reaches the model is cleaned: hidden characters are dropped, and a skill cannot write Quiver's own tags (`<quiver-always-on>`, `<quiver-skills>`, `<quiver-notice>`). `~/.quiver/logs/hook.log` records each run with a hash of the text it passed.
+
+A source skill folder that is a symlink is not discovered, so an update cannot change a skill through files that git reports somewhere else.
+
+`quiver install` changes your assistants' config files: it adds the MCP server and the hooks. `quiver uninstall` removes both.
+
+:::note[Next release]
+The hook, the notices, the cleaning of text, the checks on `quiver sync` and `update_skill`, and the symlink rule are new in the next release. In v1.3.0 `quiver mcp install` registers only the MCP server, `quiver sync` pulls without asking, and `update_skill` can change any local skill.
+:::
 
 ## Installing Quiver
 
