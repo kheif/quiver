@@ -1,7 +1,6 @@
 package server
 
 import (
-	"net/url"
 	"strings"
 	"testing"
 )
@@ -32,7 +31,7 @@ func TestApplyRootsServesProject(t *testing.T) {
 		t.Fatalf("the project was served before any root:\n%s", before)
 	}
 
-	uri := (&url.URL{Scheme: "file", Path: root}).String()
+	uri := fileURI(root)
 	if !sess.applyRoots(s, p, []string{"http://x", uri}, discard) {
 		t.Fatal("applyRoots did not serve a project")
 	}

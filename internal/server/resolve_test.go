@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kheif/quiver/internal/project"
@@ -87,10 +88,20 @@ func TestResolveErrors(t *testing.T) {
 	}
 }
 
+// fileURI is the file:// URI of a local folder. A Windows path C:\dir
+// becomes file:///C:/dir.
+func fileURI(dir string) string {
+	p := filepath.ToSlash(dir)
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	return (&url.URL{Scheme: "file", Path: p}).String()
+}
+
 func TestResolveRoots(t *testing.T) {
 	root, sub, p := projectDir(t)
 	outside := t.TempDir()
-	uri := func(dir string) string { return (&url.URL{Scheme: "file", Path: dir}).String() }
+	uri := fileURI
 
 	// The first root in a project wins; a non-file URI and a root outside a
 	// project are skipped.
