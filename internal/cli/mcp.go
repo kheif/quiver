@@ -290,8 +290,44 @@ func installJSON(out io.Writer, a *assistant.JSONAssistant, bin string) error {
 	if a.Global {
 		fmt.Fprintf(out, "%s does not start Quiver in a project folder, so it gets only the global skills.\n", a.Name)
 	}
-	if a.ID == "cursor" {
+	switch a.ID {
+	case "cursor":
 		return installCursorHook(out, bin)
+	case "antigravity":
+		return installAntigravityHook(out, bin)
+	}
+	return nil
+}
+
+// installAntigravityHook adds or updates Quiver's session-start hook in
+// Antigravity's global hooks file, so always-on skills reach it and its
+// sub-agents without a second load.
+func installAntigravityHook(out io.Writer, bin string) error {
+	res, err := assistant.InstallAntigravityHooks(bin)
+	if err != nil {
+		fmt.Fprintf(out, "Antigravity: the session-start hook was not added: %v\n", err)
+		return err
+	}
+	path, _ := assistant.AntigravityHooksPath()
+	switch res {
+	case assistant.Installed:
+		fmt.Fprintf(out, "Added the Antigravity session-start hook for always-on skills (%s).\n", path)
+	case assistant.Updated:
+		fmt.Fprintf(out, "Updated the Antigravity session-start hook to %s (%s).\n", bin, path)
+	}
+	return nil
+}
+
+// uninstallAntigravityHook removes Quiver's session-start hook from
+// Antigravity's hooks file.
+func uninstallAntigravityHook(out io.Writer) error {
+	res, err := assistant.UninstallAntigravityHooks()
+	if err != nil {
+		fmt.Fprintf(out, "Antigravity: the session-start hook was not removed: %v\n", err)
+		return err
+	}
+	if res == assistant.Removed {
+		fmt.Fprintln(out, "Removed the session-start hook from Antigravity.")
 	}
 	return nil
 }
@@ -491,8 +527,13 @@ func mcpUninstall(out io.Writer, ids []string) error {
 			}
 		default:
 			res, err = t.json.Uninstall()
-			if t.id == "cursor" {
+			switch t.id {
+			case "cursor":
 				if hookErr := uninstallCursorHook(out); hookErr != nil {
+					errs = append(errs, hookErr)
+				}
+			case "antigravity":
+				if hookErr := uninstallAntigravityHook(out); hookErr != nil {
 					errs = append(errs, hookErr)
 				}
 			}

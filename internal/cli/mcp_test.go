@@ -289,6 +289,49 @@ func TestInstallCursorHook(t *testing.T) {
 	}
 }
 
+// install adds Quiver's "quiver" hook to Antigravity's hooks file; uninstall
+// removes it.
+func TestInstallAntigravityHook(t *testing.T) {
+	appHome(t)
+	fakeExecutable(t, "/opt/bin/quiver")
+	out, err := runIn(t, "", "install", "antigravity")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Added the Antigravity session-start hook for always-on skills") {
+		t.Errorf("install output:\n%s", out)
+	}
+	path, _ := assistant.AntigravityHooksPath()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("hooks file: %v", err)
+	}
+	var m map[string]map[string][]struct {
+		Type    string
+		Command string
+		Timeout int
+	}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("hooks JSON: %v\n%s", err, data)
+	}
+	ss := m["quiver"]["SessionStart"]
+	if len(ss) != 1 || ss[0].Type != "command" || ss[0].Command != "/opt/bin/quiver hook session-start antigravity" || ss[0].Timeout != 10 {
+		t.Errorf("quiver SessionStart: %+v", ss)
+	}
+
+	out, err = runIn(t, "", "uninstall", "antigravity")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Removed the session-start hook from Antigravity.") {
+		t.Errorf("uninstall output:\n%s", out)
+	}
+	data, _ = os.ReadFile(path)
+	if strings.Contains(string(data), "quiver hook") {
+		t.Errorf("hook still in file:\n%s", data)
+	}
+}
+
 // install adds Quiver's hooks to Codex's hooks file and trusts them; uninstall
 // removes them.
 func TestInstallCodexHook(t *testing.T) {
@@ -487,7 +530,7 @@ func TestMCPInstallEveryAssistant(t *testing.T) {
 		"  Codex: always-on skills load from a session-start hook.",
 		"  Cursor: always-on skills load from a session-start hook.",
 		"  Claude Desktop: no session-start hook. Quiver's skills are loaded when the model decides to.",
-		"  Antigravity: no session-start hook. Quiver's skills are loaded when the model decides to.",
+		"  Antigravity: always-on skills load from a session-start hook.",
 	)
 	if f.User() != "/opt/bin/quiver|mcp" {
 		t.Errorf("claude user %q", f.User())

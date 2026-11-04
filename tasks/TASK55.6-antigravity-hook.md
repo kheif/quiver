@@ -4,7 +4,7 @@
 
 **Part of:** [TASK55](TASK55-quiver-install.md): `quiver install`
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK52.4, TASK53, TASK55.1
 

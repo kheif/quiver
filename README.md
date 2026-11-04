@@ -137,9 +137,9 @@ An assistant counts as installed when its command (`claude`, `codex`) is on `PAT
 
 `quiver install` ends with one line per assistant saying how always-on skills reach it, and `quiver status` lists the same. For an assistant without a session-start hook it names the always-on skills, which do not load by themselves there.
 
-**Claude Code, Codex and Cursor** get a session-start hook that adds the always-on skills' text at the start of every session, so they always reach the model. Claude Code and Codex also run it for each sub-agent; Cursor's sub-agent event cannot add text, so it has only the session-start hook. Codex's hooks are trusted automatically through `codex app-server`; if that fails, `quiver install` prints the "Review hooks" step. `quiver doctor` reports a Claude Code or Codex hook that is missing, runs another binary, or (Codex) needs review.
+**Claude Code, Codex, Cursor and Antigravity** get a session-start hook that adds the always-on skills' text at the start of every session, so they always reach the model. Claude Code, Codex and Antigravity also run it for each sub-agent; Cursor's sub-agent event cannot add text, so it has only the session-start hook. Codex's hooks are trusted automatically through `codex app-server`; if that fails, `quiver install` prints the "Review hooks" step. `quiver doctor` reports a Claude Code, Codex or Antigravity hook that is missing, runs another binary, or (Codex) needs review.
 
-**Claude Desktop and Antigravity** use Quiver's skills only when you ask for them in the prompt, such as "check the quiver skills for this"; `quiver install` says so. Antigravity puts the instructions in a file the model rarely reads, and Claude Desktop drops them. Once asked, Antigravity also follows the always-on skills; Claude Desktop does not. Antigravity starts the server in the project folder, so project skills work there. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
+**Claude Desktop** uses Quiver's skills only when you ask for them in the prompt, such as "check the quiver skills for this"; `quiver install` says so, because Claude Desktop drops the server's instructions. Antigravity starts the server in the project folder, so project skills work there. See [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md).
 
 For any other assistant, `quiver mcp config` prints the entry:
 

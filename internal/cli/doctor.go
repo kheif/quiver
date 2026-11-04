@@ -581,6 +581,9 @@ func (d *doc) checkMCP() {
 	}
 	for _, a := range installed {
 		d.checkJSONAssistant(a, appBin, appErr == nil)
+		if a.ID == "antigravity" {
+			d.checkAntigravityHook(appBin, appErr == nil)
+		}
 	}
 	// Name the always-on skills that do not load by themselves in the
 	// installed assistants without a hook, so they are not taken for granted.
@@ -608,6 +611,21 @@ func (d *doc) checkClaudeHook(bin string, knowBin bool) {
 		d.report("warn", "the Claude Code session-start hook runs another quiver; run: quiver install")
 	default:
 		d.report("ok", "Claude Code session-start hook")
+	}
+}
+
+// checkAntigravityHook reports on Quiver's session-start hook in Antigravity.
+func (d *doc) checkAntigravityHook(bin string, knowBin bool) {
+	present, current, err := assistant.AntigravityHookInstalled(bin)
+	switch {
+	case err != nil:
+		d.report("warn", "the Antigravity session-start hook could not be read", err.Error())
+	case !present:
+		d.report("warn", "no Quiver session-start hook in Antigravity; run: quiver install antigravity")
+	case knowBin && !current:
+		d.report("warn", "the Antigravity session-start hook runs another quiver; run: quiver install antigravity")
+	default:
+		d.report("ok", "Antigravity session-start hook")
 	}
 }
 

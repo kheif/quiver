@@ -58,7 +58,7 @@ func Antigravity() (*JSONAssistant, error) {
 		return nil, err
 	}
 	dir := filepath.Join(home, ".gemini")
-	return &JSONAssistant{ID: "antigravity", Name: "Antigravity", Dir: filepath.Join(dir, "antigravity-cli"), Path: filepath.Join(dir, "config", "mcp_config.json"), Delivery: DeliveryOnRequest}, nil
+	return &JSONAssistant{ID: "antigravity", Name: "Antigravity", Dir: filepath.Join(dir, "antigravity-cli"), Path: filepath.Join(dir, "config", "mcp_config.json"), Delivery: DeliveryHook}, nil
 }
 
 // JSONAssistants returns every assistant configured by JSON.
