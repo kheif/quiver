@@ -36,11 +36,11 @@ folder when it is set.`,
 
 // statusJSON is the JSON output of status.
 type statusJSON struct {
-	Folder     string           `json:"folder"`
-	Project    *statusProject   `json:"project"` // null when the folder is not a project
-	Skills     []servedSkill    `json:"skills"`
+	Folder     string            `json:"folder"`
+	Project    *statusProject    `json:"project"` // null when the folder is not a project
+	Skills     []servedSkill     `json:"skills"`
 	Assistants []statusAssistant `json:"assistants"`
-	Warnings   []string         `json:"warnings"`
+	Warnings   []string          `json:"warnings"`
 }
 
 // statusAssistant is one installed assistant and how always-on skills reach it.

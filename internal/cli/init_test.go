@@ -79,7 +79,7 @@ func TestInitGuided(t *testing.T) {
 		t.Fatalf("%v\n%s", err, out)
 	}
 	wantLines(t, out,
-		"Register the MCP server with your assistants? [Y/n] Registered with Claude Code: /opt/bin/quiver mcp",
+		"Set up Quiver in your assistants? [Y/n] Registered with Claude Code: /opt/bin/quiver mcp",
 		"Found 1 skill in "+filepath.Dir(user)+". Import them into the library? [Y/n] Found 1 skill",
 		"Assign to (p)roject, (g)lobal, or (s)kip? [g] Imported greet into the library and assigned it to every folder.",
 		"Found 1 skill in "+filepath.Dir(proj)+". Import them into the library? [Y/n] Found 1 skill",
@@ -114,7 +114,7 @@ func TestInitGuidedSkipped(t *testing.T) {
 		t.Fatalf("%v\n%s", err, out)
 	}
 	wantLines(t, out,
-		"Register the MCP server with your assistants? [Y/n] Skipped. Run it later with: quiver install",
+		"Set up Quiver in your assistants? [Y/n] Skipped. Run it later with: quiver install",
 		"Found 1 skill in "+filepath.Dir(user)+". Import them into the library? [Y/n] Skipped. Run it later with: quiver import "+filepath.Dir(user),
 		"Found 1 skill in "+filepath.Dir(proj)+". Import them into the library? [Y/n] Skipped. Run it later with: quiver import",
 	)
@@ -148,7 +148,7 @@ func TestInitPlain(t *testing.T) {
 	fakeTerminal(t)
 	t.Chdir(t.TempDir())
 	out, err := runIn(t, "n\n", "init")
-	if err != nil || strings.Contains(out, "Import") || !strings.Contains(out, "Register the MCP server") {
+	if err != nil || strings.Contains(out, "Import") || !strings.Contains(out, "Set up Quiver in your assistants") {
 		t.Errorf("nothing to import: %v\n%s", err, out)
 	}
 }

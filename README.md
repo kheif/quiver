@@ -107,7 +107,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. Before it pulls changes that make a skill always-on, change an always-on skill's files or add a source, it lists them and asks (`--yes` takes them). |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
-| `quiver install [assistant...]` | Register the MCP server with every supported assistant that is installed, or only with the assistants named. See [MCP server](#mcp-server). |
+| `quiver install [assistant...]` | Register the MCP server and add the session-start hook where the assistant has one, in every supported assistant that is installed, or only in the assistants named. See [MCP server](#mcp-server). |
 | `quiver uninstall [assistant...]` | Remove it from them, or only from the assistants named. |
 | `quiver mcp config` | Print the MCP config entry for any other assistant. |
 | `quiver mcp` | Run the MCP server. Assistants start this. |

@@ -27,7 +27,7 @@ overwritten.
 In a terminal it then offers the rest of the setup, one step at a time; each
 can be skipped:
 
-  1. register the MCP server with your assistants (quiver install)
+  1. set up the MCP server and the hooks in your assistants (quiver install)
   2. import the skills in ~/.claude/skills, for every folder
   3. import the skills in the .claude/skills of the project in this folder
 
@@ -77,7 +77,7 @@ func createHome(out io.Writer) error {
 func guidedSetup(in *bufio.Reader, out io.Writer) error {
 	var errs []error
 	fmt.Fprintln(out)
-	if confirmYes(in, out, "Register the MCP server with your assistants?") {
+	if confirmYes(in, out, "Set up Quiver in your assistants?") {
 		if err := mcpInstall(out, nil); err != nil {
 			errs = append(errs, err)
 		}

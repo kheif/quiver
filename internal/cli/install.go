@@ -18,11 +18,12 @@ func installCommand(prefix string, deprecated bool) *cobra.Command {
 	var forID string
 	cmd := &cobra.Command{
 		Use:   "install [assistant...]",
-		Short: "Register the MCP server with your assistants",
-		Long: `Register the MCP server with every supported assistant that is installed,
-or only with the assistants named. Some assistants use Quiver's skills only
-when you ask for them in the prompt; quiver install says which. For any other
-assistant, add the entry that quiver mcp config prints to its MCP config.
+		Short: "Set up the MCP server and the session-start hooks in your assistants",
+		Long: `Register the MCP server, and add the session-start hook where the assistant
+has one, in every supported assistant that is installed, or only in the
+assistants named. Some assistants use Quiver's skills only when you ask for
+them in the prompt; quiver install says which. For any other assistant, add the
+entry that quiver mcp config prints to its MCP config.
 
 Supported assistants: ` + supportedList() + `
 
@@ -60,10 +61,10 @@ func uninstallCommand(prefix string, deprecated bool) *cobra.Command {
 	var forID string
 	cmd := &cobra.Command{
 		Use:   "uninstall [assistant...]",
-		Short: "Remove the MCP server from your assistants",
-		Long: `Remove the MCP server from every supported assistant that is installed, or
-only from the assistants named. The Quiver home and its skills are not
-touched.
+		Short: "Remove the MCP server and the hooks from your assistants",
+		Long: `Remove the MCP server and Quiver's hooks from every supported assistant
+that is installed, or only from the assistants named. The Quiver home and its
+skills are not touched.
 
 Supported assistants: ` + supportedList(),
 		Example: `  ` + prefix + ` uninstall
