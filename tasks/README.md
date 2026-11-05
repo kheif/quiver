@@ -9,7 +9,7 @@ This folder breaks [PROJECT.md](../PROJECT.md) into ordered tasks, one file per 
 
 ## Conventions
 
-- **Status** is set in `scripts/gen_tasks.py` (`STATUS`) and shown in the index below and at the top of each task: ✅ done, 🚧 in progress, empty for todo.
+- **Status** is edited by hand at the top of each task file and in the index below: ✅ done, 🚧 in progress, empty for todo.
 - **Depends on:** tasks that must be finished first.
 - **Subtasks:** a large task is split into subtasks (TASK54.1, TASK54.2, …), one file each, listed under their parent in the index. Each subtask is finished and committed on its own; the parent is done when all its subtasks are.
 - **Done when:** acceptance criteria. A task is not done until every item passes and has a test.
@@ -140,7 +140,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.6](TASK55.6-antigravity-hook.md) | Antigravity hook | TASK52.4, TASK53, TASK55.1 |
 | ✅ | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
-|  | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
+| ✅ | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
 
 ### Phase 7: TUI and slash commands (v1.5)
 
