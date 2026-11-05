@@ -45,7 +45,7 @@ const folders = [
 	</div>
 	<p class="legend"><span class="on" aria-hidden="true"></span>always on: in the conversation before your first message</p>
 	<p class="sum" id="served-sum">
-		<b>{on} always on</b>, loaded at session start (coming soon). <b>{rows.length - on} more</b> when a task needs
+		<b>{on} always on</b>, loaded at session start. <b>{rows.length - on} more</b> when a task needs
 		them. Company and team layers come with Quiver for teams.
 	</p>
 	<ul class="served" id="served">
@@ -101,7 +101,7 @@ const folders = [
 		}
 		const on = rows.filter((r) => r.always).length;
 		if (sum) {
-			sum.innerHTML = `<b>${on} always on</b>, loaded at session start (coming soon). <b>${rows.length - on} more</b> when a task needs them. Company and team layers come with Quiver for teams.`;
+			sum.innerHTML = `<b>${on} always on</b>, loaded at session start. <b>${rows.length - on} more</b> when a task needs them. Company and team layers come with Quiver for teams.`;
 		}
 		if (place) place.textContent = where(state.folder);
 	}

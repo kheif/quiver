@@ -16,11 +16,11 @@ Every push already runs the `release-dry-run` CI job, which builds the archives 
 ## A normal release
 
 ```sh
-git tag v1.0.1
+git tag -a v1.0.1 -m "v1.0.1"
 git push origin v1.0.1
 ```
 
-Then watch the Release workflow: `gh run watch`.
+Tags are annotated (`-a`), like every earlier release tag. Then watch the Release workflow: `gh run watch`.
 
 ## The first npm release (once)
 
@@ -28,7 +28,7 @@ npm trusted publishing is set up per package, on the package's page, so the pack
 
 1. Tag the release locally, without pushing it:
    ```sh
-   git tag v1.0.0
+   git tag -a v1.0.0 -m "v1.0.0"
    ```
 2. Build it with the release version:
    ```sh

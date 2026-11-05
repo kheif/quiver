@@ -1,0 +1,12 @@
+---
+// Opens the Windows install tab first on Windows, unless the reader already chose a tab.
+// It runs before the tabs are drawn, which read the stored choice when they start.
+---
+
+<script is:inline>
+	try {
+		const key = 'starlight-synced-tabs__install';
+		const platform = navigator.userAgentData?.platform || navigator.platform || '';
+		if (/^win/i.test(platform) && !localStorage.getItem(key)) localStorage.setItem(key, 'Windows');
+	} catch {}
+</script>

@@ -15,8 +15,8 @@ This sets up every supported assistant that is installed. Name assistants to set
 quiver install codex cursor
 ```
 
-:::note[Next release]
-In the next release, `quiver install` replaces `quiver mcp install`, which still works as a hidden, deprecated alias until the next major version. In v1.3.0, run `quiver mcp install`, which sets up every supported assistant that is installed, or name the assistants to set up, such as `quiver mcp install claude-desktop`. v1.3.0 registers the MCP server only; it sets up no session-start hook and does not support VS Code.
+:::note
+Up to v1.3.0 this command was a subcommand of `quiver mcp` and set up the MCP server only. That older form still works as a hidden, deprecated alias until the next major version.
 :::
 
 Next to the MCP server, `quiver install` sets up a session-start hook for Claude Code, Codex, Cursor, Antigravity and VS Code, and a sub-agent hook where the assistant has one. The hook is how always-on skills reach the model. Claude Desktop has no hook. See [Always-on skills](/docs/concepts/always-on/).
@@ -40,7 +40,7 @@ Every assistant but Claude Code gets the path of the binary itself, never the np
 
 Run `quiver install` again after you move the binary. A registration that points to another binary is replaced.
 
-When it is done, `quiver install` prints one line per assistant on how always-on skills reach it, and `quiver status` lists the same. It says "hook" only when the hook is really in place.
+When it is done, `quiver install` prints one line per assistant on how always-on skills reach it, and `quiver status` lists the same. It says "hook" only when the hook is installed.
 
 ## What works where
 
@@ -53,10 +53,6 @@ When it is done, `quiver install` prints one line per assistant on how always-on
 | VS Code | Yes, through the hook | Yes, through the hook | Yes, it sends the workspace as an MCP root |
 | Claude Desktop | No | No; when you ask | Only with `QUIVER_PROJECT` |
 | Other clients | Depends on the client | Depends on the client | Where it starts the server, or with `QUIVER_PROJECT` |
-
-:::note[Next release]
-The table shows the next release. In v1.3.0 there is no hook. Claude Code and Cursor get the skill list in the server's instructions and load always-on skills themselves; Codex and Antigravity get Quiver's skills only when you ask for them in the prompt; VS Code is not supported.
-:::
 
 See [Always-on skills](/docs/concepts/always-on/) for how always-on skills reach each assistant.
 
@@ -132,7 +128,3 @@ quiver uninstall claude-desktop # from one assistant
 ```
 
 This removes the MCP server and Quiver's hooks. Your library and its skills are not touched.
-
-:::note[Next release]
-In v1.3.0 the command is `quiver mcp uninstall`.
-:::

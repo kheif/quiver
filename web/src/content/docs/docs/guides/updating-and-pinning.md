@@ -24,10 +24,6 @@ A source whose history was rewritten is not updated until you run it with `--res
 
 A skill folder in a source that is a symlink is not discovered, so an update cannot change a skill through files that git reports somewhere else. `quiver source add` prints a warning for each one it skips.
 
-:::note[Next release]
-Skipping symlinked skill folders is new in the next release.
-:::
-
 ## Pin a skill to a commit
 
 A pin keeps a source skill at one commit, so its text changes only when you decide:

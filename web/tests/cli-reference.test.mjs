@@ -14,7 +14,7 @@ Examples:
   quiver add pdf anthropic/docx
 
 Available Commands:
-  install     Register the MCP server with your assistants
+  install     Set up the MCP server and the session-start hooks in your assistants
 
 Flags:
       --always           also make the skills always-on
@@ -32,7 +32,7 @@ test('parseHelp splits cobra help into sections', () => {
 	const h = parseHelp(help);
 	assert.deepEqual(h.usage, ['quiver add <id>... [flags]']);
 	assert.deepEqual(h.examples, ['# Assign two skills', 'quiver add pdf anthropic/docx']);
-	assert.deepEqual(h.commands, [{ name: 'install', summary: 'Register the MCP server with your assistants' }]);
+	assert.deepEqual(h.commands, [{ name: 'install', summary: 'Set up the MCP server and the session-start hooks in your assistants' }]);
 	assert.deepEqual(
 		h.flags.map((f) => [f.short, f.long, f.type]),
 		[

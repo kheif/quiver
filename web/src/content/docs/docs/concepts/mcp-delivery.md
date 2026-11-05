@@ -18,13 +18,9 @@ MCP servers can send `instructions` when a session starts. Quiver's instructions
 - the names of the always-on skills, for an assistant without a session-start hook,
 - to call `list_skills` before its first reply when the conversation has no `<quiver-skills>` block.
 
-The skills themselves come from a session-start hook, which `quiver install` sets up for Claude Code, Codex, Cursor, Antigravity and VS Code. It adds the always-on skills in full, and the ID and description of every other skill served here, project skills first, to the conversation. An assistant takes only so much text from one hook command, so Quiver splits it over as many hook commands as needed and leaves nothing out. A skill that cannot be read is named in a `<quiver-notice>` block. See [Always-on skills](/docs/concepts/always-on/).
+The skills themselves come from a session-start hook, which `quiver install` sets up for Claude Code, Codex, Cursor, Antigravity and VS Code. It adds the always-on skills in full, and the ID and description of every other skill served here, project skills first, to the conversation. An assistant takes only so much text from one hook command, so Quiver splits it over as many hook commands as needed. A skill that cannot be read is named in a `<quiver-notice>` block. See [Always-on skills](/docs/concepts/always-on/).
 
 Tool descriptions are not used for the catalog: Claude Code defers MCP tools, so the model does not see their descriptions until it looks them up.
-
-:::note[Next release]
-The hook and the short instructions are new in the next release. In v1.3.0 the instructions hold the always-on skills with the request to load them with `get_skill`, and the catalog: the ID and description of every skill served here. They are cut at about 4096 characters, and a catalog that does not fit is replaced by a pointer to `list_skills`.
-:::
 
 ## 3. The assistant loads what fits
 

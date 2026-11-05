@@ -37,10 +37,6 @@ Whatever another machine pushed becomes live here, so `quiver sync` lists some c
 
 `quiver sync init` asks the same when it merges another machine's home, and takes `--yes` too. Use a private repository: whoever can push to it can change what your assistants are told.
 
-:::note[Next release]
-The question is new in the next release. In v1.3.0 `quiver sync` pulls what the remote holds without asking.
-:::
-
 ## What is synced
 
 | Synced | Not synced |

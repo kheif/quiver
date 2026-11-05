@@ -44,7 +44,7 @@ Most skills are loaded when a task needs them; the assistant decides. Some must 
 quiver add caveman --global --always
 ```
 
-An always-on skill is in the conversation before the first reply. In Claude Code, Codex, Cursor, Antigravity and VS Code, a session-start hook adds its full text, however many always-on skills there are. Changes take effect in the next session; see [Always-on skills](/docs/concepts/always-on/).
+An always-on skill is in the conversation before the first reply. In Claude Code, Codex, Cursor, Antigravity and VS Code, a session-start hook adds its full text. Changes take effect in the next session; see [Always-on skills](/docs/concepts/always-on/).
 
 An assistant cannot change an always-on skill through `update_skill`. Change it yourself with `quiver edit`.
 

@@ -34,10 +34,6 @@ This applies the safe fixes: it creates missing parts of the Quiver home, commit
 4. **Check that the hook runs this binary.** After you move the binary or switch Node versions, `quiver doctor` reports a hook that runs another `quiver`. Run `quiver install` again.
 5. **Is it Claude Desktop?** It has no hook. Ask for Quiver's skills in the prompt.
 
-:::note[Next release]
-The hook, the `hook` line in `quiver status` and the hook checks of `quiver doctor` are new in the next release. In v1.3.0 `quiver install` is `quiver mcp install`, and there is no hook.
-:::
-
 ## A skill is loaded twice
 
 Claude Code also loads skills from `~/.claude/skills`, the project's `.claude/skills` and enabled plugins. If the same skill is there and in Quiver, it may load twice. `quiver status` warns about each copy; `quiver doctor --fix` deletes the copies that are safe to delete.

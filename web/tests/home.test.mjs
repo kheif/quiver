@@ -28,7 +28,8 @@ test('hero: the layer picker shows its default state without scripts', { skip },
 	const buttons = part('class="hero').match(/<button[^>]*data-(team|folder)=[^>]*>/g) ?? [];
 	assert.equal(buttons.length, 5);
 	for (const b of buttons) assert.match(b, /aria-pressed="(true|false)"/);
-	assert.match(text(part('class="hero')), /coming soon/i);
+	assert.match(text(part('class="hero')), /loaded at session start\./);
+	assert.doesNotMatch(text(part('class="hero')), /coming soon/i);
 });
 
 test('hero: the install command is there to copy', { skip }, () => {
@@ -56,7 +57,8 @@ test('try one session: the always-on block and the switches read without scripts
 	const switches = t.match(/<button[^>]*role="switch"[^>]*>/g) ?? [];
 	assert.equal(switches.length, 3);
 	assert.equal(switches.filter((b) => b.includes('aria-checked="true"')).length, 2);
-	assert.match(text(t), /coming soon/i);
+	assert.match(text(t), /a session-start hook puts this block in the conversation/);
+	assert.doesNotMatch(text(t), /coming soon/i);
 	assert.ok(text(t).includes('quiver add reply-style --global --always'));
 });
 
@@ -77,7 +79,9 @@ test('assistants and releases come from the data files', { skip }, () => {
 	const assistants = JSON.parse(readFileSync(new URL('../src/data/assistants.json', import.meta.url), 'utf8'));
 	for (const a of assistants) assert.ok(tiles.includes(a.name), `no ${a.name}`);
 	const open = text(part('id="open"'));
-	for (const tag of ['v1.2.0', 'v1.1.0', 'v1.0.0']) assert.ok(open.includes(tag), `no ${tag}`);
+	for (const tag of ['v1.4.0', 'v1.3.0', 'v1.2.0', 'v1.1.0']) assert.ok(open.includes(tag), `no ${tag}`);
+	assert.ok(!open.includes('v1.0.0'), 'more than the latest four releases');
+	assert.equal((part('id="open"').match(/<em[ >]/g) ?? []).length, 4, 'a release has no summary');
 });
 
 test('no command on the page is the old mcp install', { skip }, () => {
@@ -96,9 +100,8 @@ test('the teams page: planned, plain logic, no commands, a way to write', { skip
 	for (const layer of ['Company', 'Team', 'You', 'Project']) assert.ok(text(page).includes(layer), `no ${layer} layer`);
 });
 
-test('words stay apart where a line ends before inline code or a link', { skip }, () => {
+test('words stay apart where a line ends before inline code', { skip }, () => {
 	assert.match(html, /Codex in\s+<code[^>]*>\.codex\/skills/, 'Codex in.codex/skills');
-	assert.match(html, /also with\s+<a[^>]*>an install script/, 'also withan install script');
 });
 
 test('hero: planned layers are marked on their own rows, and the summary comes before the rows', { skip }, () => {

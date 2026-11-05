@@ -65,10 +65,10 @@ The site describes Quiver as it will be when it is published. What is not built 
 | Mark | Used for | Find it with |
 | --- | --- | --- |
 | **Next release** | On main, not in `latestRelease` yet | `grep -rn "Next release\|text: Next\|next release" src` and `unreleased` in `src/data/site.ts` |
-| **coming soon** | Being built: the session-start hook, hosting for teams | `grep -rni "coming soon\|text: Soon\|coming-soon" src` |
-| **Planned** | Not started: Quiver for teams, VS Code Copilot | `grep -rn "Planned\|planned" src` |
+| **coming soon** | Being built: hosting for teams | `grep -rni "coming soon\|text: Soon\|coming-soon" src` |
+| **Planned** | Not started: Quiver for teams | `grep -rn "Planned\|planned" src` |
 
-When the session-start hook ships, the `coming soon` marks on it go: the hero summary (`LayerPicker.astro`), the Try section (`TrySession.astro`), the assistant labels (`src/data/assistants.json`), and the `Always-on skills`, `MCP delivery` and `Connect an assistant` pages. The marks on hosting stay until it exists; it will get a page of its own.
+The marks on hosting stay until it exists; it will get a page of its own.
 
 ## Deploy
 

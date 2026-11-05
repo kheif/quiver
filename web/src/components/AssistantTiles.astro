@@ -1,5 +1,6 @@
 ---
 import assistants from '../data/assistants.json';
+import { logos } from '../data/logos';
 import { latestRelease, unreleased, url } from '../data/site';
 ---
 
@@ -15,6 +16,13 @@ import { latestRelease, unreleased, url } from '../data/site';
 					<span class="name">{a.name}</span>
 					<span class="lvl">{a.label}</span>
 					{unreleased.has(a.id) && <span class="tag-next">Next release, after {latestRelease}</span>}
+					{
+						logos[a.id] && (
+							<svg class="logo" viewBox={logos[a.id].viewBox} fill="currentColor" aria-hidden="true" focusable="false">
+								<path d={logos[a.id].d} />
+							</svg>
+						)
+					}
 				</div>
 			))
 		}
@@ -71,6 +79,13 @@ import { latestRelease, unreleased, url } from '../data/site';
 	}
 
 	.lvl {
+		color: var(--q-text-2);
+	}
+
+	.logo {
+		width: 32px;
+		height: 32px;
+		margin-top: auto;
 		color: var(--q-text-2);
 	}
 

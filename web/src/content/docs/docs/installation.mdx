@@ -4,6 +4,7 @@ description: Install Quiver on macOS, Linux or Windows with the install script, 
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import WindowsFirst from '../../../components/WindowsFirst.astro';
 
 Quiver is a single binary, `quiver`.
 
@@ -12,6 +13,8 @@ Quiver is a single binary, `quiver`.
 **Platforms:** macOS, Linux and Windows, on x86-64 (`amd64`) and ARM64. See [Supported platforms](/docs/reference/platforms/).
 
 ## Install
+
+<WindowsFirst />
 
 <Tabs syncKey="install">
 <TabItem label="macOS / Linux">

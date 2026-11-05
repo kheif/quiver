@@ -16,10 +16,6 @@ When a session starts, the server's `instructions` are short. They tell the assi
 
 The skills themselves come from the session-start hook: the always-on skills in full, and the ID and description of the others. See [Always-on skills](/docs/concepts/always-on/).
 
-:::note[Next release]
-The short instructions are new in the next release. In v1.3.0 the instructions also hold the catalog, the ID and description of each skill served here, cut at about 4096 characters. When the catalog does not fit, it is replaced by a request to call `list_skills` before the first reply.
-:::
-
 ## Tools
 
 | Tool | Input | Result |
@@ -30,10 +26,6 @@ The short instructions are new in the next release. In v1.3.0 the instructions a
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |
 | `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. It changes only skills served in the session's project, and never an always-on skill: change those with `quiver edit`. |
 | `search_skills` | `query` | Searches the whole library, also skills not assigned here, and marks each match as assigned here (`global` or `project`) or not. The assistant may suggest an unassigned skill, but asks before using it. |
-
-:::note[Next release]
-The limits of `update_skill` are new in the next release. In v1.3.0 it changes any local skill in the library, also one that is not served in the session's project or is always-on.
-:::
 
 ## Prompts
 

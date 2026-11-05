@@ -231,7 +231,7 @@ Create the Quiver home and anything missing in it. Existing files are never over
 In a terminal it then offers the rest of the setup, one step at a time; each can be skipped:
 
 ```text
-1. register the MCP server with your assistants (quiver install)
+1. set up the MCP server and the hooks in your assistants (quiver install)
 2. import the skills in ~/.claude/skills, for every folder
 3. import the skills in the .claude/skills of the project in this folder
 ```
@@ -257,7 +257,7 @@ quiver init --yes
 
 ## quiver install
 
-Register the MCP server with every supported assistant that is installed, or only with the assistants named. Some assistants use Quiver's skills only when you ask for them in the prompt; quiver install says which. For any other assistant, add the entry that quiver mcp config prints to its MCP config.
+Register the MCP server, and add the session-start hook where the assistant has one, in every supported assistant that is installed, or only in the assistants named. Some assistants use Quiver's skills only when you ask for them in the prompt; quiver install says which. For any other assistant, add the entry that quiver mcp config prints to its MCP config.
 
 Supported assistants: claude-code, codex, cursor, claude-desktop, antigravity, vscode
 
@@ -665,7 +665,7 @@ quiver sync init git@github.com:me/quiver-home.git
 
 ## quiver uninstall
 
-Remove the MCP server from every supported assistant that is installed, or only from the assistants named. The Quiver home and its skills are not touched.
+Remove the MCP server and Quiver's hooks from every supported assistant that is installed, or only from the assistants named. The Quiver home and its skills are not touched.
 
 Supported assistants: claude-code, codex, cursor, claude-desktop, antigravity, vscode
 

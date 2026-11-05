@@ -43,7 +43,8 @@ test('every skill that can be always on has a text to show', () => {
 test('site.ts lists the releases newest first', () => {
 	const site = readFileSync(new URL('../src/data/site.ts', import.meta.url), 'utf8');
 	const tags = [...site.matchAll(/tag: '(v[\d.]+)'/g)].map((m) => m[1]);
-	assert.deepEqual(tags, ['v1.3.0', 'v1.2.0', 'v1.1.0', 'v1.0.0']);
+	assert.deepEqual(tags, ['v1.4.0', 'v1.3.0', 'v1.2.0', 'v1.1.0', 'v1.0.0']);
+	assert.equal((site.match(/summary: '/g) ?? []).length, tags.length, 'a release has no summary');
 	assert.ok(existsSync(new URL('../src/data/site.ts', import.meta.url)));
 });
 
@@ -53,7 +54,7 @@ test('no docs page but the generated CLI reference names quiver mcp install', ()
 		readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? files(join(dir, n)) : [join(dir, n)]));
 	for (const f of files(root)) {
 		if (f.endsWith('reference/cli.md')) continue;
-		// A Next release note, as a ::: block or an Aside, may say what v1.3.0 users run instead.
+		// A Next release note, as a ::: block or an Aside, may say what an earlier release's users run instead.
 		const body = readFileSync(f, 'utf8')
 			.replace(/:::note\[Next release\][\s\S]*?:::/g, '')
 			.replace(/<Aside [^>]*title="Next release"[^>]*>[\s\S]*?<\/Aside>/g, '');
@@ -63,8 +64,8 @@ test('no docs page but the generated CLI reference names quiver mcp install', ()
 
 test('assistant labels say what works today', () => {
 	const byId = Object.fromEntries(assistants.map((a) => [a.id, a]));
-	assert.match(byId.codex.label, /when you ask/i);
-	assert.equal(byId.vscode.label, 'Planned');
+	assert.match(byId['claude-desktop'].label, /when you ask/i);
+	for (const a of assistants.filter((x) => x.level === 'hook')) assert.equal(a.label, 'Skills and always-on', a.id);
 	for (const a of assistants) assert.ok(!(a.marks ?? []).includes('next-release'), `${a.id}: next-release comes from site.ts`);
 });
 
@@ -74,4 +75,19 @@ test('the introduction does not mark commands of the latest release', () => {
 		const line = intro.split('\n').find((l) => l.includes(cmd));
 		assert.ok(line && !/next release/i.test(line), `${cmd} is missing or still marked`);
 	}
+});
+
+test('every logo belongs to an assistant on the home page', () => {
+	const src = readFileSync(new URL('../src/data/logos.ts', import.meta.url), 'utf8');
+	const ids = [...src.matchAll(/^\t'([\w-]+)': \{/gm)].map((m) => m[1]);
+	assert.ok(ids.length > 0);
+	for (const id of ids) assert.ok(assistants.some((a) => a.id === id), `${id} is not an assistant`);
+});
+
+test('the install page opens the Windows tab first on Windows', () => {
+	const page = docs('installation.mdx');
+	const script = readFileSync(new URL('../src/components/WindowsFirst.astro', import.meta.url), 'utf8');
+	assert.match(page, /<WindowsFirst \/>[\s\S]*<Tabs syncKey="install">/);
+	assert.ok(script.includes("'starlight-synced-tabs__install'"));
+	assert.match(page, /<TabItem label="Windows">/);
 });

@@ -21,11 +21,16 @@ export function url(path = '/'): string {
  * Assistants supported on the main branch but not yet in the latest release.
  * The home page's assistant tiles mark them; empty the set after the next release.
  */
-export const latestRelease = 'v1.3.0';
+export const latestRelease = 'v1.4.0';
 export const unreleased = new Set<string>([]);
 
-/** The latest releases, newest first, for the home page. */
+/** Every release, newest first. The home page shows the latest four. */
 export const releases: { tag: string; date: string; summary?: string }[] = [
+	{
+		tag: 'v1.4.0',
+		date: '4 November 2026',
+		summary: 'session-start hooks that deliver always-on skills in full, quiver install, VS Code Copilot',
+	},
 	{
 		tag: 'v1.3.0',
 		date: '2 November 2026',
@@ -36,6 +41,14 @@ export const releases: { tag: string; date: string; summary?: string }[] = [
 		date: '31 October 2026',
 		summary: 'show and search, a guided first run, Cursor and Claude Desktop, a Windows installer',
 	},
-	{ tag: 'v1.1.0', date: '29 October 2026' },
-	{ tag: 'v1.0.0', date: '28 October 2026' },
+	{
+		tag: 'v1.1.0',
+		date: '29 October 2026',
+		summary: 'import one skill or a whole folder, skills written as a single markdown file',
+	},
+	{
+		tag: 'v1.0.0',
+		date: '28 October 2026',
+		summary: 'the first release: library, layers, sources and the MCP server for Claude Code',
+	},
 ];

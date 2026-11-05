@@ -7,8 +7,8 @@ import { links, releases, url } from '../data/site';
 		<div class="text">
 			<h2 id="open-title" class="h2 rise">Built in the open</h2>
 			<p class="rise" style="--d:80ms">
-				Apache-2.0, one Go binary for macOS, Linux and Windows. No account: your library is a folder of git
-				repositories on your machine. The tasks and design decisions are in the repository too.
+				Licensed under Apache-2.0. There is no account: your library is a folder of git repositories on your
+				machine. The tasks and design decisions are in the repository too.
 			</p>
 			<ul class="osl stair-list rise" style="--d:160ms">
 				<li><a href={links.contributing}>Contributing guide</a><span>build, test, pull requests</span></li>
@@ -21,7 +21,7 @@ import { links, releases, url } from '../data/site';
 			<div class="rel rise" data-ui>
 				<ul>
 					{
-						releases.map((r) => (
+						releases.slice(0, 4).map((r) => (
 							<li>
 								<a href={`${links.releases}/tag/${r.tag}`}>{r.tag}</a>
 								<span>{r.date}</span>

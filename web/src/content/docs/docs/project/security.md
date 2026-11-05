@@ -20,15 +20,11 @@ Every change to your own skills is a commit in `~/.quiver/local` (in `~/.quiver`
 
 ## What reaches the model
 
-The session-start hook passes the text of your always-on skills and the ID and description of your other skills to the model. A skill that cannot be read is left out and named in a `<quiver-notice>` block, so a session does not start silently without it. Text that reaches the model is cleaned: hidden characters are dropped, and a skill cannot write Quiver's own tags (`<quiver-always-on>`, `<quiver-skills>`, `<quiver-notice>`). `~/.quiver/logs/hook.log` records each run with a hash of the text it passed.
+The session-start hook passes the text of your always-on skills and the ID and description of your other skills to the model. A skill that cannot be read is left out and named in a `<quiver-notice>` block. Text that reaches the model is cleaned: hidden characters are dropped, and a skill cannot write Quiver's own tags (`<quiver-always-on>`, `<quiver-skills>`, `<quiver-notice>`). `~/.quiver/logs/hook.log` records each run with a hash of the text it passed.
 
 A source skill folder that is a symlink is not discovered, so an update cannot change a skill through files that git reports somewhere else.
 
 `quiver install` changes your assistants' config files: it adds the MCP server and the hooks. `quiver uninstall` removes both.
-
-:::note[Next release]
-The hook, the notices, the cleaning of text, the checks on `quiver sync` and `update_skill`, and the symlink rule are new in the next release. In v1.3.0 `quiver mcp install` registers only the MCP server, `quiver sync` pulls without asking, and `update_skill` can change any local skill.
-:::
 
 ## Installing Quiver
 

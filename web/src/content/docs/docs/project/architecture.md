@@ -23,14 +23,10 @@ Quiver is one Go binary with three roles: a CLI that manages the library, an MCP
 - **One source of skills.** Skills are read from the Quiver home only. Nothing is copied or linked into projects; a project holds only `.quiver.json`. The MCP server serves them, and `quiver hook` puts the always-on skills and the skill list into a session's context from the same files.
 - **The standard format.** Skills are Agent Skills folders with a `SKILL.md`. Quiver adds no format of its own, so existing skills and repositories work as they are.
 - **Git for storage.** Your skills are a git repository Quiver commits to; sources are git clones. History, review and sharing come from git.
-- **A hook, not tool descriptions or instructions, carries the skills.** Claude Code defers MCP tools, so the model does not see their descriptions, and it cuts long `instructions` at about 4096 characters. A session-start hook adds the always-on skills in full and the ID and description of the other skills to the context. An assistant takes only so much text from one hook command, so Quiver splits the text over as many commands as needed. The server's `instructions` stay short.
+- **Skills are delivered by a hook.** Claude Code defers MCP tools, so the model does not see their descriptions, and it cuts long `instructions` at about 4096 characters. A session-start hook adds the always-on skills in full and the ID and description of the other skills to the context. An assistant takes only so much text from one hook command, so Quiver splits the text over as many commands as needed. The server's `instructions` stay short.
 - **The assistant decides.** Quiver lists skills; the assistant loads the ones a task needs. Only always-on skills are loaded unconditionally.
-- **A session does not start silently without its skills.** A hook names what it could not load in a `<quiver-notice>` block, and text that reaches the model is cleaned of hidden characters and Quiver's own tags.
+- **Failures are named.** A hook names what it could not load in a `<quiver-notice>` block, and text that reaches the model is cleaned of hidden characters and Quiver's own tags.
 - **Assignments are personal.** They live in the Quiver home, not in projects, so a teammate's clone is not affected by your choices.
-
-:::note[Next release]
-`quiver hook` and the delivery through hooks are new in the next release. In v1.3.0 skills reach assistants only through MCP, and the skill list is in the server's `instructions`, cut at about 4096 characters.
-:::
 
 ## Code layout
 
