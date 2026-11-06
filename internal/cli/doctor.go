@@ -75,7 +75,7 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 		return err
 	}
 	d := &doc{in: bufio.NewReader(in), out: out, fix: fix, home: home}
-	for _, check := range []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkPins, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP, d.checkVersion} {
+	for _, check := range append(d.checks(), d.checkVersion) {
 		check()
 	}
 	fmt.Fprintln(out)
@@ -88,6 +88,12 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 		fmt.Fprintln(out, "Everything is fine.")
 	}
 	return nil
+}
+
+// checks are the checks that read only the machine; checkVersion asks the
+// network, so the panel leaves it out.
+func (d *doc) checks() []func() {
+	return []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkPins, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP}
 }
 
 // report prints one result. level is "ok", "warn" or "error"; details are
@@ -321,8 +327,15 @@ func (d *doc) checkSources() {
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		if _, err := os.Stat(filepath.Join(dir, name)); errors.Is(err, os.ErrNotExist) {
+		_, err := os.Stat(filepath.Join(dir, name))
+		switch {
+		case errors.Is(err, os.ErrNotExist):
 			missing = append(missing, fmt.Sprintf("%s (%s): remove it and add it again", name, d.cfg.Sources[name].Repo))
+		case err == nil:
+			// A clone that git cannot read is as good as missing.
+			if _, err := git.Head(filepath.Join(dir, name)); err != nil {
+				missing = append(missing, fmt.Sprintf("%s (%s): git cannot read the clone; remove the source and add it again", name, d.cfg.Sources[name].Repo))
+			}
 		}
 	}
 	if len(missing) > 0 {

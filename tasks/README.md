@@ -132,13 +132,15 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK52.4](TASK52.4-cursor-antigravity-and-global-rules-files.md) | Cursor, Antigravity and global rules files | TASK50 |
 | ✅ | [TASK53](TASK53-quiver-hook-session-start.md) | `quiver hook session-start` | TASK52, TASK19 |
 | ✅ | [TASK54](TASK54-always-on-pointer-becomes-the-fallback.md) | Always-on pointer becomes the fallback | TASK53 |
-|  | [TASK55](TASK55-quiver-install.md) | `quiver install` | TASK53, TASK50 |
+| ✅ | [TASK55](TASK55-quiver-install.md) | `quiver install` | TASK53, TASK50 |
 | ✅ | ↳ [TASK55.1](TASK55.1-rename-to-quiver-install-and-quiver-uninstall.md) | Rename to `quiver install` and `quiver uninstall` | TASK50 |
 | ✅ | ↳ [TASK55.2](TASK55.2-claude-code-hook.md) | Claude Code hook | TASK52.1, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.3](TASK55.3-codex-hook.md) | Codex hook | TASK52.2, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
 | ✅ | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.6](TASK55.6-antigravity-hook.md) | Antigravity hook | TASK52.4, TASK53, TASK55.1 |
+| ✅ | ↳ [TASK55.7](TASK55.7-hook-text-in-parts.md) | Hook text in parts | TASK55.2 |
+| ✅ | ↳ [TASK55.8](TASK55.8-delivery-failures-and-review-gaps.md) | Delivery failures and review gaps | TASK55.7 |
 | ✅ | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
 | ✅ | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
 
@@ -146,8 +148,13 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK58](TASK58-interactive-tui-quiver-with-no-arguments.md) | Interactive TUI (`quiver` with no arguments) | TASK45, TASK14 |
-|  | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58, TASK15 |
+| 🚧 | [TASK58](TASK58-interactive-tui-quiver-with-no-arguments.md) | Interactive panel (`quiver` with no arguments) | TASK45, TASK14 |
+| ✅ | ↳ [TASK58.1](TASK58.1-panel-shell-and-skills.md) | Panel shell and Skills section | TASK45, TASK14 |
+| ✅ | ↳ [TASK58.2](TASK58.2-projects-page.md) | Projects section | TASK58.1 |
+| ✅ | ↳ [TASK58.3](TASK58.3-sources-page.md) | Sources section | TASK58.1 |
+| ✅ | ↳ [TASK58.4](TASK58.4-safe-input-and-display.md) | Safe input and display | TASK58.1 |
+| ✅ | ↳ [TASK58.5](TASK58.5-health-and-setup.md) | Health section and first-run setup | TASK58.1 |
+|  | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58.3, TASK15 |
 |  | [TASK60](TASK60-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20, TASK55.1 |
 |  | [TASK61](TASK61-release-v1-5-0.md) | Release v1.5.0 | TASK58, TASK59, TASK60 |
 
@@ -186,4 +193,5 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 ## Later (not yet planned in detail)
 
-- Graphical app with the same features as the TUI.
+- More pages for the panel of TASK58: **Health** (what `quiver doctor` and `quiver status` report, and how always-on skills reach each assistant), **Activity** (how often the session-start hook ran, how long it took, and which skills it delivered) and **Settings** (assistants, update checks, editor, library sync). Activity needs the hook log to record more than it does today.
+- Graphical app with the same features as the panel.

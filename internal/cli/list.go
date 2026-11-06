@@ -6,6 +6,7 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/library"
@@ -171,6 +172,13 @@ func printSkills(out io.Writer, skills []listedSkill, width int) {
 // cut puts s on one line and shortens it to n characters, ending in "…".
 // n of 0 means no limit.
 func cut(s string, n int) string {
+	// A skill's text must not move the cursor or recolor the terminal.
+	s = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) && !unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, s)
 	s = strings.Join(strings.Fields(s), " ")
 	r := []rune(s)
 	if n <= 0 || len(r) <= n {

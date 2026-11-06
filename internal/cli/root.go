@@ -48,7 +48,10 @@ skills in that project. Skills are never copied into projects.
 Get started:
   quiver init               set up the library and the MCP server, import your skills
   quiver new <name>         write a skill for the project in this folder
-  quiver status             see what the assistant gets here`,
+  quiver status             see what the assistant gets here
+
+In a terminal, quiver without arguments opens an interactive screen to
+search the library and assign skills.`,
 		Example: `  quiver init
   quiver new release-notes
   quiver source add anthropics/skills --name anthropic
@@ -57,6 +60,11 @@ Get started:
 		Version: currentVersion(),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			out := cmd.OutOrStdout()
+			// In a terminal, quiver alone opens the interactive screen. Without
+			// a Quiver home, it offers to set one up.
+			if _, isTerminal := terminal(out); isTerminal && interactive(cmd.InOrStdin()) {
+				return runTUI(&tuiBackend{})
+			}
 			if err := overview(out); err != nil {
 				return err
 			}
@@ -101,6 +109,16 @@ func changesSkills(cmd *cobra.Command) bool {
 		}
 	}
 	return false
+}
+
+// homeExists reports whether the Quiver home has been set up.
+func homeExists() bool {
+	home, err := fsutil.QuiverHome()
+	if err != nil {
+		return false
+	}
+	_, err = os.Stat(filepath.Join(home, "registry.json"))
+	return err == nil
 }
 
 // overview prints three lines for quiver without arguments: the project

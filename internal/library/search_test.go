@@ -49,3 +49,37 @@ func TestSearch(t *testing.T) {
 		t.Errorf("no match: %v", ids(got))
 	}
 }
+
+func TestSearchWordsInAnyOrder(t *testing.T) {
+	l := &Library{skills: map[string]*skill.Skill{}}
+	for id, s := range map[string][2]string{
+		"team/pull-request":        {"pull-request", "Open a pull request."},
+		"team/review-pull-request": {"review-pull-request", "Review a change."},
+		"sql-optimizer":            {"sql-optimizer", "Finds slow SQL queries. Use when a database query is slow."},
+		"notes":                    {"notes", "Keep notes."},
+	} {
+		l.skills[id] = &skill.Skill{ID: id, Name: s[0], Description: s[1]}
+	}
+	ids := func(q string) []string {
+		var out []string
+		for _, m := range l.Search(q) {
+			out = append(out, m.ID)
+		}
+		return out
+	}
+	for q, want := range map[string][]string{
+		// A space finds a hyphen, and the whole text still ranks first.
+		"pull request": {"team/pull-request", "team/review-pull-request"},
+		// Words in any order match a name or ID.
+		"request pull": {"team/pull-request", "team/review-pull-request"},
+		// Words spread over the description.
+		"database slow":    {"sql-optimizer"},
+		"my database slow": nil,
+		"slow sql":         {"sql-optimizer"},
+		"sql notes":        nil,
+	} {
+		if got := ids(q); !slices.Equal(got, want) {
+			t.Errorf("%q: got %v, want %v", q, got, want)
+		}
+	}
+}

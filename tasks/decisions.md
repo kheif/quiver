@@ -7,7 +7,7 @@ These apply to every task. Change them here first if you change them at all.
 | Language | Go 1.25+ | Ships as a single binary with no runtime. The CLI and the MCP server are the same binary. 1.25 is the minimum of the MCP SDK (v1.8.0). |
 | CLI framework | `spf13/cobra` | The standard choice for Go CLIs. Provides subcommands, flags and shell completion. |
 | MCP | Official Go SDK `github.com/modelcontextprotocol/go-sdk`, stdio transport | Maintained alongside the MCP spec. Stdio is what Claude Code, Cursor and Claude Desktop launch by default. |
-| TUI | Bubble Tea (`charmbracelet/bubbletea`, `bubbles`, `lipgloss`) | The most widely used Go TUI stack. Its models can be tested without a real terminal. |
+| TUI | Bubble Tea v2 (`charm.land/bubbletea/v2`, `bubbles/v2`, `lipgloss/v2`) | The most widely used Go TUI stack. Its models can be tested without a real terminal. Version 1 queries the terminal for its background color when the package loads, which would delay every command; version 2 does not. |
 | Frontmatter parsing | `gopkg.in/yaml.v3` | `SKILL.md` frontmatter is YAML. |
 | File watching | `fsnotify/fsnotify` | Cross-platform and widely used. It does not watch subfolders, so the server adds each folder it needs (TASK26). |
 | Git | Run the system `git` binary through `os/exec` | Reuses the user's credentials (SSH keys, `gh` auth) with no extra setup. |

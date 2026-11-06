@@ -66,6 +66,19 @@ Then start Claude Code in `~/code/app` and ask for the task, such as "write the 
 
 `quiver status` shows what the assistant gets in the current folder. `quiver` alone sums it up in three lines, with a next step, before the command list.
 
+## The interactive panel
+
+In a terminal, `quiver` without arguments opens a panel for everything above, with no command to remember. `?` lists the keys of the current section.
+
+| Section | What it does |
+|---|---|
+| **1 Skills** | Your skills in four views (available here, the project's, global, all), grouped by source. Assign a skill to the project and to every folder independently, each as *On demand* or *Always on*. `n` creates a skill, `i` imports, `e` edits, `f` forks a source skill, `d` deletes, `p` pins. `/` searches. |
+| **2 Projects** | The registered projects. Choose one to manage it from anywhere, rename it, forget it, or split a copied folder. |
+| **3 Sources** | The skill repositories. `a` adds one, `u` checks for updates and shows what would change (`d` shows the patches) before it applies them, `x` removes one. |
+| **4 Health** | The checks of `quiver doctor` and how always-on skills reach each assistant. `i` sets up the MCP server and hooks, `f` applies the safe fixes. Without a Quiver home, the panel offers to set it up. |
+
+Every change goes through the same code as the matching command. `quiver sync` and the `--json` outputs stay on the command line.
+
 ## Concepts
 
 - **Library.** `~/.quiver/local/` holds your own skills, in a git repository Quiver commits to. `~/.quiver/sources/` holds cloned skill repositories. Set `QUIVER_HOME` to use another folder.

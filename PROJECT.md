@@ -145,14 +145,17 @@ quiver update
 - **Customizing:** Remote skills are read-only. `quiver fork anthropic/pdf` copies one into `local/`, where you can edit it.
 - **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `quiver update` lists the changed files of assigned skills before it applies them, marks scripts "needs review", and asks first.
 
-## Interactive Screen (TUI)
+## Interactive Panel (TUI)
 
-Running `quiver` with no arguments opens an interactive screen:
+Running `quiver` with no arguments in a terminal opens a management panel with four sections:
 
-- **Search** the whole library as you type, with a preview of each skill.
-- **Toggle** a skill for the current project (`space`) or globally (`g`).
-- **Browse** projects and sources.
-- **Update notices.** While the screen is open, Quiver quietly checks the remote sources in the background, one at a time and only when online. If a source has changes, a small notice appears in the bottom-right corner: `anthropic: 3 skills updated — press u to pull`. Nothing is pulled without a key press.
+- **Skills.** `n` creates a skill, `i` imports skills from a folder, `e` edits one, `f` forks a source skill, `d` deletes a local one, `p` pins a source skill or unpins it. Four views: what is available here (global and project assignments together), the project's assignments, the global assignments, and the whole library. `/` searches the active view. The detail of a skill shows two independent settings, for the managed project and for every folder, each *Not assigned*, *On demand* or *Always on*.
+- **Projects.** The registered projects with their folders and skills. Choose one to manage (the header then says `Managing: api`), rename it, forget it, or split a copied folder.
+- **Sources.** `a` adds a source. The remote sources, which of them the project and the global scope actually use, and their update state. Checking a source shows the same preview as `quiver update` (`d` adds the patches, like `--diff`) and waits for a yes when an assigned skill changes; a rewritten history asks before it takes the remote one (`--reset`).
+- **Health.** The checks of `quiver doctor`, how always-on skills reach each assistant, and `i`, `x`, `f` to set Quiver up in the assistants, remove it, or apply the safe fixes. A header badge counts the problems. Without a Quiver home, the panel opens on a first-run screen that sets it up.
+- **Update notices.** While the panel is open, Quiver quietly checks the remote sources in the background, one at a time and only when online. If a source has changes, a small notice appears in the bottom-right corner: `anthropic: 3 skills updated — press u to pull`. Nothing is pulled without a key press.
+
+Every action in the panel is also a command, and the panel runs the same code. `quiver sync` and the `--json` outputs stay in the CLI. Sections for activity and settings are planned (see Roadmap).
 
 ## CLI
 
@@ -162,7 +165,7 @@ Every action in the TUI is also a command, for scripts and quick use:
 # Setup
 quiver init                         # Create ~/.quiver; in a terminal, also register the MCP server and import existing skills
 quiver install                      # Register the MCP server with every installed assistant
-quiver                              # The project here, its skill count and a next step
+quiver                              # In a terminal: the interactive screen. Otherwise: the project here, its skill count and a next step
 
 # Skills
 quiver list                         # All skills, and where each one is assigned
@@ -233,7 +236,7 @@ quiver doctor                       # Check the library and fix problems
 - A pointer in the rules file of assistants without hooks
 
 **v1.5**
-- Interactive TUI with search
+- Interactive panel with sections for skills, projects and sources
 - Background update checks with notices
 - Slash commands without the `quiver:` prefix in Claude Code
 
@@ -246,6 +249,7 @@ quiver doctor                       # Check the library and fix problems
 - To be planned after the test phase (see Direction)
 
 **Later**
+- More panel pages: activity (hook runs) and settings
 - Graphical app
 - Search and a marketplace: people can find and add skills others published
 

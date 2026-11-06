@@ -286,3 +286,17 @@ func TestDoctorNativeFixAll(t *testing.T) {
 	out, _ = runIn(t, "", "doctor")
 	wantLines(t, out, "ok     no served skill is also installed in Claude Code")
 }
+
+func TestDoctorReportsACloneGitCannotRead(t *testing.T) {
+	home := sourceEnv(t)
+	assistanttest.Install(t)
+	bareSource(t, "acme", "pdf")
+	if err := os.WriteFile(filepath.Join(home, "sources", "acme", ".git", "HEAD"), []byte("garbage\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runIn(t, "", "doctor")
+	if err == nil {
+		t.Errorf("no error:\n%s", out)
+	}
+	wantLines(t, out, "error  sources that are not downloaded\n       acme (", "git cannot read the clone")
+}
