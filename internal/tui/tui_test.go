@@ -32,9 +32,20 @@ type fake struct {
 	checkErr error
 	applied  []string
 
+	// updates is what the background check finds, by source; probeErr makes it
+	// fail, as without a network. probed records the sources asked, in order.
+	updates  map[string]bool
+	probeErr error
+	probed   []string
+
 	health      []HealthItem
 	hookMissing bool
 	noHome      bool
+}
+
+func (f *fake) HasUpdate(source string) (bool, error) {
+	f.probed = append(f.probed, source)
+	return f.updates[source], f.probeErr
 }
 
 func (f *fake) projectByPath(path string) (string, bool) {
@@ -396,6 +407,7 @@ func typed(t *testing.T, m Model, s string) Model {
 func startSized(t *testing.T, f *fake, w, h int) Model {
 	t.Helper()
 	m := New(f)
+	m.probePause = 0
 	m = drive(t, m, tea.WindowSizeMsg{Width: w, Height: h})
 	m = drive(t, m, m.checkHealth()())
 	f.calls = slices.DeleteFunc(f.calls, func(c string) bool { return c == "health" })

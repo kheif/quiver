@@ -148,13 +148,13 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-| 🚧 | [TASK58](TASK58-interactive-tui-quiver-with-no-arguments.md) | Interactive panel (`quiver` with no arguments) | TASK45, TASK14 |
+| ✅ | [TASK58](TASK58-interactive-tui-quiver-with-no-arguments.md) | Interactive panel (`quiver` with no arguments) | TASK45, TASK14 |
 | ✅ | ↳ [TASK58.1](TASK58.1-panel-shell-and-skills.md) | Panel shell and Skills section | TASK45, TASK14 |
 | ✅ | ↳ [TASK58.2](TASK58.2-projects-page.md) | Projects section | TASK58.1 |
 | ✅ | ↳ [TASK58.3](TASK58.3-sources-page.md) | Sources section | TASK58.1 |
 | ✅ | ↳ [TASK58.4](TASK58.4-safe-input-and-display.md) | Safe input and display | TASK58.1 |
 | ✅ | ↳ [TASK58.5](TASK58.5-health-and-setup.md) | Health section and first-run setup | TASK58.1 |
-|  | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58.3, TASK15 |
+| ✅ | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58.3, TASK15 |
 |  | [TASK60](TASK60-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20, TASK55.1 |
 |  | [TASK61](TASK61-release-v1-5-0.md) | Release v1.5.0 | TASK58, TASK59, TASK60 |
 

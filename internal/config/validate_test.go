@@ -82,3 +82,20 @@ func TestValidatePins(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdateCheckInterval(t *testing.T) {
+	c := Default()
+	if got := c.CheckInterval(); got != DefaultUpdateCheckInterval {
+		t.Errorf("default interval = %v", got)
+	}
+	c.UpdateCheckInterval = "90m"
+	if err := c.Validate(); err != nil || c.CheckInterval().Minutes() != 90 {
+		t.Errorf("90m: %v, %v", err, c.CheckInterval())
+	}
+	for _, bad := range []string{"soon", "0s", "-1h", "6"} {
+		c.UpdateCheckInterval = bad
+		if err := c.Validate(); err == nil {
+			t.Errorf("%q: want error", bad)
+		}
+	}
+}

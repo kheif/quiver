@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // Clone makes a shallow clone (--depth 1) of url into dir. "--" stops a url
@@ -17,6 +18,20 @@ func Clone(url, dir string) error {
 func Fetch(dir string) error {
 	_, err := runNetwork(dir, "fetch", "--quiet")
 	return err
+}
+
+// RemoteHead asks origin of dir for the commit its HEAD points to. It
+// downloads no objects and gives up after ten seconds.
+func RemoteHead(dir string) (string, error) {
+	out, err := runTimeout(probeTimeout, dir, "ls-remote", "origin", "HEAD")
+	if err != nil {
+		return "", err
+	}
+	hash, _, _ := strings.Cut(out, "\t")
+	if hash == "" {
+		return "", errors.New("the remote has no HEAD")
+	}
+	return hash, nil
 }
 
 // IsAncestor reports whether commit a is an ancestor of commit b. After a

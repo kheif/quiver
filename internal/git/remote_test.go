@@ -134,3 +134,48 @@ func TestResetAfterRewrite(t *testing.T) {
 		t.Errorf("IsAncestor(old) = %v, %v; want false", ok, err)
 	}
 }
+
+func TestRemoteHeadFollowsTheRemoteWithoutFetching(t *testing.T) {
+	work, url := newRemote(t)
+	dir := filepath.Join(t.TempDir(), "clone")
+	if err := Clone(url, dir); err != nil {
+		t.Fatal(err)
+	}
+	local, _ := Head(dir)
+	if got, err := RemoteHead(dir); err != nil || got != local {
+		t.Fatalf("RemoteHead = %q, %v; want %q", got, err, local)
+	}
+	write(t, work, "pdf/SKILL.md", "v2")
+	if err := Commit(work, "v2"); err != nil {
+		t.Fatal(err)
+	}
+	push(t, work)
+	got, err := RemoteHead(dir)
+	if err != nil || got == local {
+		t.Fatalf("RemoteHead after a push = %q, %v; want a new commit", got, err)
+	}
+	if hasObject(t, dir, got) {
+		t.Fatal("RemoteHead downloaded the new commit")
+	}
+}
+
+func TestRemoteHeadFailsForAnUnreachableRemote(t *testing.T) {
+	_, url := newRemote(t)
+	dir := filepath.Join(t.TempDir(), "clone")
+	if err := Clone(url, dir); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := run(dir, "remote", "set-url", "origin", "file://"+filepath.Join(t.TempDir(), "gone.git")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RemoteHead(dir); err == nil {
+		t.Fatal("RemoteHead of a missing remote succeeded")
+	}
+}
+
+// hasObject reports whether dir already holds the object hash.
+func hasObject(t *testing.T, dir, hash string) bool {
+	t.Helper()
+	_, err := run(dir, "cat-file", "-e", hash+"^{commit}")
+	return err == nil
+}

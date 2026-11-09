@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/fsutil"
@@ -389,6 +390,12 @@ func (b *tuiBackend) Check(name string, reset bool) (tui.Preview, error) {
 		Source: name, From: short(u.From), To: short(u.To), UpToDate: u.From == u.To, Ask: ask,
 		Lines: strings.Split(strings.TrimRight(out.String(), "\n"), "\n"), Diff: diff,
 	}, nil
+}
+
+// HasUpdate asks the remote of a source whether it has news, as the panel's
+// background check does.
+func (b *tuiBackend) HasUpdate(name string) (bool, error) {
+	return library.HasUpdate(name, time.Now())
 }
 
 func (b *tuiBackend) Apply(name string) (string, error) {

@@ -13,14 +13,17 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// One green accent on the normal text of the terminal. The selected row, the
+// One blue accent on the normal text of the terminal: the accent of the
+// website (#1a4be0), a little lighter so it reads on dark terminals too. The
+// selected row, the
 // current section and the focus are also marked with characters, so they show
 // without color.
 var (
-	accent     = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
-	accentBold = accent.Bold(true)
-	bold       = lipgloss.NewStyle().Bold(true)
-	faint      = lipgloss.NewStyle().Faint(true)
+	accentColor = lipgloss.Color("#6b8cff")
+	accent      = lipgloss.NewStyle().Foreground(accentColor)
+	accentBold  = accent.Bold(true)
+	bold        = lipgloss.NewStyle().Bold(true)
+	faint       = lipgloss.NewStyle().Faint(true)
 )
 
 func (m Model) View() tea.View {
@@ -95,13 +98,13 @@ func mix(a, b color.Color, t float64) color.Color {
 }
 
 // band is the style of the selected row: the terminal's background with a
-// little green. Until the terminal has told its background there is none,
-// and the row is only bold and green.
+// little blue. Until the terminal has told its background there is none,
+// and the row is only bold and blue.
 func (m Model) band(extra lipgloss.Style) lipgloss.Style {
 	if m.bg == nil {
-		return extra.Foreground(lipgloss.Color("2"))
+		return extra.Foreground(accentColor)
 	}
-	return extra.Background(mix(m.bg, color.RGBA{86, 168, 118, 255}, 0.22))
+	return extra.Background(mix(m.bg, color.RGBA{26, 75, 224, 255}, 0.22))
 }
 
 // bar is the style of the key line: the background, a little lighter or
@@ -117,9 +120,37 @@ func (m Model) bar() lipgloss.Style {
 	return lipgloss.NewStyle().Background(lipgloss.Darken(m.bg, 0.06))
 }
 
-// statusLines is what the status area says, wrapped to at most three lines,
-// so a long message is not cut at the first one.
+// statusLines is the status area with the notice of the background check at
+// the right of its last line. A notice that does not fit beside the message is
+// left out; the Sources section still marks the source.
 func (m Model) statusLines(cw int) []string {
+	lines := m.statusText(cw)
+	n := m.notice()
+	if n == "" || m.confirm != nil {
+		return lines
+	}
+	last := len(lines) - 1
+	if room := cw - ansi.StringWidth(lines[last]) - 2; ansi.StringWidth(n) <= room {
+		lines[last] = spread(lines[last], accent.Render(n), cw)
+	}
+	return lines
+}
+
+// notice says that sources have updates, or "" when none has.
+func (m Model) notice() string {
+	names := m.updatable()
+	switch len(names) {
+	case 0:
+		return ""
+	case 1:
+		return names[0] + " has updates — press u to review"
+	}
+	return fmt.Sprintf("%d sources have updates — press u", len(names))
+}
+
+// statusText is what the status area says, wrapped to at most three lines, so
+// a long message is not cut at the first one.
+func (m Model) statusText(cw int) []string {
 	var text string
 	switch {
 	case m.confirm != nil:
@@ -1315,7 +1346,7 @@ func (m Model) helpLines(cw int) []string {
 	default:
 		add("← →  h l", "switch view: all, used by project, used globally")
 		add("a", "add a source (a git repository of skills)")
-		add("u  U", "check one source for updates, or all")
+		add("u  U", "check one source for updates, or all; u works on every section while a notice shows")
 		add("x", "remove the source")
 	}
 	add("tab", "move between the list and its detail")

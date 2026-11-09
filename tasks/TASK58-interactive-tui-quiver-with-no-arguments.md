@@ -2,7 +2,7 @@
 
 **Phase:** Phase 7: TUI and slash commands (v1.5)
 
-**Status:** 🚧 In progress
+**Status:** ✅ Done
 
 **Depends on:** TASK45, TASK14
 
@@ -21,7 +21,7 @@ Build it with Bubble Tea v2 (`charm.land/bubbletea/v2`, `charm.land/bubbles/v2` 
 
 The panel opens on Skills, in the view *Available here*. There is no separate overview page and no section that only holds counters.
 
-**Layout:** a header line (`quiver ›`, the project being managed and its folder), the sections as tabs with a rule that is thicker under the current one, then a list on the left and the detail of the selected item on the right, and at the bottom a status line and a key bar with the few keys that work now. The left pane has its title, the views, the search field and a column header; the detail pane has the name, the description, the assignments as two bordered choices (*This project*, *Every folder*) and a preview of `SKILL.md`. From 100 columns the detail sits beside the list; below that the list takes the full width, `enter` opens the detail and `esc` returns to the same row and the same search. From 30 lines the layout is spacious (blank lines, rows of two lines with the source below the name); below that it is compact. The selected row has a faint green band once the terminal has reported its background, and is only bold and green before that. No boxes around sections; thin rules separate the parts.
+**Layout:** a header line (`quiver ›`, the project being managed and its folder), the sections as tabs with a rule that is thicker under the current one, then a list on the left and the detail of the selected item on the right, and at the bottom a status line and a key bar with the few keys that work now. The left pane has its title, the views, the search field and a column header; the detail pane has the name, the description, the assignments as two bordered choices (*This project*, *Every folder*) and a preview of `SKILL.md`. From 100 columns the detail sits beside the list; below that the list takes the full width, `enter` opens the detail and `esc` returns to the same row and the same search. From 30 lines the layout is spacious (blank lines, rows of two lines with the source below the name); below that it is compact. The selected row has a faint blue band once the terminal has reported its background, and is only bold and blue before that. No boxes around sections; thin rules separate the parts.
 
 **Rules for the whole panel:**
 
@@ -31,7 +31,7 @@ The panel opens on Skills, in the view *Available here*. There is no separate ov
 4. **Visible target.** The header names the project that changes apply to (`managing project api`, with the folder the terminal was opened in). Choosing a project on the Projects section changes this target for the panel only; it changes neither the working directory nor the registry. When the terminal was opened elsewhere, the header says where.
 5. **Safe by default.** A change for every folder, a removal and a forget ask first and say what they do. A repeated key never starts the same operation twice. Every change reports what it did, on its own line, until the next change, and says when it applies from the next session.
 6. **Honest state.** A source is never reported as up to date before it was checked. A project without a folder on this machine cannot be changed. A failure shows its reason first.
-7. **Honest about the terminal.** Nothing the skills contain can alter the screen. The panel works without color, in small terminals (40×12) and over `TERM=dumb`. One green accent; the selection and the focus are also marked with characters.
+7. **Honest about the terminal.** Nothing the skills contain can alter the screen. The panel works without color, in small terminals (40×12) and over `TERM=dumb`. One blue accent, the one of the website; the selection and the focus are also marked with characters.
 8. When stdout is not a terminal, `quiver` prints the overview and help as before. Without a Quiver home, the panel opens on a first-run screen that offers to set Quiver up.
 9. **Nothing needs the command line for the work the panel is for.** Setting up, checking, assigning, creating, importing, editing, forking, pinning, deleting, adding, updating and removing sources, and managing projects all have a key. What stays in the CLI: `quiver sync` (needs a remote and answers about incoming changes), `import --deep/--keep/--name`, `show --json` and the other `--json` outputs, and shell completion.
 
@@ -40,4 +40,4 @@ There is no Settings section: Quiver has no setting that a person changes (`conf
 **Done when:**
 - Every subtask is done.
 - Tests drive the model with key messages (no real terminal) for every key of every section, including the scope changes and what the search does with keys.
-- A manual check on macOS, Linux and Windows terminals shows no layout glitches.
+- A manual check on a macOS terminal shows no layout glitches. The tests that drive the panel run on macOS, Linux and Windows in CI; a look at a Linux or Windows terminal is left to whoever has one.

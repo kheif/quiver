@@ -2,7 +2,7 @@
 
 **Phase:** Phase 7: TUI and slash commands (v1.5)
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK58.3, TASK15
 
@@ -20,3 +20,8 @@ Inside the panel, check the remote sources for updates quietly, one at a time.
 - A test with a fixture remote that gains a commit shows the notice.
 - A test with no network shows nothing and does not block the panel.
 - Checks respect the interval.
+
+**As built:**
+- `git ls-remote origin HEAD` runs in the clone of the source (`git.RemoteHead`), so the stored URL needs no parsing. `library.HasUpdate` keeps the time and the answer of each check in `~/.quiver/state.json`; inside the interval it repeats the answer, so the notice does not vanish and come back.
+- The notice cannot count the changed skills, because `ls-remote` downloads nothing: it says `anthropic has updates — press u to review`, or `3 sources have updates — press u`. `u` lists the changed skills and asks before it pulls, as on the Sources section; on the other sections it opens the Sources section on the first source with updates.
+- Two sources in a row that cannot be reached end the run, which is how a missing network shows. A failed check is skipped without a message: the panel owns the screen, and there is no log file.

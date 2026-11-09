@@ -22,6 +22,8 @@ var ErrNotInstalled = errors.New("git is not installed or not on PATH: install g
 var (
 	localTimeout   = time.Minute
 	networkTimeout = 5 * time.Minute
+	// probeTimeout is for the quiet check of a remote, which downloads nothing.
+	probeTimeout = 10 * time.Second
 )
 
 // run runs a local git command with args in dir and returns trimmed stdout.

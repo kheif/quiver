@@ -4,6 +4,7 @@ package config
 import (
 	"errors"
 	"path/filepath"
+	"time"
 
 	"github.com/kheif/quiver/internal/fsutil"
 )
@@ -18,6 +19,22 @@ type Config struct {
 	// Pins maps the IDs of pinned source skills, such as acme/pdf, to the
 	// commit they are served from.
 	Pins map[string]Pin `json:"pins,omitempty"`
+	// UpdateCheckInterval is how long the panel waits before it asks a source
+	// again whether it has updates, as a Go duration such as "12h". Empty
+	// means DefaultUpdateCheckInterval.
+	UpdateCheckInterval string `json:"updateCheckInterval,omitempty"`
+}
+
+// DefaultUpdateCheckInterval is used when updateCheckInterval is not set.
+const DefaultUpdateCheckInterval = 6 * time.Hour
+
+// CheckInterval returns the interval between update checks of one source.
+// Validate has already checked the setting.
+func (c *Config) CheckInterval() time.Duration {
+	if d, err := time.ParseDuration(c.UpdateCheckInterval); err == nil && d > 0 {
+		return d
+	}
+	return DefaultUpdateCheckInterval
 }
 
 // Pin keeps a source skill at one commit of its source.

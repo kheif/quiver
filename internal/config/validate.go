@@ -5,6 +5,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var (
@@ -31,6 +32,11 @@ func (c *Config) Validate() error {
 	}
 	if c.Version < 1 {
 		return fmt.Errorf("config.json has invalid version %d", c.Version)
+	}
+	if c.UpdateCheckInterval != "" {
+		if d, err := time.ParseDuration(c.UpdateCheckInterval); err != nil || d <= 0 {
+			return fmt.Errorf("updateCheckInterval %q is not a positive duration such as \"6h\"", c.UpdateCheckInterval)
+		}
 	}
 	for name, s := range c.Sources {
 		if err := ValidateSourceName(name); err != nil {

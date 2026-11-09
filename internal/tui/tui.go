@@ -12,6 +12,7 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"time"
 
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
@@ -157,6 +158,10 @@ type Backend interface {
 	// history of a source whose history was rewritten.
 	Check(source string, reset bool) (Preview, error)
 	Apply(source string) (string, error)
+	// HasUpdate asks the remote of a source, quietly and without downloading
+	// anything, whether it has a commit the clone lacks. It asks again only
+	// after the check interval and applies nothing.
+	HasUpdate(source string) (bool, error)
 	RemoveSource(name string) (string, error)
 	RenameProject(id, name string) error
 	ForgetProject(id string) error
@@ -276,6 +281,25 @@ type (
 		preview Preview
 		err     error
 	}
+	// probedMsg is the answer of the background check of one source; rest
+	// are the sources still waiting for theirs.
+	probedMsg struct {
+		source string
+		behind bool
+		err    error
+		rest   []string
+	}
+)
+
+// updatesAvailable is what the Sources section says about a source whose
+// remote has a newer commit, found by the background check.
+const updatesAvailable = "Updates available"
+
+// How the background check paces itself, and when it gives up: two sources in
+// a row that cannot be reached mean the network is down.
+const (
+	probePause        = 2 * time.Second
+	probeFailuresStop = 2
 )
 
 // confirmation is a question asked before a change.
@@ -354,11 +378,14 @@ type Model struct {
 	preview *previewState
 	confirm *confirmation
 
-	checks  map[string]string // what the last check of each source found
-	pending map[string]string // running operations, by key, with what to say
-	status  string
-	failed  bool
-	note    bool // the status is a hint, not the result of a change
+	checks map[string]string // what the last check of each source found
+	// probeFailures counts the unanswered background checks in a row.
+	probeFailures int
+	probePause    time.Duration
+	pending       map[string]string // running operations, by key, with what to say
+	status        string
+	failed        bool
+	note          bool // the status is a hint, not the result of a change
 
 	// bg is the terminal background, once the terminal has answered; nil
 	// until then, and for terminals that never do.
@@ -375,7 +402,7 @@ func New(be Backend) Model {
 	return Model{
 		be: be, filter: in, vp: viewport.New(),
 		details: map[string]Details{}, checks: map[string]string{}, pending: map[string]string{},
-		width: 80, height: 24,
+		width: 80, height: 24, probePause: probePause,
 	}
 }
 
@@ -427,6 +454,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.loadErr = errText(msg.err)
 			return m, nil
 		}
+		first := !m.loaded
 		m.loadErr = ""
 		m.data = cleanData(msg.data)
 		m.details = map[string]Details{}
@@ -435,6 +463,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.refilter(msg.keys, false)
 		m.loaded = true
+		if first {
+			return m, m.probeNext(m.probeNames(), false)
+		}
+	case probedMsg:
+		return m.probed(msg)
 	case healthMsg:
 		if msg.err != nil {
 			m.healthLoaded = true
@@ -886,6 +919,12 @@ func (m Model) activate(i int) (Model, tea.Cmd) {
 // shortcut runs the letter keys of each section; they work from the list and
 // from the detail pane.
 func (m Model) shortcut(k string) (Model, tea.Cmd, bool) {
+	if k == "u" && m.sec != secSources {
+		if names := m.updatable(); len(names) > 0 {
+			next, cmd := m.openUpdate(names[0])
+			return next, cmd, true
+		}
+	}
 	switch m.sec {
 	case secSkills:
 		switch k {
@@ -1553,6 +1592,74 @@ func (m Model) check(name string, reset bool) (Model, tea.Cmd) {
 		p, err := be.Check(name, reset)
 		return checkedMsg{name, p, err}
 	}
+}
+
+// probeNames are the sources the background check visits: the ones with a
+// clone, in the order of the list.
+func (m Model) probeNames() []string {
+	var names []string
+	for _, s := range m.data.Sources {
+		if s.Commit != "" {
+			names = append(names, s.Name)
+		}
+	}
+	return names
+}
+
+// probeNext asks for the update of the first of names, after a pause unless it
+// is the first one of the run. Sources are asked one at a time, and nothing
+// is downloaded or applied.
+func (m Model) probeNext(names []string, pause bool) tea.Cmd {
+	if len(names) == 0 {
+		return nil
+	}
+	be, wait := m.be, m.probePause
+	return func() tea.Msg {
+		if pause {
+			time.Sleep(wait)
+		}
+		behind, err := be.HasUpdate(names[0])
+		return probedMsg{names[0], behind, err, names[1:]}
+	}
+}
+
+// probed notes the answer and goes on with the next source. A failure is
+// skipped without a word: the panel owns the screen, and the check is only a
+// courtesy. After probeFailuresStop in a row the run ends.
+func (m Model) probed(msg probedMsg) (tea.Model, tea.Cmd) {
+	if msg.err != nil {
+		m.probeFailures++
+		if m.probeFailures >= probeFailuresStop {
+			return m, nil
+		}
+		return m, m.probeNext(msg.rest, true)
+	}
+	m.probeFailures = 0
+	if _, known := m.checks[msg.source]; msg.behind && !known {
+		m.checks[msg.source] = updatesAvailable
+	}
+	return m, m.probeNext(msg.rest, true)
+}
+
+// updatable lists the sources the background check found updates for.
+func (m Model) updatable() []string {
+	var names []string
+	for _, s := range m.data.Sources {
+		if m.checks[s.Name] == updatesAvailable {
+			names = append(names, s.Name)
+		}
+	}
+	return names
+}
+
+// openUpdate shows the Sources section on a source and starts its update, which
+// lists the changed skills and asks before it pulls.
+func (m Model) openUpdate(name string) (Model, tea.Cmd) {
+	m = m.goTo(secSources)
+	keys := m.selectedKeys()
+	keys[secSources] = name
+	m.refilter(keys, false)
+	return m.check(name, false)
 }
 
 // checkAllSources checks every source, one after the other. It applies
