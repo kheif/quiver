@@ -2,7 +2,7 @@
 
 **Phase:** Phase 7: TUI and slash commands (v1.5)
 
-**Status:** Todo
+**Status:** Postponed (after v1.5.0; commands stay reachable through MCP prompts as `/quiver:<id>`)
 
 **Depends on:** TASK25, TASK14, TASK20, TASK55.1
 
