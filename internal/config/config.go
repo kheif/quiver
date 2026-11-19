@@ -23,6 +23,10 @@ type Config struct {
 	// again whether it has updates, as a Go duration such as "12h". Empty
 	// means DefaultUpdateCheckInterval.
 	UpdateCheckInterval string `json:"updateCheckInterval,omitempty"`
+	// AllowInsecureSources lets `quiver source add` take http:// and git://
+	// addresses. They are not encrypted, so anyone on the network can change
+	// the skills that arrive.
+	AllowInsecureSources bool `json:"allowInsecureSources,omitempty"`
 }
 
 // DefaultUpdateCheckInterval is used when updateCheckInterval is not set.

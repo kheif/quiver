@@ -112,7 +112,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver search <text>` | Search the IDs, names and descriptions of every library skill, also unassigned ones, and show whether each is served here (`--json`). |
 | `quiver status` | Show the project in this folder and the skills served here, with a warning for each copy Claude Code also loads (`--json`). |
 | `quiver where <id>` | Show where one skill is assigned (`--json`). |
-| `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. |
+| `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. An `http://` or `git://` address is refused, because it is not encrypted; set `"allowInsecureSources": true` in `~/.quiver/config.json` to allow it, and Quiver still warns. |
 | `quiver source list` | List sources with their skill count and commit. |
 | `quiver source remove <name>` | Delete a source. Refuses while its skills are assigned, unless `--force`. |
 | `quiver update [<name>...]` | Download the latest skills of all or some sources and show what would change: the changed files of each assigned skill, with scripts marked "needs review". Asks before it applies changes to assigned skills (`--yes` does not ask, `--diff` shows the whole change). Pinned skills stay at their commit. |

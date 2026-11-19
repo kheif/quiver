@@ -460,6 +460,10 @@ func (b *tuiBackend) AddSource(repo, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	var warn bytes.Buffer
+	if err := checkTransport(&warn, p.URL); err != nil {
+		return "", err
+	}
 	if name == "" {
 		name = p.Name
 	}
@@ -477,6 +481,9 @@ func (b *tuiBackend) AddSource(repo, name string) (string, error) {
 	}
 	syncHooks(io.Discard)
 	text := fmt.Sprintf("Added source %s with %s. Review them before you assign them.", name, plural(len(s.Discovery.Skills), "skill"))
+	if warn.Len() > 0 {
+		text += " " + strings.TrimSpace(warn.String())
+	}
 	for _, w := range s.Discovery.Warnings {
 		text += " warning: " + w
 	}

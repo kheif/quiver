@@ -55,6 +55,13 @@ func Parse(input string) (Parsed, error) {
 	return Parsed{}, unreadable(in)
 }
 
+// Insecure reports whether a clone URL uses a transport without encryption
+// (http:// or git://), where anyone on the network can change what arrives.
+func Insecure(cloneURL string) bool {
+	u, err := url.Parse(cloneURL)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "git")
+}
+
 // checkSafe rejects input that git could read as an option or as a
 // transport helper (ext::, fd::), both of which can run commands.
 func checkSafe(in string) error {

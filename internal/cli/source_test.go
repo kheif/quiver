@@ -245,3 +245,34 @@ func TestSourceRemoveAssigned(t *testing.T) {
 		t.Errorf("second remove: %v", err)
 	}
 }
+
+func TestSourceAddRefusesInsecureTransport(t *testing.T) {
+	sourceEnv(t)
+	for _, addr := range []string{"http://example.invalid/a/skills.git", "git://example.invalid/a/skills.git"} {
+		_, err := runIn(t, "", "source", "add", addr)
+		if err == nil || !strings.Contains(err.Error(), "not encrypted") || !strings.Contains(err.Error(), "allowInsecureSources") {
+			t.Errorf("%s: %v", addr, err)
+		}
+	}
+	if got := sourceNames(t); len(got) != 0 {
+		t.Errorf("sources added: %v", got)
+	}
+}
+
+func TestSourceAddWarnsWhenInsecureTransportIsAllowed(t *testing.T) {
+	sourceEnv(t)
+	if err := config.Update(func(c *config.Config) error { c.AllowInsecureSources = true; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	var warn bytes.Buffer
+	if err := checkTransport(&warn, "http://example.invalid/a/skills.git"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(warn.String(), "warning:") || !strings.Contains(warn.String(), "not encrypted") {
+		t.Errorf("no warning: %q", warn.String())
+	}
+	warn.Reset()
+	if err := checkTransport(&warn, "https://example.invalid/a/skills.git"); err != nil || warn.Len() != 0 {
+		t.Errorf("https: %v %q", err, warn.String())
+	}
+}

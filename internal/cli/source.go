@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/source"
 	"github.com/spf13/cobra"
@@ -51,6 +52,9 @@ The source name defaults to the repository owner.`,
 			if err != nil {
 				return err
 			}
+			if err := checkTransport(cmd.ErrOrStderr(), p.URL); err != nil {
+				return err
+			}
 			if name == "" {
 				name = p.Name
 			}
@@ -59,6 +63,23 @@ The source name defaults to the repository owner.`,
 	}
 	cmd.Flags().StringVar(&name, "name", "", "source name (default: the repository owner)")
 	return cmd
+}
+
+// checkTransport refuses an http:// or git:// source unless config.json sets
+// allowInsecureSources, and warns on w when it lets one through.
+func checkTransport(w io.Writer, url string) error {
+	if !source.Insecure(url) {
+		return nil
+	}
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	if !cfg.AllowInsecureSources {
+		return fmt.Errorf("%s is not encrypted: anyone on the network can change the skills you get. Use https:// or ssh, or set \"allowInsecureSources\": true in config.json", url)
+	}
+	fmt.Fprintf(w, "warning: %s is not encrypted; anyone on the network can change the skills you get\n", url)
+	return nil
 }
 
 func addSource(cmd *cobra.Command, name, url string) error {
