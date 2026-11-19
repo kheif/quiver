@@ -74,7 +74,7 @@ In a terminal, `quiver` without arguments opens a panel for everything above, wi
 |---|---|
 | **1 Skills** | Your skills in four views (available here, the project's, global, all), grouped by source. Assign a skill to the project and to every folder independently, each as *On demand* or *Always on*. `n` creates a skill, `i` imports, `e` edits, `f` forks a source skill, `d` deletes, `p` pins. `/` searches. |
 | **2 Projects** | The registered projects. Choose one to manage it from anywhere, rename it, forget it, or split a copied folder. |
-| **3 Sources** | The skill repositories. `a` adds one, `u` checks for updates and shows what would change (`d` shows the patches) before it applies them, `x` removes one. |
+| **3 Sources** | The skill repositories. `a` adds one, `u` checks for updates and shows what would change (`d` shows the patches) before it applies them, `x` removes one. While the panel is open, Quiver checks the sources for updates in the background, one at a time and only when online, and shows a notice; it pulls nothing without a key press. `updateCheckInterval` in `config.json` (a duration such as `"12h"`, default 6 hours) sets how often. |
 | **4 Health** | The checks of `quiver doctor` and how always-on skills reach each assistant. `i` sets up the MCP server and hooks, `f` applies the safe fixes. Without a Quiver home, the panel offers to set it up. |
 
 Every change goes through the same code as the matching command. `quiver sync` and the `--json` outputs stay on the command line.

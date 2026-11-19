@@ -38,7 +38,7 @@ Skills are never copied into projects. A project only gets a tiny `.quiver.json`
 1. **Library.** Every skill is stored once in `~/.quiver/`. A skill is either your own (`local/`) or comes from a remote git repository (`sources/`). Quiver treats both the same way.
 2. **Assignments.** You decide which skills are **global** (available in every project) and which belong to specific **projects**. These assignments live in Quiver, not in the project.
 3. **MCP server.** You add Quiver to your assistant once, globally. When a session starts, the server reads the project's `.quiver.json` and offers the global skills plus that project's skills.
-4. **The assistant decides.** The server's `instructions` give it each skill's name and description. When a skill fits the task, the assistant calls a tool to load the skill into the conversation.
+4. **The assistant decides.** At session start a hook gives the assistant the always-on skills in full and each other skill's name and description. When a skill fits the task, the assistant calls a tool to load the skill into the conversation.
 
 ## Skill Format
 
@@ -84,9 +84,9 @@ A project is identified by a small `.quiver.json` file in its root:
 
 ### Skill catalog
 
-At session start, the server's `instructions` list the available skills (global and project) with their descriptions, and tell the assistant to load a fitting skill with `get_skill`. The assistant adds `instructions` to its system prompt, so it knows the skills from the first message. Claude Code and Cursor do. Codex and Antigravity pass them only after the model looks for Quiver's tools, and Claude Desktop drops them, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
+A session-start hook (`quiver hook`, set up by `quiver install`) adds the available skills to the context: the always-on skills in full, then the ID and description of every other skill served in the folder, global and project. The assistant knows them from the first message and loads a fitting one with `get_skill`. Claude Code, Codex, Cursor, Antigravity and VS Code Copilot have such a hook. An assistant takes only so much text from one hook command, so the text is split over as many hook commands as it needs and nothing is left out.
 
-Tool descriptions are not used for this. Claude Code defers MCP tools, so the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). `instructions` are cut at about 4096 characters. A catalog that does not fit is replaced by a pointer: before its first reply, the assistant calls `list_skills`, which returns every skill with its whole description.
+The server's `instructions` stay short: how to use the tools, and the names of the always-on skills for an assistant without a hook, which loads them with `get_skill`. Tool descriptions are not used for the catalog, because Claude Code defers MCP tools and the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). Claude Desktop uses no hook and drops `instructions`, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
 
 ### Tools
 
@@ -107,7 +107,7 @@ Some skills must apply from the first message, without the assistant deciding to
 quiver add caveman/caveman --global --always
 ```
 
-The server's `instructions` name them and tell the assistant to load them with `get_skill` before its first reply. The full text is not put into `instructions`, because they are cut at about 4096 characters. Changes take effect in the next session. Plugin hooks are not run; only the skill text is delivered. Subagents may not follow always-on skills.
+The session-start hook puts their full text into the context before the first reply, for the main session and, in Claude Code, Codex, Antigravity and VS Code, for every sub-agent. Cursor has no sub-agent hook. An assistant without a hook gets only the names and loads them with `get_skill`; `quiver install` and `quiver status` say which assistants those are. Changes take effect in the next session. Plugin hooks are not run; only the skill text is delivered.
 
 ### Prompts
 
@@ -115,7 +115,7 @@ Every available skill is also exposed as an MCP prompt. In Claude Code, this mea
 
 ### Live updates
 
-When the library or the assignments change, the server notifies the assistant (`prompts/list_changed`), and `list_skills` returns the new list. The catalog in `instructions` is updated in the next session.
+When the library or the assignments change, the server notifies the assistant (`prompts/list_changed`), and `list_skills` returns the new list. The hook's text is built when a session starts, so it changes in the next session.
 
 ## Creating Skills From a Project
 
@@ -143,7 +143,7 @@ quiver update
 - **Updates:** Sources are git clones. `quiver update` downloads them, shows what changes in each assigned skill and asks before it applies the changes; then every project gets the new version.
 - **Sharing:** `~/.quiver/local/` is a git repository. Push it to GitHub and others can add it as a source. The same repository can also serve as a Claude Code marketplace.
 - **Customizing:** Remote skills are read-only. `quiver fork anthropic/pdf` copies one into `local/`, where you can edit it.
-- **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `quiver update` lists the changed files of assigned skills before it applies them, marks scripts "needs review", and asks first.
+- **Security:** Remote skills give instructions to your assistant and can include scripts. Add only sources you trust. `http://` and `git://` addresses are refused, because they are not encrypted, unless `allowInsecureSources` is set in `config.json`; Quiver then still warns. `quiver update` lists the changed files of assigned skills before it applies them, marks scripts "needs review", and asks first.
 
 ## Interactive Panel (TUI)
 
@@ -238,7 +238,6 @@ quiver doctor                       # Check the library and fix problems
 **v1.5**
 - Interactive panel with sections for skills, projects and sources
 - Background update checks with notices
-- Slash commands without the `quiver:` prefix in Claude Code
 
 **Test phase** (before the enterprise track)
 - End-to-end user journeys, Windows without skipped tests, versioned data formats with migration tests
@@ -249,6 +248,7 @@ quiver doctor                       # Check the library and fix problems
 - To be planned after the test phase (see Direction)
 
 **Later**
+- Slash commands without the `quiver:` prefix in Claude Code (postponed until after v1.5)
 - More panel pages: activity (hook runs) and settings
 - Graphical app
 - Search and a marketplace: people can find and add skills others published
