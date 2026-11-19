@@ -2,7 +2,7 @@
 
 **Phase:** Phase 7: TUI and slash commands (v1.5)
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK58, TASK59
 

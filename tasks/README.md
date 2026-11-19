@@ -156,7 +156,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK58.5](TASK58.5-health-and-setup.md) | Health section and first-run setup | TASK58.1 |
 | ✅ | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58.3, TASK15 |
 | ⏸ | [TASK60](TASK60-prefix-free-commands-in-claude-code.md) | Prefix-free commands in Claude Code | TASK25, TASK14, TASK20, TASK55.1 |
-|  | [TASK61](TASK61-release-v1-5-0.md) | Release v1.5.0 | TASK58, TASK59 |
+| ✅ | [TASK61](TASK61-release-v1-5-0.md) | Release v1.5.0 | TASK58, TASK59 |
 
 ### Phase 8: Test phase
 
