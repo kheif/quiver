@@ -1,0 +1,96 @@
+---
+// The panel at work: a recorded session of the real panel that plays by itself,
+// key by key, and loops. Hovering pauses it.
+import PanelScreen from './PanelScreen.astro';
+import { captionOf, events, lines, screen } from '../scripts/panel';
+
+const first = events[0];
+const play = events.map((e) => ({ key: e.key ?? '', caption: e.caption ?? '', wait: e.wait, frame: e.frame }));
+---
+
+<div class="ptour" data-ptour>
+	<PanelScreen label={`The Quiver panel. ${captionOf('skills')}`} />
+	<p class="pcap" aria-live="off">{first.caption}</p>
+	<script type="application/json" data-play set:html={JSON.stringify({ lines, events: play })} />
+</div>
+
+<style>
+	.ptour {
+		display: grid;
+		gap: 14px;
+		max-width: 62rem;
+		margin-inline: auto;
+	}
+
+	.pcap {
+		margin: 0;
+		min-height: 4.4em;
+		color: var(--q-text-2);
+		font-size: var(--q-step-body);
+	}
+</style>
+
+<script>
+	interface Played {
+		key: string;
+		caption: string;
+		wait: number;
+		frame: number[];
+	}
+
+	const KEYS: Record<string, string> = {
+		up: '↑',
+		down: '↓',
+		left: '←',
+		right: '→',
+		enter: 'enter',
+		esc: 'esc',
+		tab: 'tab',
+	};
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	document.querySelectorAll<HTMLElement>('[data-ptour]').forEach((root) => {
+		const data = JSON.parse(root.querySelector('[data-play]')?.textContent ?? 'null') as { lines: string[]; events: Played[] } | null;
+		const screen = root.querySelector<HTMLElement>('.pscreen');
+		const caption = root.querySelector<HTMLElement>('.pcap');
+		const key = root.querySelector<HTMLElement>('.pkey');
+		if (!data || !screen || !caption || !key || reduced) return;
+		// The lines are HTML the build made from the panel's own output; the page's data.
+		const html = data.lines;
+
+		let at = 0;
+		let timer = 0;
+		let visible = false;
+		let hovered = false;
+
+		function show(i: number) {
+			const e = data!.events[i];
+			screen!.innerHTML = e.frame.map((n) => html[n]).join('\n');
+			if (e.caption) caption!.textContent = e.caption;
+			key!.hidden = e.key === '';
+			key!.textContent = KEYS[e.key] ?? e.key;
+			key!.classList.add('hit');
+			window.setTimeout(() => key!.classList.remove('hit'), 140);
+		}
+
+		function step() {
+			window.clearTimeout(timer);
+			if (!visible || hovered) return;
+			show(at);
+			const wait = data!.events[at].wait;
+			at = (at + 1) % data!.events.length;
+			timer = window.setTimeout(step, wait);
+		}
+
+		root.addEventListener('pointerenter', () => ((hovered = true), window.clearTimeout(timer)));
+		root.addEventListener('pointerleave', () => ((hovered = false), step()));
+		new IntersectionObserver(
+			([entry]) => {
+				visible = entry.isIntersecting;
+				if (visible) step();
+				else window.clearTimeout(timer);
+			},
+			{ threshold: 0.4 },
+		).observe(root);
+	});
+</script>

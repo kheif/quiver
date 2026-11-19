@@ -52,6 +52,13 @@ The sources, with their repository and the folder of each skill ID:
 }
 ```
 
+Two optional settings, which you edit by hand:
+
+| Setting | Meaning |
+|---|---|
+| `updateCheckInterval` | How long the panel waits before it asks a source again whether it has updates, as a duration such as `"12h"`. Default: 6 hours. |
+| `allowInsecureSources` | `true` lets `quiver source add` take `http://` and `git://` addresses, which are not encrypted. Quiver still warns. Default: not set, and such addresses are refused. |
+
 ### registry.json
 
 The assignments: global skills, always-on skills, and each project's skills by project ID.

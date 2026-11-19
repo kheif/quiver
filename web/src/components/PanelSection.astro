@@ -1,0 +1,46 @@
+---
+// The terminal panel, shown as it is: a tour of its real screens.
+import PanelDemo from './PanelDemo.astro';
+import { url } from '../data/site';
+---
+
+<section class="panelfield" id="panel" aria-labelledby="panel-title">
+	<div class="wrap">
+		<div class="phead">
+			<h2 id="panel-title" class="h2 rise">One screen for all of it</h2>
+			<p class="rise" style="--d:80ms">
+				Type <code>quiver</code> in a terminal. Search your library, give a skill to a project or to every folder,
+				review updates before they land, and see whether each assistant gets your always-on skills. Everything in
+				it is also a command.
+			</p>
+		</div>
+		<div class="rise" style="--d:160ms">
+			<PanelDemo />
+		</div>
+		<p class="after rise" style="--d:200ms">
+			The screens above are recorded from the real panel. <a href={url('/docs/guides/panel/')}>Read the guide to the panel</a>.
+		</p>
+	</div>
+</section>
+
+<style>
+	.panelfield {
+		padding: clamp(72px, 9vw, 130px) 0 0;
+	}
+
+	.phead {
+		margin-bottom: 36px;
+	}
+
+	.phead p {
+		max-width: 52ch;
+		margin-top: 18px;
+	}
+
+	.after {
+		max-width: 62rem;
+		margin: 18px auto 0;
+		color: var(--q-text-2);
+		font-size: var(--q-step-small);
+	}
+</style>

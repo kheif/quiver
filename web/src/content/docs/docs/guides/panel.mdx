@@ -1,0 +1,103 @@
+---
+title: The interactive panel
+description: Manage skills, projects, sources and the health of your setup from one screen in the terminal. A tour of every section.
+---
+
+import PanelDemo from '../../../../components/PanelDemo.astro';
+import PanelScreen from '../../../../components/PanelScreen.astro';
+
+Run `quiver` in a terminal, with no arguments, and it opens a panel. It does what the commands do, on one screen, so you do not have to remember them: search the library, give a skill to a project or to every folder, review the updates of your sources, and see whether each assistant gets your always-on skills.
+
+Below is a short session, recorded from the real panel on a sample library. It plays by itself and shows each key as it is pressed; move the pointer over it to pause.
+
+<PanelDemo />
+
+## Keys you need first
+
+| Key | What it does |
+|---|---|
+| `1` `2` `3` `4` | Go to Skills, Projects, Sources or Health. |
+| `↑` `↓` | Move in the list. |
+| `←` `→` | Switch the view of the list (in Skills: Here, Project, Global, All). |
+| `/` | Search the current list. `esc` clears the search. |
+| `enter` | Open the detail of the selected row. On a wide terminal the detail is already beside the list. |
+| `?` | List the keys of the current section. |
+| `q` | Quit. |
+
+Typing a letter that is not a key does nothing but remind you to press `/`, so the panel never runs a command you did not mean.
+
+## Skills
+
+<PanelScreen step="skills" label="The Skills section of the panel" />
+
+Skills is the library. Four views, switched with `←` and `→`:
+
+- **Here:** every skill the assistant is given in the project you are managing, global and project ones together.
+- **Project:** the skills assigned to that project.
+- **Global:** the skills assigned to every folder.
+- **All:** the whole library, assigned or not.
+
+Skills are grouped by where they come from: your own, and one group per source. The detail on the right shows two independent settings. The first is for the project you are managing, the second for every folder. Each is *Not assigned*, *On demand* or *Always on*, and changing one never touches the other.
+
+<PanelScreen step="search" label="Searching the panel's list" />
+
+Press `/` and type. The list narrows as you type, and the words may come in any order. `esc` clears the search; it is kept when you switch views.
+
+<PanelScreen step="assign" label="Choosing how a skill is assigned" />
+
+Press `enter` on a skill and then on one of the two settings to choose. *On demand* means the assistant loads the skill when a task fits. *Always on* means it is in the conversation before the first reply, from the next session. A change for every folder asks you to confirm first, because it reaches every project.
+
+More keys in Skills:
+
+| Key | What it does |
+|---|---|
+| `n` | Create a skill. It asks whether it belongs to the project, to every folder, or to neither. |
+| `i` | Import skills from a folder. |
+| `e` | Edit a skill of your own in your editor. |
+| `f` | Fork a skill from a source into your own, to change it. |
+| `d` | Delete a skill of your own. |
+| `p` | Pin a source skill to its current version, or unpin it. |
+| `r` | Read the skill's text. |
+
+## Projects
+
+<PanelScreen step="projects" label="The Projects section of the panel" />
+
+Projects lists every folder Quiver knows by its `.quiver.json`, with what each one gets: the skills assigned to it directly, and the global ones that reach it. Choose a project with `m` to manage it from anywhere; the header then says which one, for example `project api`, and the Skills section works on that project. This changes only what the panel edits, not your current folder.
+
+You can also rename a project (`r`), forget it (`f`), or split a copied folder from the project it shares an ID with. A project whose folder no longer exists is marked, and so is a skill that is assigned but missing from the library.
+
+## Sources
+
+<PanelScreen step="sources" label="The Sources section of the panel" />
+
+A source is a git repository of skills. The list shows each one, its repository, its latest commit, and whether it has updates. The views show all sources, the ones your project uses, and the ones used globally. Press `a` to add one; Quiver refuses an unencrypted `http://` or `git://` address unless you allow it in `config.json`.
+
+While the panel is open, Quiver asks the sources in the background whether they have changes. It does this one source at a time and only when you are online, and it pulls nothing. When a source has news, a line appears at the bottom of every section, such as `anthropic has updates — press u to review`. To change how often Quiver asks, set `updateCheckInterval` in `config.json` to a duration such as `"12h"`; the default is 6 hours.
+
+<PanelScreen step="update" label="Reviewing the changes of a source before they are pulled" />
+
+Press `u` and you see what would change in each skill you use. Skills that contain scripts are marked as needing review, and `d` shows the patches. The update is applied only when you press `y`. A source whose history was rewritten asks before taking the remote version.
+
+## Health
+
+<PanelScreen step="health" label="The Health section of the panel" />
+
+Health shows the checks of `quiver doctor`, and how always-on skills reach each assistant. In the screen above, Cursor has no session-start hook, so its always-on skills would not load by themselves. The header shows a badge with the number of problems, so you see them from any section.
+
+| Key | What it does |
+|---|---|
+| `i` | Set up Quiver in your assistants: the MCP server and the session-start hooks. |
+| `f` | Apply the safe fixes of `quiver doctor`. |
+| `x` | Remove Quiver from your assistants. |
+| `r` | Check again. |
+
+When there is no Quiver home yet, the panel opens a first-run screen that sets it up.
+
+## On a small terminal
+
+With 100 columns or more, the detail of the selected row sits beside the list. On a narrower terminal the list takes the full width, `enter` opens the detail, and `esc` brings you back to the same row. The panel needs at least 40 columns and 12 rows; below that it asks you to make the window bigger.
+
+## What stays on the command line
+
+The panel runs the same code as the commands, so anything you do in it you can also script. A few things are only commands: `quiver sync` between machines, the `--json` outputs, and options such as `import --deep`. See the [command reference](/docs/reference/cli/).

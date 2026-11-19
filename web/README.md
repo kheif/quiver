@@ -49,6 +49,14 @@ web/
 - `src/content/docs/docs/reference/cli.md` is generated. Change the help text in `internal/cli` and run `npm run cli-reference`; the deploy workflow regenerates it on every build anyway.
 - The repository README stays the short reference for the CLI. When behavior changes, update the README, the help text and the matching docs page together. `tests/install.test.mjs` fails when the install commands on the site are not in the README.
 
+### The panel tour
+
+`src/data/panel.json` is a recording of the real panel on a sample library: every key press and the screen it gave. The home page plays it and the panel guide shows its screens. Regenerate it after the panel changes, from the repository root:
+
+```sh
+FRAMES_OUT=$PWD/web/src/data/panel.json go test -run TestWriteFrames ./internal/tui
+```
+
 ### Unreleased features
 
 The docs follow the main branch. Features that are on main but not in the latest release are marked:

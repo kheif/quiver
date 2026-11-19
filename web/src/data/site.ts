@@ -21,11 +21,16 @@ export function url(path = '/'): string {
  * Assistants supported on the main branch but not yet in the latest release.
  * The home page's assistant tiles mark them; empty the set after the next release.
  */
-export const latestRelease = 'v1.4.0';
+export const latestRelease = 'v1.5.0';
 export const unreleased = new Set<string>([]);
 
 /** Every release, newest first. The home page shows the latest four. */
 export const releases: { tag: string; date: string; summary?: string }[] = [
+	{
+		tag: 'v1.5.0',
+		date: '19 November 2026',
+		summary: 'an interactive panel when you run quiver, background update checks, http and git sources refused by default',
+	},
 	{
 		tag: 'v1.4.0',
 		date: '4 November 2026',

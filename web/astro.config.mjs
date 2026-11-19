@@ -77,6 +77,7 @@ export default defineConfig({
 					label: 'Guides',
 					items: [
 						'docs/guides/writing-skills',
+						'docs/guides/panel',
 						'docs/guides/importing-skills',
 						'docs/guides/sources',
 						'docs/guides/updating-and-pinning',

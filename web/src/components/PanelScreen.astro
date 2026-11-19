@@ -1,0 +1,110 @@
+---
+// The panel's screen as it looks in a terminal: one recorded frame as styled text.
+// Styles are global because the tour swaps frames in the browser.
+import { screenHtml } from '../scripts/panel';
+
+interface Props {
+	/** Id of a screen in panel.json. */
+	step?: string;
+	label: string;
+}
+const { step = 'skills', label } = Astro.props;
+---
+
+<div class="pwin">
+	<div class="pbar" aria-hidden="true"><i></i><i></i><i></i><span>quiver</span><kbd class="pkey" hidden></kbd></div>
+	<div class="pbox">
+		<pre class="pscreen" role="img" aria-label={label} set:html={screenHtml(step)} />
+	</div>
+</div>
+
+<style is:global>
+	.pwin {
+		border: 1px solid var(--q-term-line);
+		border-radius: 10px;
+		background: var(--q-term-bg);
+		color: var(--q-term-text);
+		overflow: hidden;
+	}
+
+	.pbar {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 9px 12px;
+		background: var(--q-term-bar);
+		border-bottom: 1px solid var(--q-term-line);
+	}
+
+	.pbar i {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--q-term-line);
+	}
+
+	.pbar span {
+		margin-left: 8px;
+		font: 0.75rem var(--q-font-mono);
+		color: var(--q-term-dim);
+	}
+
+	/* The key being pressed, while the tour plays. */
+	.pkey {
+		margin-left: auto;
+		padding: 1px 9px;
+		border: 1px solid var(--q-term-dim);
+		border-radius: 5px;
+		font: 0.75rem var(--q-font-mono);
+		color: var(--q-term-text);
+	}
+
+	.pkey[hidden] {
+		display: none;
+	}
+
+	.pkey.hit {
+		background: var(--q-term-text);
+		color: var(--q-term-bg);
+	}
+
+	/* The frame is 100 columns wide: its text scales with the box, and below 0.55rem it scrolls inside the box instead. */
+	.pbox {
+		container-type: inline-size;
+		overflow-x: auto;
+	}
+
+	.pscreen {
+		margin: 0;
+		padding: 10px 6px 12px;
+		min-width: 34rem;
+		border: 0;
+		background: none;
+		color: var(--q-term-text);
+		font-family: var(--q-font-mono);
+		font-size: clamp(0.55rem, 1.6cqw, 0.85rem);
+		line-height: 1.3;
+		white-space: pre;
+	}
+
+	.pscreen .b {
+		font-weight: 700;
+	}
+
+	.pscreen .f {
+		color: var(--q-term-dim);
+	}
+
+	.pscreen .u {
+		text-decoration: underline;
+	}
+
+	.pscreen .a {
+		color: #6b8cff;
+	}
+
+	.pscreen .r {
+		background: var(--q-term-text);
+		color: var(--q-term-bg);
+	}
+</style>

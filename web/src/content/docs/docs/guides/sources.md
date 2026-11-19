@@ -21,6 +21,8 @@ The repository can be:
 - any git URL, such as `git@github.com:acme/skills.git`,
 - a local path, such as `~/code/team-skills`.
 
+An `http://` or `git://` address is refused, because anyone on the network could change the skills that arrive. Use `https://` or `ssh`. To allow one anyway, set `allowInsecureSources` to `true` in `config.json`; Quiver then adds the source and warns.
+
 The source name defaults to the repository owner; `--name` sets another one. Quiver lists the skills it found:
 
 ```text
