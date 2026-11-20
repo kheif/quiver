@@ -1,8 +1,8 @@
 # TASK60: Prefix-free commands in Claude Code
 
-**Phase:** Phase 7: TUI and slash commands (v1.5)
+**Phase:** Unscheduled
 
-**Status:** Postponed (after v1.5.0; commands stay reachable through MCP prompts as `/quiver:<id>`)
+**Status:** ⏸ Postponed (not scheduled, to be thought through further; commands stay reachable through MCP prompts as `/quiver:<id>`)
 
 **Depends on:** TASK25, TASK14, TASK20, TASK55.1
 
