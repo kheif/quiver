@@ -248,7 +248,7 @@ quiver doctor                       # Check the library and fix problems
 - To be planned after the test phase (see Direction)
 
 **Later**
-- Slash commands without the `quiver:` prefix in Claude Code (postponed until after v1.5)
+- Slash commands without the `quiver:` prefix in Claude Code (planned in detail, not scheduled)
 - More panel pages: activity (hook runs) and settings
 - Graphical app
 - Search and a marketplace: people can find and add skills others published

@@ -27,7 +27,7 @@ A command that a session-start hook runs: it prints the always-on skills of the 
    ```
 5. **Size.** Keep the whole block under 10,000 characters, Claude Code's limit (TASK52.1). The Codex hook turns Codex's own limit off (TASK55.3), so the same limit applies there; it also stays below Antigravity's cut at about 48,900 bytes (TASK52.4). If the skills do not fit, print whole skills in order while they fit, and list the rest by ID with a line to load them with `get_skill` before the first reply.
 6. **Sub-agents.** `quiver hook subagent-start <assistant>` prints the same block for the assistant's sub-agent event (`SubagentStart` in Claude Code, Codex and VS Code; Antigravity runs `SessionStart` for each sub-agent, and Cursor's `subagentStart` cannot add text). Its input has the same `cwd`. Claude Code takes a sub-agent's context only from `additionalContext`, and `hookEventName` must name the event: with a wrong name the hook fails (TASK52.1).
-7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASK67.3.
+7. **Never break a session.** No network. On any error, print what is known, write the error to `~/.quiver/logs/hook.log`, and exit 0. Log one line per run: time, assistant, project and skill IDs. The run must stay within the budget of TASK69.3.
 
 **Out of scope:** installing the hook (TASK55), per-prompt hooks.
 

@@ -9,9 +9,10 @@ This folder breaks [PROJECT.md](../PROJECT.md) into ordered tasks, one file per 
 
 ## Conventions
 
-- **Status** is edited by hand at the top of each task file and in the index below: ✅ done, 🚧 in progress, empty for todo.
-- **Depends on:** tasks that must be finished first.
-- **Subtasks:** a large task is split into subtasks (TASK54.1, TASK54.2, …), one file each, listed under their parent in the index. Each subtask is finished and committed on its own; the parent is done when all its subtasks are.
+- **Status** is edited by hand at the top of each task file and in the index below: ✅ done, 🚧 in progress, ⏸ postponed, empty for todo. The status line of a file starts with the same mark.
+- **Depends on:** tasks that must be finished first. The index repeats the line of the file.
+- **Subtasks:** a large task is split into subtasks (TASK54.1, TASK54.2, …), one file each, listed under their parent in the index and in a **Subtasks** list in the parent's file. Each subtask is finished and committed on its own; the parent is done when all its subtasks are.
+- **Consistency** of the index, the files, their links and their dependencies is checked by `go test ./tasks`; it runs with the other tests in CI.
 - **Done when:** acceptance criteria. A task is not done until every item passes and has a test.
 - Every command needs unit tests. Every user-facing flow also needs an end-to-end test (see TASK30).
 - MCP tasks are tested through the in-memory harness from TASK16.
@@ -139,10 +140,10 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK55.4](TASK55.4-delivery-report-doctor-and-status.md) | Delivery report, doctor and status | TASK55.2 |
 | ✅ | ↳ [TASK55.5](TASK55.5-cursor-hook.md) | Cursor hook | TASK52.4, TASK53, TASK55.1 |
 | ✅ | ↳ [TASK55.6](TASK55.6-antigravity-hook.md) | Antigravity hook | TASK52.4, TASK53, TASK55.1 |
-| ✅ | ↳ [TASK55.7](TASK55.7-hook-text-in-parts.md) | Hook text in parts | TASK55.2 |
+| ✅ | ↳ [TASK55.7](TASK55.7-hook-text-in-parts.md) | Hook text in parts | TASK53, TASK55.2, TASK55.3, TASK55.5, TASK55.6, TASK56 |
 | ✅ | ↳ [TASK55.8](TASK55.8-delivery-failures-and-review-gaps.md) | Delivery failures and review gaps | TASK55.7 |
 | ✅ | [TASK56](TASK56-vs-code-copilot.md) | VS Code Copilot | TASK52.3, TASK53, TASK55.1 |
-| ✅ | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK56 |
+| ✅ | [TASK57](TASK57-release-v1-4-0.md) | Release v1.4.0 | TASK52, TASK53, TASK54, TASK55, TASK55.7, TASK55.8, TASK56 |
 
 ### Phase 7: TUI and slash commands (v1.5)
 
@@ -157,42 +158,72 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | [TASK59](TASK59-background-update-checks.md) | Background update checks | TASK58.3, TASK15 |
 | ✅ | [TASK61](TASK61-release-v1-5-0.md) | Release v1.5.0 | TASK58, TASK59 |
 
+### Phase 7b: Skill discovery (v1.6)
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+| 🚧 | [TASK62](TASK62-finding-unassigned-skills.md) | Finding unassigned skills | TASK61 |
+| 🚧 | ↳ [TASK62.1](TASK62.1-discovery-spike.md) | Discovery spike | TASK61 |
+|  | ↳ [TASK62.2](TASK62.2-searchable-level-in-the-registry.md) | Searchable level in the registry | TASK61, TASK62.1 |
+|  | ↳ [TASK62.3](TASK62.3-assigning-the-searchable-level.md) | Assigning the Searchable level | TASK62.2 |
+|  | ↳ [TASK62.4](TASK62.4-searchable-delivery-readers-and-panel.md) | Searchable skills in delivery, readers and the panel | TASK62.2, TASK62.3 |
+|  | ↳ [TASK62.5](TASK62.5-search-settings-and-word-search.md) | Search settings and word search | TASK61, TASK62.1, TASK62.4 |
+|  | ↳ [TASK62.6](TASK62.6-local-vector-search.md) | Local vector search | TASK62.1, TASK62.5 |
+|  | ↳ [TASK62.7](TASK62.7-guided-local-model-setup.md) | Guided setup of the local model | TASK62.1, TASK62.4, TASK62.6 |
+|  | ↳ [TASK62.8](TASK62.8-search-cue-and-instructions.md) | Search cue and default level of new skills | TASK62.1, TASK62.3, TASK62.4, TASK62.5 |
+|  | ↳ [TASK62.9](TASK62.9-catalog-cost.md) | Catalog cost | TASK58.1, TASK62.4, TASK62.5 |
+|  | ↳ [TASK62.10](TASK62.10-release-v1-6-0.md) | Release v1.6.0 | TASK62.2, TASK62.3, TASK62.4, TASK62.5, TASK62.6, TASK62.7, TASK62.8, TASK62.9 |
+
+### Phase 7c: Tool bundles (v1.7)
+
+| Status | Task | Title | Depends on |
+|---|---|---|---|
+|  | [TASK63](TASK63-tool-bundles.md) | Tool bundles | TASK62.10 |
+|  | ↳ [TASK63.1](TASK63.1-bundle-spike.md) | Bundle spike | TASK62.10 |
+|  | ↳ [TASK63.2](TASK63.2-bundle-manifest.md) | Bundle manifest | TASK63.1, TASK62.2 |
+|  | ↳ [TASK63.3](TASK63.3-ownership-ledger.md) | Ownership ledger | TASK63.2 |
+|  | ↳ [TASK63.4](TASK63.4-component-writers.md) | Component writers | TASK63.3 |
+|  | ↳ [TASK63.5](TASK63.5-tool-commands.md) | Tool commands | TASK63.4, TASK58.4 |
+|  | ↳ [TASK63.6](TASK63.6-tools-page-in-the-panel.md) | Tools page in the panel | TASK58.1, TASK58.4, TASK63.5 |
+|  | ↳ [TASK63.7](TASK63.7-first-bundles.md) | First bundles | TASK63.5 |
+|  | ↳ [TASK63.8](TASK63.8-release-v1-7-0.md) | Release v1.7.0 | TASK62.10, TASK63.2, TASK63.3, TASK63.4, TASK63.5, TASK63.6, TASK63.7 |
+
 ### Phase 8: Test phase
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK62](TASK62-coverage-baseline.md) | Coverage baseline | TASK56 |
-|  | [TASK63](TASK63-end-to-end-user-journeys.md) | End-to-end user journeys | TASK56, TASK30 |
-|  | ↳ [TASK63.1](TASK63.1-journey-setup-and-delivery.md) | Journey: setup and delivery | TASK56, TASK30 |
-|  | ↳ [TASK63.2](TASK63.2-journey-library-lifecycle.md) | Journey: library lifecycle | TASK56, TASK30 |
-|  | ↳ [TASK63.3](TASK63.3-journey-two-machines.md) | Journey: two machines | TASK56, TASK30 |
-|  | ↳ [TASK63.4](TASK63.4-journey-failures.md) | Journey: failures | TASK56, TASK30 |
-|  | [TASK64](TASK64-windows.md) | Windows | TASK56 |
-|  | ↳ [TASK64.1](TASK64.1-fake-assistants-in-go.md) | Fake assistants in Go | TASK56 |
-|  | ↳ [TASK64.2](TASK64.2-hooks-and-paths-on-windows.md) | Hooks and paths on Windows | TASK64.1 |
-|  | ↳ [TASK64.3](TASK64.3-installed-binary-runs-the-hook.md) | Installed binary runs the hook | TASK64.1 |
-|  | [TASK65](TASK65-versioned-data-formats-and-migration.md) | Versioned data formats and migration | TASK56 |
-|  | [TASK66](TASK66-assistant-behaviour-benchmark.md) | Assistant behaviour benchmark | TASK56 |
-|  | ↳ [TASK66.1](TASK66.1-benchmark-runner.md) | Benchmark runner | TASK56 |
-|  | ↳ [TASK66.2](TASK66.2-assistant-adapters.md) | Assistant adapters | TASK66.1 |
-|  | ↳ [TASK66.3](TASK66.3-benchmark-cases.md) | Benchmark cases | TASK66.2 |
-|  | ↳ [TASK66.4](TASK66.4-baselines-and-reports.md) | Baselines and reports | TASK66.3 |
-|  | [TASK67](TASK67-robustness.md) | Robustness | TASK56 |
-|  | ↳ [TASK67.1](TASK67.1-fuzzing.md) | Fuzzing | TASK56 |
-|  | ↳ [TASK67.2](TASK67.2-parallel-processes.md) | Parallel processes | TASK56 |
-|  | ↳ [TASK67.3](TASK67.3-performance-budgets.md) | Performance budgets | TASK56 |
-|  | [TASK68](TASK68-security-review.md) | Security review | TASK56 |
-|  | [TASK69](TASK69-test-phase-review.md) | Test phase review | TASK62, TASK63, TASK64, TASK65, TASK66, TASK67, TASK68 |
+|  | [TASK64](TASK64-coverage-baseline.md) | Coverage baseline | TASK56, TASK63.8 |
+|  | [TASK65](TASK65-windows.md) | Windows | TASK56, TASK63.8 |
+|  | ↳ [TASK65.1](TASK65.1-fake-assistants-in-go.md) | Fake assistants in Go | TASK56 |
+|  | ↳ [TASK65.2](TASK65.2-hooks-and-paths-on-windows.md) | Hooks and paths on Windows | TASK65.1, TASK63.8 |
+|  | ↳ [TASK65.3](TASK65.3-installed-binary-runs-the-hook.md) | Installed binary runs the hook | TASK65.1 |
+|  | [TASK66](TASK66-end-to-end-user-journeys.md) | End-to-end user journeys | TASK56, TASK30, TASK63.8, TASK65.1, TASK65.2 |
+|  | ↳ [TASK66.1](TASK66.1-journey-setup-and-delivery.md) | Journey: setup and delivery | TASK56, TASK30, TASK63.8, TASK65.1, TASK65.2 |
+|  | ↳ [TASK66.2](TASK66.2-journey-library-lifecycle.md) | Journey: library lifecycle | TASK56, TASK30, TASK63.8, TASK65.1, TASK65.2 |
+|  | ↳ [TASK66.3](TASK66.3-journey-two-machines.md) | Journey: two machines | TASK56, TASK30, TASK63.8, TASK65.1, TASK65.2 |
+|  | ↳ [TASK66.4](TASK66.4-journey-failures.md) | Journey: failures | TASK56, TASK30, TASK63.8, TASK65.1, TASK65.2 |
+|  | [TASK67](TASK67-versioned-data-formats-and-migration.md) | Versioned data formats and migration | TASK56, TASK63.8 |
+|  | [TASK68](TASK68-assistant-behaviour-benchmark.md) | Assistant behaviour benchmark | TASK56, TASK62.1, TASK62.8, TASK63.7 |
+|  | ↳ [TASK68.1](TASK68.1-benchmark-runner.md) | Benchmark runner | TASK56 |
+|  | ↳ [TASK68.2](TASK68.2-assistant-adapters.md) | Assistant adapters | TASK68.1, TASK62.1 |
+|  | ↳ [TASK68.3](TASK68.3-benchmark-cases.md) | Benchmark cases | TASK68.2, TASK62.8, TASK63.7 |
+|  | ↳ [TASK68.4](TASK68.4-baselines-and-reports.md) | Baselines and reports | TASK68.3 |
+|  | [TASK69](TASK69-robustness.md) | Robustness | TASK56, TASK63.8, TASK65.1, TASK65.2 |
+|  | ↳ [TASK69.1](TASK69.1-fuzzing.md) | Fuzzing | TASK56, TASK63.8 |
+|  | ↳ [TASK69.2](TASK69.2-parallel-processes.md) | Parallel processes | TASK56, TASK63.8, TASK65.1, TASK65.2 |
+|  | ↳ [TASK69.3](TASK69.3-performance-budgets.md) | Performance budgets | TASK56, TASK63.8 |
+|  | [TASK70](TASK70-security-review.md) | Security review | TASK56, TASK63.8 |
+|  | [TASK71](TASK71-test-phase-review.md) | Test phase review | TASK64, TASK65, TASK66, TASK67, TASK68, TASK69, TASK70 |
 
 ### Phase 9: Enterprise
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-|  | [TASK70](TASK70-enterprise.md) | Enterprise | TASK69 |
+|  | [TASK72](TASK72-enterprise.md) | Enterprise | TASK71 |
 
 ## Later (not yet planned in detail)
 
-- More pages for the panel of TASK58: **Health** (what `quiver doctor` and `quiver status` report, and how always-on skills reach each assistant), **Activity** (how often the session-start hook ran, how long it took, and which skills it delivered) and **Settings** (assistants, update checks, editor, library sync). Activity needs the hook log to record more than it does today.
+- More pages for the panel of TASK58: **Activity** (how often the session-start hook ran, how long it took, and which skills it delivered) and **Settings** (assistants, update checks, editor, library sync, and the search engine setting of TASK62.5). Activity needs the hook log to record more than it does today.
 - Graphical app with the same features as the panel.
 
 ### Unscheduled

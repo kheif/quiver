@@ -41,3 +41,10 @@ There is no Settings section: Quiver has no setting that a person changes (`conf
 - Every subtask is done.
 - Tests drive the model with key messages (no real terminal) for every key of every section, including the scope changes and what the search does with keys.
 - A manual check on a macOS terminal shows no layout glitches. The tests that drive the panel run on macOS, Linux and Windows in CI; a look at a Linux or Windows terminal is left to whoever has one.
+
+**Subtasks:**
+- [TASK58.1](TASK58.1-panel-shell-and-skills.md): Panel shell and Skills section
+- [TASK58.2](TASK58.2-projects-page.md): Projects section
+- [TASK58.3](TASK58.3-sources-page.md): Sources section
+- [TASK58.4](TASK58.4-safe-input-and-display.md): Safe input and display
+- [TASK58.5](TASK58.5-health-and-setup.md): Health section and first-run setup

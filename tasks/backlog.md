@@ -44,13 +44,14 @@ Items are ordered by priority within each section.
 - **Proposal:** Save skills created with `scope: "global"` as pending. Activate them only after `quiver approve <id>` (or a TUI confirmation).
 - **Related:** create_skill task (Phase 3), TASK32 (decide before release)
 - **Decided 2026-10-29: not planned.** Global skills created with `create_skill` are active at once. They are committed in `local/`, so they can be reviewed and reverted there.
+- **Raised again 2026-11-20:** the audit of 2026-11-10 shows that the commit is the only trace. TASK70 decides the review step.
 
 ## Practical
 
 ### B08 — Non-interactive git
 - **Concern:** If a private repo asks for credentials, a background `git ls-remote` or `git pull` hangs.
 - **Proposal:** Always run git with `GIT_TERMINAL_PROMPT=0` and a timeout.
-- **Related:** TASK09, background update checks (TASK60)
+- **Related:** TASK09, background update checks (TASK59)
 - **Resolved 2026-10-29:** `GIT_TERMINAL_PROMPT=0` and timeouts on every git command (TASK34).
 
 ### B09 — `mcp install` writes an absolute path
@@ -106,4 +107,21 @@ Items are ordered by priority within each section.
 ### B18 — Measure skill loading against the real assistant
 - **Concern:** That the assistant loads a fitting skill and follows always-on skills was measured by hand (docs/spike-b01-results.md). A new model can change this.
 - **Proposal:** A workflow started by hand (`workflow_dispatch`) runs `claude -p` with a few prompts against a test library and counts `get_skill` calls. It needs an API key secret and costs a few cents per run, so it runs now and then, such as before a release. Copilot on GitHub would only test Copilot, not Claude.
-- **Planned 2026-11-01:** TASK67, a benchmark over every assistant with a headless mode, run by hand before each release.
+- **Planned 2026-11-01:** TASK68, a benchmark over every assistant with a headless mode, run by hand before each release.
+
+### B19 — Repository settings and contributor files
+- **Concern:** Release integrity and review rely on repository settings that no test sees, and the contributor files are missing.
+- **Proposal:** Tag and `main` rulesets (no force-push or deletion, required checks), a release environment, `permissions` set in every workflow, secret scanning, push protection and Dependabot alerts on, `/web` in `dependabot.yml`, an `AGENTS.md`, a `CODEOWNERS` file, a pull request template, and a release job that waits for green CI and refuses a lightweight tag.
+- **Planned 2026-11-20:** done or decided before the tag of v1.6.0 (TASK62.10); TASK71 checks that none is open.
+
+### B20 — The user's own embedding model, and other languages
+- **Concern:** The local engine of TASK62 runs one model, all-MiniLM-L6-v2, which understands English only (docs/spike-discovery-results.md: Turkish queries find the fitting skill in 0 of 15 cases with it). Someone who writes skills or queries in another language, or wants a stronger model, cannot change it.
+- **Proposal:** Let the user name a model of their own. Two ways: a folder of a BERT-style model (weights, `tokenizer.json` and a small file with the pooling and the query and document prefixes; the spike ran all-MiniLM-L6-v2, gte-small, bge-small-en-v1.5 and e5-small-v2 with the same code), and a server on a loopback address that speaks `/v1/embeddings` (Ollama, LM Studio, llama.cpp). Models of other languages that use another tokenizer and position numbering (XLM-R based) need small additions to the model code and were not tried. The server route needs a loopback check, the query and document prefixes of each model and a `minScore` calibration per model.
+- **Measured:** embeddinggemma through Ollama found 14 of 15 Turkish paraphrases and 98% of the English queries, at 621 MB on disk and 751 MB of memory with the model loaded, plus Ollama itself (186 MB archive, 772 MB unpacked).
+- **Also later:** a half-size model file that the project hosts (float16), a copy of the file in the project's release assets, and faster kernels if the time to build the index matters on slow machines (97 s for 262 skills on one core of an Apple M1).
+- **Planned 2026-11-21:** not scheduled; decide after v1.6.0.
+
+### B21 — Word beginnings and accents in the ranked word search
+- **Concern:** The ranked word search of TASK62.5 is the one the spike measured (docs/spike-discovery-results.md, 73% of the English queries that fit a skill). It matches whole words only: `deploy` does not find a description that says `deployment`, and `sifre` does not find `şifre`. English is the language of v1.6.
+- **Proposal:** Match the beginning of a word in descriptions, and fold accents, then measure both on the query set of TASK62.1 before shipping: the rates must not fall on any kind of query, and the cutoff is calibrated again.
+- **Planned 2026-11-21:** not scheduled; decide after v1.6.0.

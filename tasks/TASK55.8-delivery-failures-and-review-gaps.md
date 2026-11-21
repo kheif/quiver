@@ -17,6 +17,6 @@ A review of the hook delivery with real binaries, in isolated homes, found place
 5. **The assistant cannot rewrite what every session starts with.** `update_skill` changes only skills served in the session's project, and not always-on skills, which the user changes with `quiver edit`.
 6. **Install and doctor tell the truth.** The delivery report and `quiver status` say "hook" only when the assistant's config holds Quiver's hook. VS Code's `mcp.json`, which allows comments, is read with them and written without them, after the old file is saved next to it. `quiver doctor` checks Cursor's hook. A hook command with a shell suffix such as `2>/dev/null || true` is still Quiver's, so install does not add a second one.
 
-**Not done:** Windows quoting of the hook command for `cmd.exe` and PowerShell (TASK64.2); `get_skill` and `search_skills` still read the whole library, as documented.
+**Not done:** Windows quoting of the hook command for `cmd.exe` and PowerShell (TASK65.2); `get_skill` and `search_skills` still read the whole library, as documented.
 
 **Done when:** unit tests cover each point above, including the unreadable skill, the forged tags, the hidden characters, invalid UTF-8, the symlinked skill folder, the sync confirmation, the `update_skill` refusals, commented `mcp.json`, wrapped hook commands, and parts sharing one snapshot; and all 231 parts of a 2 MB text, started at once, were delivered in a real run.
