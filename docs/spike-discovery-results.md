@@ -1,6 +1,6 @@
 # Discovery spike results (TASK62.1)
 
-**Status: partial.** This file holds items 2 and 3 of TASK62.1 for the embedding models: the comparison of the search engines and the size, memory and speed of the routes. The comparison is read on English queries, because English is the language that the library and the assistants' searches are written in; the Turkish queries are reported on their own. Item 1 (runs with the assistants), the per-system setup steps of the runtimes and the final decisions are still open. No threshold fixed in TASK62.1 was changed; where a rule had to be read differently, the text says so.
+**Status: partial.** This file holds items 2 and 3 of TASK62.1 for the embedding models: the comparison of the search engines and the size, memory and speed of the routes. The comparison is read on English queries, because English is the language that the library and the assistants' searches are written in; the Turkish queries are reported on their own. Item 1 was run on Claude Code only (the section "Runs with Claude Code"); the per-system setup steps of the runtimes are not measured. No threshold fixed in TASK62.1 was changed; where a rule had to be read differently, the text says so.
 
 The code is in `spike/discovery/` (not product code, own `go.mod`). `queries.json` is the labelled query set; `corpus.py`, `ref.py`, `ollama_vecs.py` and `main.go` (`validate`, `vcheck`, `eval`, `bench`) make every number below.
 
@@ -127,6 +127,30 @@ The 112 MB of the multilingual model right after loading are resident while its 
 
 A second run of the same server, made while another download was stalling, took far longer for the library and the first embedding; its times were discarded, and only its memory and per-query figures (which matched the first run) were used for the 110M model.
 
+## Runs with Claude Code (item 1)
+
+Claude Code 2.1.311, model claude-opus-5-5 in every cell, macOS. Each run is a headless `claude -p` in its own project folder with project-level settings (`--setting-sources project`, `--strict-mcp-config`, `--disable-slash-commands`), so no setting, hook or skill of the machine reaches the session. Tools allowed: the server's, `Read`, `Glob`, `Grep`. The library has 264 skills of four sources (224, 22, 15 and 1) and the two fixture skills of `spike/discovery/fixtures/`, all Searchable except where a cell says otherwise. The task names a made-up product: *"Write a short draft of the announcement for Fenwick's new recurring bookings feature, for our customer newsletter."* `spike/fenwick-announcements` is named after the product; `spike/tone-ladder` has no word of the task in its name or ID and can only be reached through its description (house voice for text that customers read). A skill is found as TASK62 defines it: `get_skill` of one of the two after a `search_skills` (cell h, where the skills are listed, counts a `get_skill` alone); no run read skill files from `~/.quiver`. The code is `serve.go` (the prototype server and the candidate wordings), `runs.py` and `analyze.py`; the per-run numbers are in `spike/discovery/results/runs-summary.json`.
+
+| Cell | Engine, wording | Runs | Searched | Found | Of which fenwick / tone-ladder |
+|---|---|---|---|---|---|
+| a, primary (no skill listed) | ranked word search, wording 1 | 20 | 20 | **7** | 7 / 0 |
+| a2, primary with changed wording | ranked word search, wording 2 | 20 | 20 | **20** | 20 / 0 |
+| g, primary with `local` | all-MiniLM-L6-v2 fused with the word search, wording 1 | 20 | 20 | 20 | 20 / 0 |
+| b, baseline (today's texts and server, skills not assigned) | matching of today | 20 | 0 | 0 | 0 / 0 |
+| c, 16 skills listed, none fits | ranked word search, wording 1 | 20 | 20 | 10 | 5 / 5 |
+| d, two turns | ranked word search, wording 1 | 20 | 20 | 0 | 0 / 0 |
+| d2, two turns | ranked word search, wording 2 | 20 | 20 | 4 | 4 / 0 |
+| e, primary in Turkish | ranked word search, wording 1 | 20 | 20 | 20 | 20 / 0 |
+| f, control (a plain question about the project) | ranked word search, wording 1 | 20 | **0** | n/a | n/a |
+| h, reference (both skills listed on demand) | n/a | 20 | 0 | 20 | 20 / 20 |
+
+- **Threshold (16 of 20 in the primary cell).** Wording 1 with the ranked word search misses it (7 of 20). The assistant searched in every run, but its first query named no product (`customer newsletter announcement` in 18 runs, `customer newsletter feature announcement` in 2). The first returns nothing from the word search; the second returned the product skill. The skill was found in the 5 runs that searched again with the product name and in those 2. Wording 2 (the query names the product, tool or channel and what is produced; one more search from another angle if nothing fits) meets it with 20 of 20, every first query being `Fenwick customer newsletter announcement`. With wording 1, `local` meets it as well (20 of 20), because the model ranks the skill for the same query. Wording 2 is a changed wording run as a new cell, as TASK62.1 allows; both rows are kept and no threshold was changed.
+- **Control.** The assistant searched in 0 of 20 runs of the plain question (limit 2). The baseline searched in 0 of 20 runs of the task, so without the cue it never reaches a skill that is not listed.
+- **What the cells that inform say.** Listed skills are loaded without a search (h, 20 of 20, both). With 16 listed skills the cue still makes the assistant search in 20 of 20 runs and finds a fitting skill in 10; in the other 10 it takes a skill from the library that fits less well (`brand-voice-enforcement`, `brand-review`) or none. In Turkish the assistant writes the query in English and names the product (20 of 20). In the two-turn conversation the assistant's topic is the Slack message, not the product, and its queries are about Slack and status updates (`anthropics/stakeholder-update` and `anthropics/slack-messaging` are loaded instead); it searched in turn 2 in 5 of 20 runs of d and in turn 1 in all of them.
+- **Limits.** One task, one made-up product, one model, 20 runs per cell. The second fitting skill (`tone-ladder`, reachable only through its description) was found by search in 5 runs of cell c and in none of a, a2, e or g, so the rates above are rates of finding the skill named after the product; the assistant names the product in its query once the wording asks it to, and no cell measures how well a skill is found when the prompt names nothing that the skill contains. Cell d does not test the second turn alone, because the topic of the first turn already differs from the skill. All cells ran with the throwaway server of the prototype, not the shipped build (TASK62.10 measures that again).
+- **Spent.** 200 runs (160 planned for Claude Code plus 40 of the two cells with the changed wording): 2,180 input tokens, 1,497,404 cache-creation tokens, 20,484,618 cache-read tokens and 222,285 output tokens, which the CLI reports as USD 25.61. No retry was made.
+- **Not measured.** Every assistant other than Claude Code (TASK68.2 runs the same cells and thresholds). The earlier spikes (docs/spike-mcp-clients.md) drove Claude Code, Codex, Cursor, VS Code and Antigravity by script; Claude Desktop cannot be driven by a script and is documented as not measured.
+
 ## Decisions by the rules fixed in TASK62.1, read on English queries
 
 The rules count the three fitting kinds taken together, which include the Turkish paraphrase. They are applied here to the English queries only (paraphrases A and B and the assistant-style queries, 60 in the test half), because English is the language of the library and of the assistants' searches. This is a different reading of the rules than the one fixed in TASK62.1; that task lists every deviation from its plan.
@@ -139,7 +163,7 @@ The rules count the three fitting kinds taken together, which include the Turkis
 
 ## Not measured, and limits
 
-- Item 1: no run with an assistant was made. The queries of the kind "assistant style" were written by hand from the skills' descriptions, not taken from runs, so they are probably easier than real ones. The query set is to be extended with the queries of the runs when item 1 is done.
+- Item 1: runs were made on Claude Code only (see above). The queries of the kind "assistant style" were written by hand from the skills' descriptions, not taken from runs, so they are probably easier than real ones. The queries that the assistants wrote in the runs are in `spike/discovery/results/runs-summary.json`; the query set has not been extended with them, so the numbers above are unchanged.
 - Per-system setup steps and the need for administrator rights of Ollama and LM Studio, a running instance on a default port, and Windows and Linux numbers: not done. Only macOS on Apple silicon was run. The loader maps the file with a Unix call; Windows needs another way (or reads the file, at 191 MB for all-MiniLM-L6-v2).
 - 45 paraphrases and 15 assistant-style queries in the English test half, one person labelled them, 224 of the 262 skills come from one source. A library of other skills may behave differently.
 - Set B was added after the first comparison, which used set A only; the advantage of the static models over the word search is smaller on set B than on set A (see above), so the numbers of set B are the ones to rely on for English.

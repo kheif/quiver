@@ -1,0 +1,5611 @@
+{
+ "a": {
+  "runs": 20,
+  "found": 7,
+  "found_A": 7,
+  "found_B": 0,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.92,
+  "tokens": {
+   "input_tokens": 232,
+   "output_tokens": 21150,
+   "cache_creation_input_tokens": 131044,
+   "cache_read_input_tokens": 2233698
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0664194,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1002,
+     "cache_creation_input_tokens": 3464,
+     "cache_read_input_tokens": 93137
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0828138,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 983,
+     "cache_creation_input_tokens": 5606,
+     "cache_read_input_tokens": 91329
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1194544,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1410,
+     "cache_creation_input_tokens": 8486,
+     "cache_read_input_tokens": 116592
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08449040000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 817,
+     "cache_creation_input_tokens": 5632,
+     "cache_read_input_tokens": 115232
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0835528,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 777,
+     "cache_creation_input_tokens": 5616,
+     "cache_read_input_tokens": 115184
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1478424,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1563,
+     "cache_creation_input_tokens": 10933,
+     "cache_read_input_tokens": 145312
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "product release copy style guide"
+    ],
+    "gets": [
+     "anthropics/brand-review"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1198578,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1170,
+     "cache_creation_input_tokens": 9142,
+     "cache_read_input_tokens": 116369
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "product release marketing copy style guide"
+    ],
+    "gets": [
+     "anthropics/content-creation"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0825826,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 965,
+     "cache_creation_input_tokens": 5621,
+     "cache_read_input_tokens": 91373
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0847006,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1066,
+     "cache_creation_input_tokens": 5633,
+     "cache_read_input_tokens": 91383
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1327094,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1555,
+     "cache_creation_input_tokens": 9072,
+     "cache_read_input_tokens": 144887
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09128920000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 757,
+     "cache_creation_input_tokens": 6608,
+     "cache_read_input_tokens": 116186
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick brand voice style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0836022,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1011,
+     "cache_creation_input_tokens": 5633,
+     "cache_read_input_tokens": 91391
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09580079999999999,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 935,
+     "cache_creation_input_tokens": 6117,
+     "cache_read_input_tokens": 140544
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1344352,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1590,
+     "cache_creation_input_tokens": 9200,
+     "cache_read_input_tokens": 144896
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0833556,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 768,
+     "cache_creation_input_tokens": 5614,
+     "cache_read_input_tokens": 115178
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0942092,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1080,
+     "cache_creation_input_tokens": 6178,
+     "cache_read_input_tokens": 115686
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08211660000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 954,
+     "cache_creation_input_tokens": 5599,
+     "cache_read_input_tokens": 91023
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07586920000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 663,
+     "cache_creation_input_tokens": 5547,
+     "cache_read_input_tokens": 90966
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0900538,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1068,
+     "cache_creation_input_tokens": 5690,
+     "cache_read_input_tokens": 115629
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "product marketing writing style guide"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0838642,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1016,
+     "cache_creation_input_tokens": 5653,
+     "cache_read_input_tokens": 91401
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   }
+  }
+ },
+ "b": {
+  "runs": 20,
+  "found": 0,
+  "found_A": 0,
+  "found_B": 0,
+  "searched": 0,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.58,
+  "tokens": {
+   "input_tokens": 190,
+   "output_tokens": 19644,
+   "cache_creation_input_tokens": 106187,
+   "cache_read_input_tokens": 1690452
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.079465,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1003,
+     "cache_creation_input_tokens": 5167,
+     "cache_read_input_tokens": 90145
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0805966,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 999,
+     "cache_creation_input_tokens": 5308,
+     "cache_read_input_tokens": 90563
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0788702,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 927,
+     "cache_creation_input_tokens": 5281,
+     "cache_read_input_tokens": 90211
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.072395,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 809,
+     "cache_creation_input_tokens": 5358,
+     "cache_read_input_tokens": 66595
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0809726,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1022,
+     "cache_creation_input_tokens": 5298,
+     "cache_read_input_tokens": 90543
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0841646,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1170,
+     "cache_creation_input_tokens": 5326,
+     "cache_read_input_tokens": 90583
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08037540000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 985,
+     "cache_creation_input_tokens": 5315,
+     "cache_read_input_tokens": 90577
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0790062,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 922,
+     "cache_creation_input_tokens": 5302,
+     "cache_read_input_tokens": 90551
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0806666,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1000,
+     "cache_creation_input_tokens": 5314,
+     "cache_read_input_tokens": 90573
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0739454,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 871,
+     "cache_creation_input_tokens": 5396,
+     "cache_read_input_tokens": 66627
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.080683,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1005,
+     "cache_creation_input_tokens": 5304,
+     "cache_read_input_tokens": 90555
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.074513,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 892,
+     "cache_creation_input_tokens": 5414,
+     "cache_read_input_tokens": 66645
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0788654,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 975,
+     "cache_creation_input_tokens": 5159,
+     "cache_read_input_tokens": 90267
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0732394,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 848,
+     "cache_creation_input_tokens": 5366,
+     "cache_read_input_tokens": 66597
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0746122,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 915,
+     "cache_creation_input_tokens": 5370,
+     "cache_read_input_tokens": 66601
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08236260000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1089,
+     "cache_creation_input_tokens": 5304,
+     "cache_read_input_tokens": 90553
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.082145,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1087,
+     "cache_creation_input_tokens": 5282,
+     "cache_read_input_tokens": 90545
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08080420000000002,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1014,
+     "cache_creation_input_tokens": 5297,
+     "cache_read_input_tokens": 90541
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08211620000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1078,
+     "cache_creation_input_tokens": 5300,
+     "cache_read_input_tokens": 90581
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08142780000000002,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1033,
+     "cache_creation_input_tokens": 5326,
+     "cache_read_input_tokens": 90599
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   }
+  }
+ },
+ "c": {
+  "runs": 20,
+  "found": 10,
+  "found_A": 5,
+  "found_B": 5,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 2.35,
+  "tokens": {
+   "input_tokens": 242,
+   "output_tokens": 23804,
+   "cache_creation_input_tokens": 172567,
+   "cache_read_input_tokens": 2470805
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1317478,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1411,
+     "cache_creation_input_tokens": 9883,
+     "cache_read_input_tokens": 122079
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09982740000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1135,
+     "cache_creation_input_tokens": 7258,
+     "cache_read_input_tokens": 95117
+    },
+    "searches": [
+     "customer newsletter announcement writing"
+    ],
+    "gets": [
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.12257180000000001,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1015,
+     "cache_creation_input_tokens": 8395,
+     "cache_read_input_tokens": 175239
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick brand voice style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0942202,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1016,
+     "cache_creation_input_tokens": 6856,
+     "cache_read_input_tokens": 95061
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0990906,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1099,
+     "cache_creation_input_tokens": 7256,
+     "cache_read_input_tokens": 95113
+    },
+    "searches": [
+     "customer newsletter announcement writing"
+    ],
+    "gets": [
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1017732,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 747,
+     "cache_creation_input_tokens": 7822,
+     "cache_read_input_tokens": 121046
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick brand voice style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.13889379999999998,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1446,
+     "cache_creation_input_tokens": 9966,
+     "cache_read_input_tokens": 150949
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.14072279999999998,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1422,
+     "cache_creation_input_tokens": 10255,
+     "cache_read_input_tokens": 150934
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.148818,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1542,
+     "cache_creation_input_tokens": 11688,
+     "cache_read_input_tokens": 122130
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide marketing copy"
+    ],
+    "gets": [
+     "anthropics/draft-content",
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.13069779999999998,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1370,
+     "cache_creation_input_tokens": 9855,
+     "cache_read_input_tokens": 122049
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide writing"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0945814,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1037,
+     "cache_creation_input_tokens": 6849,
+     "cache_read_input_tokens": 95047
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1335716,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1506,
+     "cache_creation_input_tokens": 9874,
+     "cache_read_input_tokens": 122058
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice writing style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0987568,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 820,
+     "cache_creation_input_tokens": 7276,
+     "cache_read_input_tokens": 120504
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick brand voice writing"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.11820380000000001,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1070,
+     "cache_creation_input_tokens": 8383,
+     "cache_read_input_tokens": 148419
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick brand voice style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09639059999999998,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 936,
+     "cache_creation_input_tokens": 7313,
+     "cache_read_input_tokens": 95633
+    },
+    "searches": [
+     "customer newsletter announcement writing"
+    ],
+    "gets": [
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0985046,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1027,
+     "cache_creation_input_tokens": 7348,
+     "cache_read_input_tokens": 95703
+    },
+    "searches": [
+     "customer newsletter announcement writing"
+    ],
+    "gets": [
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1413616,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1500,
+     "cache_creation_input_tokens": 10160,
+     "cache_read_input_tokens": 150128
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice style guide"
+    ],
+    "gets": [
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.10284380000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1018,
+     "cache_creation_input_tokens": 7282,
+     "cache_read_input_tokens": 120899
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.155482,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1598,
+     "cache_creation_input_tokens": 11637,
+     "cache_read_input_tokens": 151850
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "brand voice marketing writing"
+    ],
+    "gets": [
+     "anthropics/draft-content",
+     "anthropics/brand-voice-enforcement"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.10368539999999998,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1089,
+     "cache_creation_input_tokens": 7211,
+     "cache_read_input_tokens": 120847
+    },
+    "searches": [
+     "customer newsletter announcement writing"
+    ],
+    "gets": [
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   }
+  }
+ },
+ "d": {
+  "runs": 20,
+  "found": 0,
+  "found_A": 0,
+  "found_B": 0,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 5.66,
+  "tokens": {
+   "input_tokens": 308,
+   "output_tokens": 38210,
+   "cache_creation_input_tokens": 234362,
+   "cache_read_input_tokens": 2847163
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3330958,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2269,
+     "cache_creation_input_tokens": 13809,
+     "cache_read_input_tokens": 185735
+    },
+    "searches": [
+     "Slack launch announcement status update",
+     "send Slack message"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "02": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.28172379999999997,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1755,
+     "cache_creation_input_tokens": 11643,
+     "cache_read_input_tokens": 122177
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "03": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.2129508,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1491,
+     "cache_creation_input_tokens": 7788,
+     "cache_read_input_tokens": 118313
+    },
+    "searches": [
+     "Slack launch announcement message"
+    ],
+    "gets": [
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "04": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.29652979999999995,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1910,
+     "cache_creation_input_tokens": 12130,
+     "cache_read_input_tokens": 122409
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "05": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.33089999999999997,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2512,
+     "cache_creation_input_tokens": 12751,
+     "cache_read_input_tokens": 183560
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "06": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.2853354,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1865,
+     "cache_creation_input_tokens": 11767,
+     "cache_read_input_tokens": 121495
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "07": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3360018,
+    "usage": {
+     "input_tokens": 20,
+     "output_tokens": 2100,
+     "cache_creation_input_tokens": 20030,
+     "cache_read_input_tokens": 183690
+    },
+    "searches": [
+     "Slack launch announcement message"
+    ],
+    "gets": [
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "08": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.283879,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1727,
+     "cache_creation_input_tokens": 11815,
+     "cache_read_input_tokens": 122315
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "09": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.2974434,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 2039,
+     "cache_creation_input_tokens": 12179,
+     "cache_read_input_tokens": 152103
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "10": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.29924739999999994,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 2106,
+     "cache_creation_input_tokens": 12023,
+     "cache_read_input_tokens": 122293
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "11": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.235771,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2000,
+     "cache_creation_input_tokens": 8352,
+     "cache_read_input_tokens": 169529
+    },
+    "searches": [
+     "Slack launch announcement",
+     "product launch communications",
+     "post message to Slack"
+    ],
+    "gets": [
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "12": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.29399139999999996,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 2036,
+     "cache_creation_input_tokens": 11884,
+     "cache_read_input_tokens": 122305
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "13": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.32770380000000005,
+    "usage": {
+     "input_tokens": 20,
+     "output_tokens": 2177,
+     "cache_creation_input_tokens": 13150,
+     "cache_read_input_tokens": 212527
+    },
+    "searches": [
+     "Slack launch announcement status update",
+     "send Slack message"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "14": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.31261479999999997,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 1907,
+     "cache_creation_input_tokens": 13463,
+     "cache_read_input_tokens": 184452
+    },
+    "searches": [
+     "Slack launch announcement status update",
+     "post message to Slack channel"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "15": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.20235160000000002,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1590,
+     "cache_creation_input_tokens": 7882,
+     "cache_read_input_tokens": 143231
+    },
+    "searches": [
+     "Slack launch announcement",
+     "post message to Slack"
+    ],
+    "gets": [
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "16": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.2896624,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1834,
+     "cache_creation_input_tokens": 11874,
+     "cache_read_input_tokens": 122302
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "17": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.27418580000000004,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1455,
+     "cache_creation_input_tokens": 11599,
+     "cache_read_input_tokens": 122075
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "18": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.2955804,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 2064,
+     "cache_creation_input_tokens": 11923,
+     "cache_read_input_tokens": 122284
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "19": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.284484,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1745,
+     "cache_creation_input_tokens": 11826,
+     "cache_read_input_tokens": 122294
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "20": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.183073,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1628,
+     "cache_creation_input_tokens": 6474,
+     "cache_read_input_tokens": 92074
+    },
+    "searches": [
+     "Slack launch announcement"
+    ],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   }
+  }
+ },
+ "e": {
+  "runs": 20,
+  "found": 20,
+  "found_A": 20,
+  "found_B": 0,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.74,
+  "tokens": {
+   "input_tokens": 210,
+   "output_tokens": 22380,
+   "cache_creation_input_tokens": 112344,
+   "cache_read_input_tokens": 1942643
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08885820000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1021,
+     "cache_creation_input_tokens": 5665,
+     "cache_read_input_tokens": 115351
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style guide"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09179320000000002,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1169,
+     "cache_creation_input_tokens": 5662,
+     "cache_read_input_tokens": 115346
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0858652,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1145,
+     "cache_creation_input_tokens": 5589,
+     "cache_read_input_tokens": 91066
+    },
+    "searches": [
+     "customer newsletter product announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08285740000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1003,
+     "cache_creation_input_tokens": 5569,
+     "cache_read_input_tokens": 91027
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09076400000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1127,
+     "cache_creation_input_tokens": 5640,
+     "cache_read_input_tokens": 115280
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09199280000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1185,
+     "cache_creation_input_tokens": 5648,
+     "cache_read_input_tokens": 115304
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product writing style"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0863706,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1169,
+     "cache_creation_input_tokens": 5592,
+     "cache_read_input_tokens": 91073
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08371740000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1046,
+     "cache_creation_input_tokens": 5569,
+     "cache_read_input_tokens": 91027
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09802920000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1309,
+     "cache_creation_input_tokens": 6082,
+     "cache_read_input_tokens": 115726
+    },
+    "searches": [
+     "customer newsletter announcement",
+     "Fenwick product brand voice"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08405420000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1062,
+     "cache_creation_input_tokens": 5571,
+     "cache_read_input_tokens": 91031
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08381620000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1048,
+     "cache_creation_input_tokens": 5576,
+     "cache_read_input_tokens": 91041
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08717620000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1221,
+     "cache_creation_input_tokens": 5564,
+     "cache_read_input_tokens": 91021
+    },
+    "searches": [
+     "customer newsletter product announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0831722,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1020,
+     "cache_creation_input_tokens": 5566,
+     "cache_read_input_tokens": 91021
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08603740000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1162,
+     "cache_creation_input_tokens": 5569,
+     "cache_read_input_tokens": 91027
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08472460000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1093,
+     "cache_creation_input_tokens": 5577,
+     "cache_read_input_tokens": 91043
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08600060000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1161,
+     "cache_creation_input_tokens": 5567,
+     "cache_read_input_tokens": 91023
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.085177,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1111,
+     "cache_creation_input_tokens": 5588,
+     "cache_read_input_tokens": 91065
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08374140000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1043,
+     "cache_creation_input_tokens": 5579,
+     "cache_read_input_tokens": 91047
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0861674,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1163,
+     "cache_creation_input_tokens": 5582,
+     "cache_read_input_tokens": 91057
+    },
+    "searches": [
+     "customer newsletter product announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0854054,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1122,
+     "cache_creation_input_tokens": 5589,
+     "cache_read_input_tokens": 91067
+    },
+    "searches": [
+     "customer newsletter announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   }
+  }
+ },
+ "f": {
+  "runs": 20,
+  "found": 0,
+  "found_A": 0,
+  "found_B": 0,
+  "searched": 0,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.09,
+  "tokens": {
+   "input_tokens": 80,
+   "output_tokens": 5910,
+   "cache_creation_input_tokens": 100482,
+   "cache_read_input_tokens": 852700
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.057491,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 395,
+     "cache_creation_input_tokens": 5131,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.058703000000000005,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 438,
+     "cache_creation_input_tokens": 5175,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.057367,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 390,
+     "cache_creation_input_tokens": 5128,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.05305499999999999,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 236,
+     "cache_creation_input_tokens": 4974,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.05305499999999999,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 236,
+     "cache_creation_input_tokens": 4974,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.057267,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 385,
+     "cache_creation_input_tokens": 5128,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.050083,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 127,
+     "cache_creation_input_tokens": 4875,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.053339,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 247,
+     "cache_creation_input_tokens": 4982,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.050703,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 152,
+     "cache_creation_input_tokens": 4890,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.052235,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 207,
+     "cache_creation_input_tokens": 4944,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.050686999999999996,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 212,
+     "cache_creation_input_tokens": 4738,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.052215,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 206,
+     "cache_creation_input_tokens": 4944,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.053330999999999996,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 245,
+     "cache_creation_input_tokens": 4986,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.050439,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 140,
+     "cache_creation_input_tokens": 4887,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.055091,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 309,
+     "cache_creation_input_tokens": 5046,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.056806999999999996,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 370,
+     "cache_creation_input_tokens": 5108,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.058498999999999995,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 429,
+     "cache_creation_input_tokens": 5172,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.059011,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 449,
+     "cache_creation_input_tokens": 5186,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.058059,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 415,
+     "cache_creation_input_tokens": 5152,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.055479,
+    "usage": {
+     "input_tokens": 4,
+     "output_tokens": 322,
+     "cache_creation_input_tokens": 5062,
+     "cache_read_input_tokens": 42635
+    },
+    "searches": [],
+    "gets": [],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [],
+    "found": false
+   }
+  }
+ },
+ "g": {
+  "runs": 20,
+  "found": 20,
+  "found_A": 20,
+  "found_B": 0,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.97,
+  "tokens": {
+   "input_tokens": 218,
+   "output_tokens": 17809,
+   "cache_creation_input_tokens": 149652,
+   "cache_read_input_tokens": 2091492
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1034674,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 949,
+     "cache_creation_input_tokens": 7585,
+     "cache_read_input_tokens": 118797
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1002168,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1031,
+     "cache_creation_input_tokens": 7627,
+     "cache_read_input_tokens": 92704
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1052514,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1039,
+     "cache_creation_input_tokens": 7583,
+     "cache_read_input_tokens": 118797
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1043154,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 991,
+     "cache_creation_input_tokens": 7586,
+     "cache_read_input_tokens": 118797
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08919859999999999,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 709,
+     "cache_creation_input_tokens": 7067,
+     "cache_read_input_tokens": 92213
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1003348,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1039,
+     "cache_creation_input_tokens": 7622,
+     "cache_read_input_tokens": 92694
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.1016168,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1040,
+     "cache_creation_input_tokens": 7769,
+     "cache_read_input_tokens": 93124
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.106258,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 993,
+     "cache_creation_input_tokens": 7806,
+     "cache_read_input_tokens": 119510
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.10692080000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1018,
+     "cache_creation_input_tokens": 7825,
+     "cache_read_input_tokens": 119564
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.10258640000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 1091,
+     "cache_creation_input_tokens": 7763,
+     "cache_read_input_tokens": 93112
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.11190019999999999,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 985,
+     "cache_creation_input_tokens": 7873,
+     "cache_read_input_tokens": 145801
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0913858,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 720,
+     "cache_creation_input_tokens": 7300,
+     "cache_read_input_tokens": 92729
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.10601060000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 1015,
+     "cache_creation_input_tokens": 7724,
+     "cache_read_input_tokens": 119353
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09068300000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 726,
+     "cache_creation_input_tokens": 7200,
+     "cache_read_input_tokens": 92615
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0922346,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 770,
+     "cache_creation_input_tokens": 7282,
+     "cache_read_input_tokens": 92693
+    },
+    "searches": [
+     "customer newsletter feature announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.097583,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 750,
+     "cache_creation_input_tokens": 7345,
+     "cache_read_input_tokens": 118875
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0903162,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 759,
+     "cache_creation_input_tokens": 7081,
+     "cache_read_input_tokens": 92241
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.08968820000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 675,
+     "cache_creation_input_tokens": 7203,
+     "cache_read_input_tokens": 92621
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09215540000000003,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 795,
+     "cache_creation_input_tokens": 7211,
+     "cache_read_input_tokens": 92637
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09044300000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 714,
+     "cache_creation_input_tokens": 7200,
+     "cache_read_input_tokens": 92615
+    },
+    "searches": [
+     "customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   }
+  }
+ },
+ "h": {
+  "runs": 20,
+  "found": 20,
+  "found_A": 20,
+  "found_B": 20,
+  "searched": 0,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.5,
+  "tokens": {
+   "input_tokens": 160,
+   "output_tokens": 18090,
+   "cache_creation_input_tokens": 108453,
+   "cache_read_input_tokens": 1326673
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0728264,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 808,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0755664,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 945,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07482639999999999,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 908,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0744064,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 887,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0842474,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 1377,
+     "cache_creation_input_tokens": 5426,
+     "cache_read_input_tokens": 66337
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0731418,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 825,
+     "cache_creation_input_tokens": 5418,
+     "cache_read_input_tokens": 66329
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07568739999999999,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 949,
+     "cache_creation_input_tokens": 5426,
+     "cache_read_input_tokens": 66337
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07674639999999999,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 1004,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0739874,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 864,
+     "cache_creation_input_tokens": 5426,
+     "cache_read_input_tokens": 66337
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0718664,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 760,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0740474,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 867,
+     "cache_creation_input_tokens": 5426,
+     "cache_read_input_tokens": 66337
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0753464,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 934,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0720018,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 768,
+     "cache_creation_input_tokens": 5418,
+     "cache_read_input_tokens": 66329
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07321,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 828,
+     "cache_creation_input_tokens": 5419,
+     "cache_read_input_tokens": 66330
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0728064,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 807,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07911760000000001,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 1116,
+     "cache_creation_input_tokens": 5437,
+     "cache_read_input_tokens": 66348
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07366639999999999,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 850,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0725064,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 792,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0745464,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 894,
+     "cache_creation_input_tokens": 5421,
+     "cache_read_input_tokens": 66332
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07484740000000001,
+    "usage": {
+     "input_tokens": 8,
+     "output_tokens": 907,
+     "cache_creation_input_tokens": 5426,
+     "cache_read_input_tokens": 66337
+    },
+    "searches": [],
+    "gets": [
+     "spike/fenwick-announcements",
+     "spike/tone-ladder"
+    ],
+    "fit": [
+     "fenwick-announcements",
+     "tone-ladder"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [],
+    "found": true
+   }
+  }
+ },
+ "a2": {
+  "runs": 20,
+  "found": 20,
+  "found_A": 20,
+  "found_B": 0,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 1.62,
+  "tokens": {
+   "input_tokens": 214,
+   "output_tokens": 14679,
+   "cache_creation_input_tokens": 115676,
+   "cache_read_input_tokens": 2001343
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09631400000000001,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 896,
+     "cache_creation_input_tokens": 6262,
+     "cache_read_input_tokens": 141210
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "02": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07803860000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 710,
+     "cache_creation_input_tokens": 5691,
+     "cache_read_input_tokens": 91353
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "03": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.098429,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 965,
+     "cache_creation_input_tokens": 6346,
+     "cache_read_input_tokens": 141525
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "04": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.075547,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 646,
+     "cache_creation_input_tokens": 5550,
+     "cache_read_input_tokens": 90935
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "05": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.09296560000000001,
+    "usage": {
+     "input_tokens": 12,
+     "output_tokens": 995,
+     "cache_creation_input_tokens": 6213,
+     "cache_read_input_tokens": 116568
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "06": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0778702,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 702,
+     "cache_creation_input_tokens": 5690,
+     "cache_read_input_tokens": 91351
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "07": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0775102,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 684,
+     "cache_creation_input_tokens": 5690,
+     "cache_read_input_tokens": 91351
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "08": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0932976,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 849,
+     "cache_creation_input_tokens": 6009,
+     "cache_read_input_tokens": 140948
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "09": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0788902,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 753,
+     "cache_creation_input_tokens": 5690,
+     "cache_read_input_tokens": 91351
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "10": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07705980000000001,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 664,
+     "cache_creation_input_tokens": 5684,
+     "cache_read_input_tokens": 91339
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "11": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07822499999999999,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 721,
+     "cache_creation_input_tokens": 5687,
+     "cache_read_input_tokens": 91345
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "12": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0764502,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 631,
+     "cache_creation_input_tokens": 5690,
+     "cache_read_input_tokens": 91351
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "13": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0771482,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 668,
+     "cache_creation_input_tokens": 5685,
+     "cache_read_input_tokens": 91341
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "14": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0771622,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 675,
+     "cache_creation_input_tokens": 5670,
+     "cache_read_input_tokens": 91311
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "15": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.07763339999999999,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 691,
+     "cache_creation_input_tokens": 5688,
+     "cache_read_input_tokens": 91347
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "16": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0778882,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 705,
+     "cache_creation_input_tokens": 5685,
+     "cache_read_input_tokens": 91341
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.078125,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 716,
+     "cache_creation_input_tokens": 5687,
+     "cache_read_input_tokens": 91345
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "18": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0775966,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 690,
+     "cache_creation_input_tokens": 5686,
+     "cache_read_input_tokens": 91343
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "19": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0762934,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 624,
+     "cache_creation_input_tokens": 5688,
+     "cache_read_input_tokens": 91347
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "20": {
+    "status": [
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.0776682,
+    "usage": {
+     "input_tokens": 10,
+     "output_tokens": 694,
+     "cache_creation_input_tokens": 5685,
+     "cache_read_input_tokens": 91341
+    },
+    "searches": [
+     "Fenwick customer newsletter announcement"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   }
+  }
+ },
+ "d2": {
+  "runs": 20,
+  "found": 4,
+  "found_A": 4,
+  "found_B": 0,
+  "searched": 20,
+  "bypass": 0,
+  "not_success": 0,
+  "models": [
+   "claude-opus-5-5"
+  ],
+  "cost_usd": 6.18,
+  "tokens": {
+   "input_tokens": 326,
+   "output_tokens": 40609,
+   "cache_creation_input_tokens": 266637,
+   "cache_read_input_tokens": 3027649
+  },
+  "per_run": {
+   "01": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.355,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 2500,
+     "cache_creation_input_tokens": 14115,
+     "cache_read_input_tokens": 151498
+    },
+    "searches": [
+     "Slack launch announcement message",
+     "Fenwick launch status update"
+    ],
+    "gets": [
+     "anthropics/slack-messaging",
+     "spike/fenwick-announcements",
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "02": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.31550979999999995,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1988,
+     "cache_creation_input_tokens": 12312,
+     "cache_read_input_tokens": 153381
+    },
+    "searches": [
+     "Fenwick launch announcement Slack status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "03": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.39774719999999997,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2015,
+     "cache_creation_input_tokens": 23792,
+     "cache_read_input_tokens": 154487
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "04": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3215452000000001,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 1779,
+     "cache_creation_input_tokens": 19611,
+     "cache_read_input_tokens": 145816
+    },
+    "searches": [
+     "Slack launch announcement message"
+    ],
+    "gets": [
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "05": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3295214,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 1994,
+     "cache_creation_input_tokens": 19738,
+     "cache_read_input_tokens": 146009
+    },
+    "searches": [
+     "Slack launch announcement message"
+    ],
+    "gets": [
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "06": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.28578600000000004,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1788,
+     "cache_creation_input_tokens": 11747,
+     "cache_read_input_tokens": 122101
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "07": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.2412436,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2154,
+     "cache_creation_input_tokens": 7819,
+     "cache_read_input_tokens": 169462
+    },
+    "searches": [
+     "Slack launch announcement update",
+     "Fenwick product communications"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "08": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.296081,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1914,
+     "cache_creation_input_tokens": 12106,
+     "cache_read_input_tokens": 122842
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "09": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.33165659999999997,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2166,
+     "cache_creation_input_tokens": 13928,
+     "cache_read_input_tokens": 186642
+    },
+    "searches": [
+     "Slack launch announcement status update",
+     "Slack post message to channel"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "10": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.30887440000000005,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 2283,
+     "cache_creation_input_tokens": 12577,
+     "cache_read_input_tokens": 153595
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "11": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3211758,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1763,
+     "cache_creation_input_tokens": 13084,
+     "cache_read_input_tokens": 154415
+    },
+    "searches": [
+     "Slack launch-comms status update message"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "12": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3198212,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2285,
+     "cache_creation_input_tokens": 12447,
+     "cache_read_input_tokens": 182440
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "13": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.313786,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 2431,
+     "cache_creation_input_tokens": 12713,
+     "cache_read_input_tokens": 153613
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "14": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3049906,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 2043,
+     "cache_creation_input_tokens": 11813,
+     "cache_read_input_tokens": 151619
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "15": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3091638,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1932,
+     "cache_creation_input_tokens": 12156,
+     "cache_read_input_tokens": 153165
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "16": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.21109139999999998,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1931,
+     "cache_creation_input_tokens": 7028,
+     "cache_read_input_tokens": 117763
+    },
+    "searches": [
+     "Slack launch announcement Fenwick"
+    ],
+    "gets": [
+     "spike/fenwick-announcements"
+    ],
+    "fit": [
+     "fenwick-announcements"
+    ],
+    "bypass": false,
+    "fit_turn": [
+     1
+    ],
+    "searched_turn": [
+     1
+    ],
+    "found": true
+   },
+   "17": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3074722,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1889,
+     "cache_creation_input_tokens": 12117,
+     "cache_read_input_tokens": 153231
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "18": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.28708300000000003,
+    "usage": {
+     "input_tokens": 14,
+     "output_tokens": 1820,
+     "cache_creation_input_tokens": 11774,
+     "cache_read_input_tokens": 122068
+    },
+    "searches": [
+     "Slack launch announcement status update"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   },
+   "19": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.3168512,
+    "usage": {
+     "input_tokens": 18,
+     "output_tokens": 2031,
+     "cache_creation_input_tokens": 13484,
+     "cache_read_input_tokens": 184891
+    },
+    "searches": [
+     "Slack launch announcement status update",
+     "Slack send message post to channel"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update",
+     "anthropics/slack-messaging"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1,
+     2
+    ],
+    "found": false
+   },
+   "20": {
+    "status": [
+     "success",
+     "success"
+    ],
+    "model": "claude-opus-5-5",
+    "cost": 0.30923120000000004,
+    "usage": {
+     "input_tokens": 16,
+     "output_tokens": 1903,
+     "cache_creation_input_tokens": 12276,
+     "cache_read_input_tokens": 148611
+    },
+    "searches": [
+     "Slack launch announcement update",
+     "status update stakeholder message writing"
+    ],
+    "gets": [
+     "anthropics/stakeholder-update"
+    ],
+    "fit": [],
+    "bypass": false,
+    "fit_turn": [],
+    "searched_turn": [
+     1
+    ],
+    "found": false
+   }
+  }
+ }
+}

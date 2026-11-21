@@ -163,7 +163,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | Status | Task | Title | Depends on |
 |---|---|---|---|
 | 🚧 | [TASK62](TASK62-finding-unassigned-skills.md) | Finding unassigned skills | TASK61 |
-| 🚧 | ↳ [TASK62.1](TASK62.1-discovery-spike.md) | Discovery spike | TASK61 |
+| ✅ | ↳ [TASK62.1](TASK62.1-discovery-spike.md) | Discovery spike | TASK61 |
 |  | ↳ [TASK62.2](TASK62.2-searchable-level-in-the-registry.md) | Searchable level in the registry | TASK61, TASK62.1 |
 |  | ↳ [TASK62.3](TASK62.3-assigning-the-searchable-level.md) | Assigning the Searchable level | TASK62.2 |
 |  | ↳ [TASK62.4](TASK62.4-searchable-delivery-readers-and-panel.md) | Searchable skills in delivery, readers and the panel | TASK62.2, TASK62.3 |

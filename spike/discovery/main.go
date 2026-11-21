@@ -52,6 +52,22 @@ func main() {
 		os.Exit(2)
 	}
 	cmd := os.Args[1]
+	if cmd == "cue" {
+		if len(os.Args) > 2 && os.Args[2] == "2" {
+			fmt.Println(searchableCue2)
+			return
+		}
+		fmt.Println(searchableCue)
+		return
+	}
+	if cmd == "embedlib" {
+		runEmbedLib(os.Args[2:])
+		return
+	}
+	if cmd == "serve" {
+		runServe(os.Args[2:])
+		return
+	}
 	fs := flag.NewFlagSet(cmd, flag.ExitOnError)
 	corpus := fs.String("corpus", "corpus.json", "skill library")
 	queries := fs.String("queries", "queries.json", "labelled queries")
