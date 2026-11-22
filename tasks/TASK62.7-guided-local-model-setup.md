@@ -33,5 +33,5 @@ The user answers one question; Quiver does the rest: it downloads the model file
 
 ## Still open for the release (TASK62.10)
 
-- The one real download of `model.safetensors` (91 MB) through `quiver engine setup` on each available system, with the result written here. Not made yet.
+- The one real download of `model.safetensors` (91 MB) through `quiver engine setup` on each available system, with the result written here. Made on macOS (Apple silicon) on 2026-11-22 in a throwaway home: both files downloaded from the pinned address, size and SHA-256 matched, the index of 256 skills was built and the check passed; a second setup found the file and downloaded nothing. Not made on Linux or Windows.
 - The decision on a second pinned URL in the project's release assets (item 4).

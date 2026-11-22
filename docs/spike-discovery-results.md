@@ -151,6 +151,24 @@ Claude Code 2.1.311, model claude-opus-5-5 in every cell, macOS. Each run is a h
 - **Spent.** 200 runs (160 planned for Claude Code plus 40 of the two cells with the changed wording): 2,180 input tokens, 1,497,404 cache-creation tokens, 20,484,618 cache-read tokens and 222,285 output tokens, which the CLI reports as USD 25.61. No retry was made.
 - **Not measured.** Every assistant other than Claude Code (TASK68.2 runs the same cells and thresholds). The earlier spikes (docs/spike-mcp-clients.md) drove Claude Code, Codex, Cursor, VS Code and Antigravity by script; Claude Desktop cannot be driven by a script and is documented as not measured.
 
+## Runs on the shipped build (TASK62.10, item 4)
+
+The three cells that decide the release, run again with the build that is released instead of the prototype: the session-start text comes from `quiver hook session-start claude-code` and the tools from `quiver mcp` (commit `9654f5c`, the shipped cue and instructions), in a throwaway Quiver home whose library is 256 skills of five sources plus the two fixture skills (258 in all), every one Searchable in every folder, so the folder lists nothing. Claude Code 2.1.323, model claude-opus-5-5 in every run, macOS, same task, same project folder and same settings flags as above. The code is `runs_shipped.py` and `mkhome_shipped.sh` in `spike/discovery/`; the per-run numbers are in `spike/discovery/results/shipped-summary.json`. The two fixture skills had unquoted colons in their descriptions, which the prototype's lenient parser accepted and Quiver's YAML parser rejects, so their descriptions are quoted now (the text is unchanged); a first pilot run with the unquoted files found nothing for that reason and was discarded.
+
+| Cell | Engine | Runs | Searched | Found | Of which fenwick / tone-ladder |
+|---|---|---|---|---|---|
+| a, primary (nothing listed) | words | 20 | 20 | **20** | 20 / 0 |
+| f, control (a plain question about the project) | words | 20 | **0** | n/a | n/a |
+| g, primary with `local` | all-MiniLM-L6-v2 fused with words | 20 | 20 | 20 | 20 / 0 |
+
+- **Threshold (16 of 20 in the primary cell): met**, 20 of 20, with the words engine alone. The prototype measured 20 of 20 with the same wording.
+- **Control: met**, 0 searches in 20 runs (limit 2).
+- **`local`** also found the skill in 20 of 20 runs. On this task the words engine already reaches the fitting skill, so the measurement does not separate the two engines.
+- No run read skill files from `~/.quiver`, none ended in an error, all 60 reached `success`.
+- **Spent:** 60 runs, about $5.00 (a $1.65, f $1.08, g $2.27), 4.4 million input tokens read from the cache, 0.2 million written, 33 thousand output tokens.
+- **Limits.** The same as above: one task, one made-up product, one model, 20 runs per cell. The cells b to e and h were not run again; the second fitting skill (`tone-ladder`) was found in none of these runs, as in cell a2.
+- **The model download.** For cell g, `quiver engine setup --yes` downloaded the 91 MB model from the real address in a throwaway home (pinned size and SHA-256 matched, index of 256 skills built, check passed), the first real run of that download on macOS (Apple silicon); a second setup found the file and downloaded nothing.
+
 ## Decisions by the rules fixed in TASK62.1, read on English queries
 
 The rules count the three fitting kinds taken together, which include the Turkish paraphrase. They are applied here to the English queries only (paraphrases A and B and the assistant-style queries, 60 in the test half), because English is the language of the library and of the assistants' searches. This is a different reading of the rules than the one fixed in TASK62.1; that task lists every deviation from its plan.

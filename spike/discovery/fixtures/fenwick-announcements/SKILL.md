@@ -1,6 +1,6 @@
 ---
 name: fenwick-announcements
-description: How to write Fenwick product announcements: structure, headline rule, voice and the words Fenwick never uses. Use for any announcement, release post or changelog entry about a Fenwick feature.
+description: "How to write Fenwick product announcements: structure, headline rule, voice and the words Fenwick never uses. Use for any announcement, release post or changelog entry about a Fenwick feature."
 ---
 
 # Fenwick announcements

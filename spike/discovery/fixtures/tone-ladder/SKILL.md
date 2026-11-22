@@ -1,6 +1,6 @@
 ---
 name: tone-ladder
-description: House voice for text that customers read: warm, short sentences, no jargon, first person plural, one clear next step at the end. Use when writing anything a customer will see, such as emails, newsletters, in-app notices and posts.
+description: "House voice for text that customers read: warm, short sentences, no jargon, first person plural, one clear next step at the end. Use when writing anything a customer will see, such as emails, newsletters, in-app notices and posts."
 ---
 
 # Tone ladder
