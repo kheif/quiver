@@ -1,0 +1,9 @@
+# Every change is reviewed by the maintainer. The release workflow and the
+# security files are listed on their own so that they stay covered if the
+# default owner list ever grows.
+*                       @kheif
+/.github/workflows/     @kheif
+/SECURITY.md            @kheif
+/docs/security.md       @kheif
+/install.sh             @kheif
+/install.ps1            @kheif

@@ -113,6 +113,7 @@ Items are ordered by priority within each section.
 - **Concern:** Release integrity and review rely on repository settings that no test sees, and the contributor files are missing.
 - **Proposal:** Tag and `main` rulesets (no force-push or deletion, required checks), a release environment, `permissions` set in every workflow, secret scanning, push protection and Dependabot alerts on, `/web` in `dependabot.yml`, an `AGENTS.md`, a `CODEOWNERS` file, a pull request template, and a release job that waits for green CI and refuses a lightweight tag.
 - **Planned 2026-11-20:** done or decided before the tag of v1.6.0 (TASK62.10); TASK71 checks that none is open.
+- **Files done 2026-11-22:** `AGENTS.md`, `.github/CODEOWNERS`, `.github/pull_request_template.md`, `/web` in `dependabot.yml`, `permissions` in every workflow (`ci.yml` was the one without), and a release job that refuses a lightweight tag and waits for green CI. **Settings still open** (the maintainer's, in the repository settings): rulesets for `main` and for `v*` tags (no force-push or deletion, required checks, no bypass), a `release` environment, secret scanning, push protection and Dependabot alerts.
 
 ### B20 — The user's own embedding model, and other languages
 - **Concern:** The local engine of TASK62 runs one model, all-MiniLM-L6-v2, which understands English only (docs/spike-discovery-results.md: Turkish queries find the fitting skill in 0 of 15 cases with it). Someone who writes skills or queries in another language, or wants a stronger model, cannot change it.

@@ -20,7 +20,7 @@ git tag -a v1.0.1 -m "v1.0.1"
 git push origin v1.0.1
 ```
 
-Tags are annotated (`-a`), like every earlier release tag. Then watch the Release workflow: `gh run watch`.
+Tags are annotated (`-a`), like every earlier release tag. The Release workflow refuses a lightweight tag, and waits for the CI run of the tagged commit and stops unless it succeeded, so tag a commit that is already on `main` and green. Then watch the Release workflow: `gh run watch`.
 
 ## The first npm release (once)
 

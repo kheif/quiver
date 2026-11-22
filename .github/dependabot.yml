@@ -25,3 +25,11 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: monthly
+    groups:
+      web:
+        patterns: ["*"]

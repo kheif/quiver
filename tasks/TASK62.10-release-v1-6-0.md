@@ -20,3 +20,11 @@
 10. **Golden home.** After the tag, the golden home of v1.6.0 is made by running the released binary through the script of TASK62.2 and committed under `testdata/formats/v1.6.0/`; TASK63.8 upgrades from it.
 
 **Done when:** the upgrade check, the measurement on the shipped build, the decision of item 8, the security check and the golden home are recorded, and the release workflow is green.
+
+## Done so far
+
+- **Measurement on the shipped build (item 4), 2026-11-22:** primary cell 20 of 20 (threshold 16), control 0 searches in 20 runs (limit 2), `local` cell 20 of 20, on Claude Code 2.1.323 with claude-opus-5-5; recorded in docs/spike-discovery-results.md. The threshold is met on the shipped build.
+- **Upgrade check (item 3):** `TestGoldenHomeV150` reads the home that the v1.5.0 binary made: the version 2 `registry.json` is read and kept as it is, a write without a Searchable skill keeps version 2, the first Searchable skill writes version 3, `doctor` is clean, there is no `state/search.json` so the engine is `words`, and after a search and a status neither `cache/embeddings.json` nor `cache/models/` exists.
+- **Security check (item 9):** `docs/security.md` works through the risks of this release with a mitigation and a test for each; the only open dependency is the address of the model file (item 8). B07 is left to TASK70, with the reason written in the file.
+- **Repository (item 7):** the files of B19 are done (`AGENTS.md`, `CODEOWNERS`, the pull request template, `/web` in `dependabot.yml`, `permissions` in every workflow, a release job that refuses a lightweight tag and waits for green CI). The repository settings of B19 are open and are the maintainer's.
+- **README and help (item 1):** every change of the phase is in the README, the help texts and the website; PROJECT.md lists v1.6 with the wording "search within your own library", distinct from "Search and a marketplace".

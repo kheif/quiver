@@ -7,6 +7,7 @@ on:
     tags: ["v*"]
 
 permissions:
+  actions: read # read the CI runs of the tagged commit
   contents: write # create the GitHub release
   id-token: write # npm trusted publishing and provenance
 
@@ -17,6 +18,40 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # GoReleaser builds the changelog from the history
+      # Every release tag is annotated (docs/releasing.md). A lightweight tag
+      # carries no message and no tagger, so it is refused.
+      - name: Refuse a lightweight tag
+        run: |
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          kind=$(git cat-file -t "refs/tags/$GITHUB_REF_NAME")
+          if [ "$kind" != "tag" ]; then
+            echo "::error::$GITHUB_REF_NAME is a $kind, not an annotated tag. Delete it and tag again with git tag -a."
+            exit 1
+          fi
+      # The release waits for the CI run of the tagged commit and stops unless
+      # it succeeded: a tag cannot publish a commit that CI did not pass.
+      - name: Wait for green CI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in $(seq 1 60); do
+            runs=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" --json status,conclusion)
+            total=$(echo "$runs" | jq length)
+            pending=$(echo "$runs" | jq '[.[] | select(.status != "completed")] | length')
+            failed=$(echo "$runs" | jq '[.[] | select(.status == "completed" and .conclusion != "success")] | length')
+            if [ "$failed" -gt 0 ]; then
+              echo "::error::The CI run of $GITHUB_SHA did not succeed."
+              exit 1
+            fi
+            if [ "$total" -gt 0 ] && [ "$pending" -eq 0 ]; then
+              echo "CI is green for $GITHUB_SHA."
+              exit 0
+            fi
+            echo "Waiting for CI of $GITHUB_SHA ($total runs, $pending pending)..."
+            sleep 30
+          done
+          echo "::error::No finished CI run for $GITHUB_SHA after 30 minutes."
+          exit 1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           # The latest Go with security fixes; go.mod's go line is only the minimum.
