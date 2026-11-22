@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -143,5 +144,21 @@ func TestGoldenHomeV150(t *testing.T) {
 	}
 	if out := quiver(t, "doctor"); !strings.HasSuffix(out, "\nEverything is fine.\n") || strings.Contains(out, "warn") {
 		t.Errorf("doctor after the upgrade:\n%s", out)
+	}
+
+	// No search settings file: the engine is words, and a search, a status and a
+	// doctor create neither the index nor a model folder.
+	if _, err := os.Stat(filepath.Join(home, "state", "search.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("search.json exists after the upgrade: %v", err)
+	}
+	if out := quiver(t, "engine"); out != "Search engine: words\n" {
+		t.Errorf("engine: %q", out)
+	}
+	quiver(t, "search", "notes")
+	quiver(t, "status")
+	for _, p := range []string{"embeddings.json", "models"} {
+		if _, err := os.Stat(filepath.Join(home, "cache", p)); !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("cache/%s exists although the local engine was never used: %v", p, err)
+		}
 	}
 }

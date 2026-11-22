@@ -251,6 +251,12 @@ quiver doctor                       # Check the library and fix problems
 - Interactive panel with sections for skills, projects and sources
 - Background update checks with notices
 
+**v1.6: Finding skills in your own library**
+- A *Searchable* level between *Not assigned* and *On demand*: the skill is not listed at session start, the assistant finds it with `search_skills` and loads it without asking; a short cue tells the assistant when to look
+- A ranked word search, and an optional `local` engine that also searches by meaning with a small model that runs inside Quiver (`quiver engine setup` downloads it once)
+- `quiver new` and `quiver import` make the skills you write Searchable; `quiver status` shows what the listing costs at session start
+- This is search within the skills you already have in your library and sources, not a place where people publish and find skills; that remains under "Search and a marketplace"
+
 **Test phase** (before the enterprise track)
 - End-to-end user journeys, Windows without skipped tests, versioned data formats with migration tests
 - A benchmark of assistant behaviour, run before every release
