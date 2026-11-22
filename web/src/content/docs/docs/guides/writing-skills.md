@@ -14,6 +14,10 @@ quiver new release-notes
 
 `quiver new` creates `~/.quiver/local/release-notes/SKILL.md`, opens it in `$VISUAL` or `$EDITOR`, then checks and commits it. By default the skill is made Searchable in the project of the current folder: a skill you write is your own, so it is not listed at session start, and the assistant finds it by searching. `quiver add release-notes` lists it instead, or `--always` loads it in full.
 
+:::note[Next release]
+Making new skills Searchable ships after v1.5.0. In v1.5.0 `quiver new` assigns the skill on demand, and it is listed.
+:::
+
 | Flag | Effect |
 | --- | --- |
 | `--global` | Make it Searchable in every folder instead. |
