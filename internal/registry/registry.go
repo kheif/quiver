@@ -13,8 +13,13 @@ import (
 )
 
 // CurrentVersion is the newest registry.json version this binary understands.
-// Version 1 kept each project's paths in registry.json.
-const CurrentVersion = 2
+// Version 1 kept each project's paths in registry.json. Version 3 added the
+// searchable lists. Write only uses it when a searchable list is not empty,
+// so a registry without Searchable skills stays readable by v1.5.
+const CurrentVersion = 3
+
+// baseVersion is the version written when no searchable list is used.
+const baseVersion = 2
 
 // StateFile holds each project's paths on this machine, relative to the
 // Quiver home.
@@ -25,10 +30,14 @@ const stateVersion = 1
 
 // Registry is the content of registry.json.
 type Registry struct {
-	Version  int                 `json:"version"`
-	Global   []string            `json:"global"`
-	AlwaysOn []string            `json:"alwaysOn"`
-	Projects map[string]*Project `json:"projects"`
+	Version  int      `json:"version"`
+	Global   []string `json:"global"`
+	AlwaysOn []string `json:"alwaysOn"`
+	// Searchable lists the skills that are in no list at session start and
+	// that the assistant finds by searching. A skill is in this list or in
+	// Global, never in both.
+	Searchable []string            `json:"searchable,omitempty"`
+	Projects   map[string]*Project `json:"projects"`
 }
 
 // Project is one project's entry, keyed by the ID in its .quiver.json.
@@ -39,12 +48,15 @@ type Project struct {
 	Paths    []string `json:"-"`
 	Skills   []string `json:"skills"`
 	AlwaysOn []string `json:"alwaysOn,omitempty"`
+	// Searchable is the project's searchable list; a skill is in it or in
+	// Skills, never in both.
+	Searchable []string `json:"searchable,omitempty"`
 }
 
 // Default returns the registry used when registry.json does not exist.
 func Default() *Registry {
 	return &Registry{
-		Version:  CurrentVersion,
+		Version:  baseVersion,
 		Global:   []string{},
 		AlwaysOn: []string{},
 		Projects: map[string]*Project{},
@@ -181,8 +193,22 @@ func Write(r *Registry) error {
 	if err := fsutil.WriteJSONAtomic(statePath, s); err != nil {
 		return err
 	}
-	r.Version = CurrentVersion
+	r.Version = r.writeVersion()
 	return fsutil.WriteJSONAtomic(path, r)
+}
+
+// writeVersion is the version r is written with: 3 when any searchable list
+// is not empty, 2 otherwise.
+func (r *Registry) writeVersion() int {
+	if len(r.Searchable) > 0 {
+		return CurrentVersion
+	}
+	for _, p := range r.Projects {
+		if len(p.Searchable) > 0 {
+			return CurrentVersion
+		}
+	}
+	return baseVersion
 }
 
 func (r *Registry) check(path string) error {
@@ -201,10 +227,12 @@ func (r *Registry) check(path string) error {
 }
 
 // normalize replaces nil lists with empty ones and sorts every list, so the
-// file is stable and diffs stay small.
+// file is stable and diffs stay small. A skill that is both served and
+// Searchable in a scope keeps its served level.
 func (r *Registry) normalize() {
 	r.Global = sortedSet(r.Global)
 	r.AlwaysOn = sortedSet(r.AlwaysOn)
+	r.Searchable = searchableOnly(r.Searchable, r.Global)
 	if r.Projects == nil {
 		r.Projects = map[string]*Project{}
 	}
@@ -214,5 +242,16 @@ func (r *Registry) normalize() {
 		if len(p.AlwaysOn) > 0 {
 			p.AlwaysOn = sortedSet(p.AlwaysOn)
 		}
+		p.Searchable = searchableOnly(p.Searchable, p.Skills)
 	}
+}
+
+// searchableOnly returns the sorted searchable entries that are not in
+// served, and nil when none is left, so an empty list is not written.
+func searchableOnly(searchable, served []string) []string {
+	out := without(sortedSet(searchable), served...)
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }

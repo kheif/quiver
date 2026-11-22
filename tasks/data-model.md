@@ -29,14 +29,15 @@ Assignments: which skills are global, and which projects get which skills.
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "global": ["caveman/caveman", "commit-rules", "anthropic/pdf"],
   "alwaysOn": ["caveman/caveman"],
   "projects": {
     "app-k3f9q2": {
       "name": "app",
       "skills": ["db-migration", "hga-expert"],
-      "alwaysOn": []
+      "alwaysOn": [],
+      "searchable": ["release-notes"]
     },
     "tool-8xw2mf": {
       "name": "tool",
@@ -48,7 +49,9 @@ Assignments: which skills are global, and which projects get which skills.
 
 `alwaysOn` lists skills that apply from the first message. The MCP server's `instructions` name them and tell the assistant to load them with `get_skill` before its first reply. Every ID in an `alwaysOn` list must also be in the matching `global` or `skills` list.
 
-The file holds only data that is the same on every machine, so it can be synced as it is. Version 1 also kept each project's `paths`. Quiver still reads version 1, and the first write moves the paths into `state/projects.json` and saves version 2. An older Quiver stops on version 2 with "update quiver".
+`searchable` (next to `global`, and in each project next to `skills`; omitted when empty) lists the skills that are not listed and not loaded at session start, and that the assistant finds by searching. A skill is in at most one of the two lists of a scope, `searchable` or `global`/`skills`. A file that has it in both, which a merge of two machines can produce, is normalised when it is read and when it is merged: the skill keeps its most served level (always on, then listed, then Searchable). Across the global and the project scope, the level of a skill in a folder is its most served level in either.
+
+The file holds only data that is the same on every machine, so it can be synced as it is. Version 1 also kept each project's `paths`. Quiver still reads version 1, and the first write moves the paths into `state/projects.json` and saves version 2. Version 3 adds the `searchable` lists. It is written only while a `searchable` list is not empty, so a registry without Searchable skills stays at version 2 and v1.5 reads it. An older Quiver stops on a version it does not know with "update quiver"; `quiver sync` ignores the version when it merges two files and writes the one its content needs.
 
 ## `~/.quiver/state/`
 

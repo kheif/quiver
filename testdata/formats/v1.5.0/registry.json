@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "global": [
+    "acme/one",
+    "notes"
+  ],
+  "alwaysOn": [
+    "notes"
+  ],
+  "projects": {
+    "app-3dgtfx": {
+      "name": "app",
+      "skills": [
+        "acme/two",
+        "deploy"
+      ],
+      "alwaysOn": [
+        "deploy"
+      ]
+    }
+  }
+}

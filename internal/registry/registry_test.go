@@ -80,7 +80,7 @@ func TestUpdateErrorWritesNothing(t *testing.T) {
 
 func TestLoadRejectsBadFile(t *testing.T) {
 	cases := map[string]struct{ content, want string }{
-		"newer version": {`{"version": 3}`, "update quiver"},
+		"newer version": {`{"version": 4}`, "update quiver"},
 		"zero version":  {`{"version": 0}`, "invalid version 0"},
 		"null project":  {`{"version": 1, "projects": {"a": null}}`, `project "a" is null`},
 		"bad json":      {`{`, "decode"},

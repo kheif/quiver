@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "sources": {
+    "acme": {
+      "repo": "https://example.invalid/acme.git",
+      "ids": {
+        "one": "one",
+        "two": "two"
+      }
+    }
+  }
+}

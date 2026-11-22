@@ -186,7 +186,7 @@ var ErrWorktree = errors.New("the other folders with this project's ID are workt
 
 // SplitProject gives the project that dir is in a new ID, for a folder that
 // was copied with its .quiver.json. The new project starts with the old
-// one's skills and always-on marks; after that the two are independent.
+// one's skills, always-on marks and Searchable skills; after that the two are independent.
 func SplitProject(dir string) (oldID string, p *project.Project, err error) {
 	err = fsutil.WithLock(func() error {
 		r, err := Load()
@@ -212,10 +212,11 @@ func SplitProject(dir string) (oldID string, p *project.Project, err error) {
 		}
 		newID := project.NewID(filepath.Base(p.Root))
 		r.Projects[newID] = &Project{
-			Name:     filepath.Base(p.Root),
-			Paths:    []string{p.Root},
-			Skills:   slices.Clone(old.Skills),
-			AlwaysOn: slices.Clone(old.AlwaysOn),
+			Name:       filepath.Base(p.Root),
+			Paths:      []string{p.Root},
+			Skills:     slices.Clone(old.Skills),
+			AlwaysOn:   slices.Clone(old.AlwaysOn),
+			Searchable: slices.Clone(old.Searchable),
 		}
 		old.Paths = slices.DeleteFunc(old.Paths, func(path string) bool { return samePath(path, p.Root) })
 		if err := project.SetID(p.Root, newID); err != nil {

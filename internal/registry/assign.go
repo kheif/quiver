@@ -14,33 +14,64 @@ func (r *Registry) Assign(projectID string, ids ...string) error {
 		return fmt.Errorf("unknown project %q", projectID)
 	}
 	p.Skills = sortedSet(append(p.Skills, ids...))
+	p.Searchable = searchableOnly(p.Searchable, p.Skills)
 	return nil
 }
 
+// AssignSearchable makes the skills Searchable in the project. A skill that
+// the project served before moves: it loses its place in Skills and its
+// always-on mark.
+func (r *Registry) AssignSearchable(projectID string, ids ...string) error {
+	p, ok := r.Projects[projectID]
+	if !ok {
+		return fmt.Errorf("unknown project %q", projectID)
+	}
+	p.Skills = without(p.Skills, ids...)
+	p.AlwaysOn = without(p.AlwaysOn, ids...)
+	p.Searchable = searchableOnly(append(p.Searchable, ids...), p.Skills)
+	return nil
+}
+
+// AssignSearchableGlobal makes the skills Searchable in every folder. A
+// skill that was global moves, like in AssignSearchable.
+func (r *Registry) AssignSearchableGlobal(ids ...string) {
+	r.Global = without(r.Global, ids...)
+	r.AlwaysOn = without(r.AlwaysOn, ids...)
+	r.Searchable = searchableOnly(append(r.Searchable, ids...), r.Global)
+}
+
 // Unassign takes the skills away from the project, including their
-// always-on mark. It returns the IDs that were not assigned.
+// always-on mark and their Searchable level. It returns the IDs that were
+// neither served nor Searchable in the project.
 func (r *Registry) Unassign(projectID string, ids ...string) (notAssigned []string, err error) {
 	p, ok := r.Projects[projectID]
 	if !ok {
 		return nil, fmt.Errorf("unknown project %q", projectID)
 	}
-	notAssigned = missing(p.Skills, ids...)
+	notAssigned = missing(append(slices.Clone(p.Skills), p.Searchable...), ids...)
 	p.Skills = without(p.Skills, ids...)
 	p.AlwaysOn = without(p.AlwaysOn, ids...)
+	p.Searchable = searchableOnly(p.Searchable, append(slices.Clone(p.Skills), ids...))
 	return notAssigned, nil
 }
 
 // AssignGlobal makes the skills available in every folder.
 func (r *Registry) AssignGlobal(ids ...string) {
 	r.Global = sortedSet(append(r.Global, ids...))
+	r.Searchable = searchableOnly(r.Searchable, r.Global)
 }
 
-// UnassignGlobal removes global skills, including their always-on mark. It
-// returns the IDs that were not global.
+// UnassignGlobal removes global skills, including their always-on mark and
+// their Searchable level. It returns the IDs that were neither global nor
+// Searchable everywhere.
 func (r *Registry) UnassignGlobal(ids ...string) (notAssigned []string) {
-	notAssigned = missing(r.Global, ids...)
+	notAssigned = missing(append(slices.Clone(r.Global), r.Searchable...), ids...)
 	r.Global = without(r.Global, ids...)
 	r.AlwaysOn = without(r.AlwaysOn, ids...)
+	r.Searchable = without(r.Searchable, ids...)
+	if len(r.Searchable) == 0 {
+		r.Searchable = nil
+	}
 	return notAssigned
 }
 
@@ -98,9 +129,16 @@ func (r *Registry) Replace(oldID, newID string) {
 		return sortedSet(append(without(ids, oldID), newID))
 	}
 	r.Global, r.AlwaysOn = swap(r.Global), swap(r.AlwaysOn)
+	if len(r.Searchable) > 0 {
+		r.Searchable = swap(r.Searchable)
+	}
 	for _, p := range r.Projects {
 		p.Skills, p.AlwaysOn = swap(p.Skills), swap(p.AlwaysOn)
+		if len(p.Searchable) > 0 {
+			p.Searchable = swap(p.Searchable)
+		}
 	}
+	r.normalize()
 }
 
 // AlwaysOnServed returns the always-on skills served in the project: the
@@ -151,4 +189,42 @@ func (r *Registry) ProjectsUsing(skillID string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// Level is how a skill is assigned in a folder.
+type Level int
+
+const (
+	// NotAssigned: the skill is in no list of the global or project scope.
+	NotAssigned Level = iota
+	// Searchable: not listed at session start; the assistant finds it by
+	// searching.
+	Searchable
+	// OnDemand: listed at session start and loaded when it fits.
+	OnDemand
+	// AlwaysOn: loaded in full at session start.
+	AlwaysOn
+)
+
+// LevelIn returns the level of the skill in the project's folder: its most
+// served level across the global and the project scope. An unknown or
+// empty projectID looks at the global scope only.
+func (r *Registry) LevelIn(projectID, skillID string) Level {
+	level := scopeLevel(skillID, r.Global, r.AlwaysOn, r.Searchable)
+	if p, ok := r.Projects[projectID]; ok {
+		level = max(level, scopeLevel(skillID, p.Skills, p.AlwaysOn, p.Searchable))
+	}
+	return level
+}
+
+func scopeLevel(id string, served, always, searchable []string) Level {
+	switch {
+	case slices.Contains(served, id) && slices.Contains(always, id):
+		return AlwaysOn
+	case slices.Contains(served, id):
+		return OnDemand
+	case slices.Contains(searchable, id):
+		return Searchable
+	}
+	return NotAssigned
 }
