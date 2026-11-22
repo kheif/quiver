@@ -81,11 +81,37 @@ type built struct {
 // built, counted and written once however many projects use it.
 type textCache map[string]*built
 
+// CatalogLine is the line of a skill in the catalog of the session-start
+// text. It reads no file.
+func CatalogLine(sk *skill.Skill) string {
+	return fmt.Sprintf("- %s: %s\n", oneLine(sk.ID), shorten(sk.Description))
+}
+
+// CatalogChars is the number of characters of the catalog lines of the
+// skills, the figure that quiver status reports and BuildSessionContext
+// spends. It reads no file.
+func CatalogChars(skills []*skill.Skill) int {
+	n := 0
+	for _, sk := range skills {
+		n += utf8.RuneCountInString(CatalogLine(sk))
+	}
+	return n
+}
+
+// line returns the catalog line of the skill without building its text, so a
+// skill that is only listed is never read.
+func (c textCache) line(sk *skill.Skill) string {
+	if b, ok := c[sk.ID]; ok {
+		return b.line
+	}
+	return CatalogLine(sk)
+}
+
 func (c textCache) get(sk *skill.Skill) *built {
 	if b, ok := c[sk.ID]; ok {
 		return b
 	}
-	b := &built{line: fmt.Sprintf("- %s: %s\n", oneLine(sk.ID), shorten(sk.Description))}
+	b := &built{line: CatalogLine(sk)}
 	b.text, b.err = skillText(sk)
 	c[sk.ID] = b
 	return b
@@ -207,7 +233,7 @@ func buildSessionContext(r *registry.Registry, l *library.Library, projectID str
 			problems = append(problems, problem(l, id, nil))
 			continue
 		}
-		lines = append(lines, unit{skillsTag, cache.get(sk).line, 0, false})
+		lines = append(lines, unit{skillsTag, cache.line(sk), 0, false})
 	}
 	if len(lines) > 0 {
 		units = append(units, unit{skillsTag, skillsIntro, 0, false})

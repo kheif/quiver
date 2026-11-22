@@ -723,6 +723,8 @@ Show the project in this folder and the skills the MCP server serves here.
 
 Like the server, it uses $QUIVER\_PROJECT instead of the current folder when it is set.
 
+One line says what the assignments cost at the start of a session: how many skills are listed, the size of the listing in characters and in estimated tokens (characters divided by four), the always-on skills counted apart, and how many skills are Searchable, which add nothing. With -v it lists the ten listed skills with the longest descriptions and the command that makes each one Searchable. The numbers inform; nothing is refused or trimmed.
+
 ```sh
 quiver status [flags]
 ```
@@ -735,6 +737,7 @@ quiver status [flags]
 
 ```sh
 quiver status
+quiver status -v
 QUIVER_PROJECT=~/code/api quiver status
 quiver status --json
 ```

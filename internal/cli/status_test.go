@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -35,7 +36,7 @@ func TestStatusGolden(t *testing.T) {
 			t.Chdir(c.dir)
 			t.Setenv(server.ProjectEnv, c.env)
 			t.Setenv("PATH", t.TempDir()) // no assistant installed, so the golden is stable
-			golden(t, c.name, f.run(t, "status"))
+			golden(t, c.name, stableCost(f.run(t, "status")))
 		})
 	}
 }
@@ -45,7 +46,7 @@ func TestStatusPossibleCopy(t *testing.T) {
 	cp := projectDir(t, "app-copy", "app-000001")
 	t.Chdir(cp)
 	t.Setenv("PATH", t.TempDir()) // no assistant installed, so the golden is stable
-	golden(t, "status-copy", f.run(t, "status"))
+	golden(t, "status-copy", stableCost(f.run(t, "status")))
 	// status only reports; the registry keeps the one known path.
 	if p := loadRegistry(t).Projects["app-000001"]; len(p.Paths) != 1 {
 		t.Errorf("paths = %v", p.Paths)
@@ -146,6 +147,13 @@ func TestStatusJSON(t *testing.T) {
 	}
 	// f.run writes temp paths as <tmp>.
 	want.Folder, want.Project.Root = got.Folder, got.Project.Root
+	// The always-on text names the folder of its skill, so its size depends on
+	// the temporary folder; the rest of the figures is fixed.
+	c := got.Catalog
+	if c.Listed != 2 || c.AlwaysOn != 1 || c.Searchable != 0 || c.ListedChars != 137 || c.ListedTokens != 35 || c.AlwaysOnChars == 0 || c.AlwaysOnTokens != (c.AlwaysOnChars+3)/4 {
+		t.Errorf("catalog %+v", c)
+	}
+	want.Catalog = c
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got  %+v\nwant %+v", got, want)
 	}
@@ -162,4 +170,12 @@ func TestStatusJSON(t *testing.T) {
       "in_library": false`) {
 		t.Errorf("outside a project:\n%s", out)
 	}
+}
+
+// alwaysOnSize is the size of the always-on text, which names the folder of
+// each skill, so it depends on the length of the temporary folder.
+var alwaysOnSize = regexp.MustCompile(`loaded in full: \d+ characters \(about \d+ tokens\)`)
+
+func stableCost(out string) string {
+	return alwaysOnSize.ReplaceAllString(out, "loaded in full: N characters (about N tokens)")
 }

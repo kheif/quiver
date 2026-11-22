@@ -129,12 +129,23 @@ type Data struct {
 	Project *Project
 	// Opened is the name of the project of the folder quiver was started in,
 	// or "" outside a project.
-	Opened   string
+	Opened string
+	// Cost is what the managed project's assignments (and the global ones)
+	// cost at the start of a session, as quiver status reports it.
+	Cost     Cost
 	Skills   []Skill
 	Projects []Project
 	Sources  []Source
 	// Version and Home are shown in the help.
 	Version, Home string
+}
+
+// Cost is the price of the assignments of a folder at session start.
+// Searchable skills add nothing to the listing.
+type Cost struct {
+	Listed, ListedChars, ListedTokens int
+	AlwaysOn, AlwaysOnChars           int
+	Searchable                        int
 }
 
 // Details is the file of a skill.

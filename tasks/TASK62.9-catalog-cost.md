@@ -4,7 +4,7 @@
 
 **Part of:** [TASK62](TASK62-finding-unassigned-skills.md): Finding unassigned skills
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK58.1, TASK62.4, TASK62.5
 
@@ -18,3 +18,10 @@ Make the price of an assignment visible, so a skill that is rarely needed can mo
 6. **Hint after the upgrade.** `search_skills` finds only Searchable skills (TASK62.5), where v1.5 searched the whole library. While the library holds skills that are at no level in this folder and the folder has no Searchable skill at all, `quiver status` adds one line: how many skills of the library the assistant's search does not find, and `quiver add --source <name> --searchable --global` (or `quiver add <id> --searchable`) to change that, naming the source with the most of them. The line goes away when the first Searchable skill exists. It is text only, not in `--json`, and refuses nothing.
 
 **Done when:** tests cover an empty folder, a folder with global and project assignments, always-on skills counted apart, the figure equal to the length of the lines of the same skill set, the `--json` fields, `-v` with fewer and with more than ten skills, the panel header for a project in another folder, the panel detail text for a *Searchable* skill, and the hint (shown for a library with skills at no level and no Searchable skill, gone after the first Searchable skill, absent from `--json`, naming the largest source). An end-to-end test (TASK30) runs `status` and `status -v` through the binary.
+
+## Built
+
+- `server.CatalogLine`, `server.CatalogChars` and `server.Cost` (`internal/server/cost.go`): the catalog line is made without building the skill's text, so a listed skill is never read; `BuildSessionContext` takes its lines from the same function. The always-on size is the size of its units before the split. Tokens are the characters divided by four, rounded up, and labelled an estimate.
+- `quiver status` prints one line (and `--json` the `catalog` object); `-v` lists the ten longest listed entries with `quiver add <id> --searchable` (`--global` for a global skill); the hint for a library that search does not find is text only.
+- The panel's Skills header shows the listed count (and the estimate when there is room) for the managed project, from `Data.Cost`, and the detail of a Searchable skill says it costs nothing in the listing.
+- The size of the always-on text includes the folder of each skill, so it depends on the length of the path; the golden files of `status` replace that figure.

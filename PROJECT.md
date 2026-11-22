@@ -190,7 +190,7 @@ quiver fork <source/skill> [--as <name>]  # Copy a source skill into local/ to c
 # Assignments (current project unless --project is given)
 quiver add <skill>... [--global] [--always]    # Assign to this project or globally; --always loads it every session
 quiver remove <skill>... [--global] [--always] # Unassign (the skill stays in the library); --always removes only the mark
-quiver status                       # What the MCP server serves in this project
+quiver status [-v]                 # What the MCP server serves in this project, and what it costs at session start
 quiver where <skill>                # Which projects use this skill
 quiver projects                     # List projects; rename, forget or split them
 

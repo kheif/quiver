@@ -398,7 +398,7 @@ func (m Model) listPane(w, h int) []string {
 
 	var out []string
 	if m.roomy() {
-		out = append(out, spread(bold.Render(what), faint.Render(m.countText()), w), m.viewsLine(w), m.searchLine(w, false), rule(w), "")
+		out = append(out, spread(bold.Render(what), faint.Render(m.countTextIn(w-ansi.StringWidth(what)-2)), w), m.viewsLine(w), m.searchLine(w, false), rule(w), "")
 	} else {
 		out = append(out, m.viewsLine(w), m.searchLine(w, true))
 	}
@@ -416,6 +416,26 @@ func (m Model) scopeHeader() string {
 	return "ASSIGNED"
 }
 
+// countTextIn is countText, or less of it when the whole does not fit in room
+// columns: the cost of the listing in tokens goes first, then the count of
+// listed skills.
+func (m Model) countTextIn(room int) string {
+	full := m.countText()
+	for {
+		if ansi.StringWidth(full) <= room {
+			return full
+		}
+		i := strings.LastIndex(full, ", ")
+		if j := strings.LastIndex(full, " · "); i < 0 || j > i {
+			i = j
+		}
+		if i < 0 {
+			return full
+		}
+		full = full[:i]
+	}
+}
+
 // countText is what the title line says about the results.
 func (m Model) countText() string {
 	switch m.sec {
@@ -426,7 +446,8 @@ func (m Model) countText() string {
 	case secHealth:
 		return fmt.Sprintf("%d checks", len(m.health))
 	}
-	return fmt.Sprintf("%d in library", len(m.data.Skills))
+	c := m.data.Cost
+	return fmt.Sprintf("%d in library · %d listed, about %d tokens", len(m.data.Skills), c.Listed, c.ListedTokens)
 }
 
 // viewsLine shows the views of the section with their result counts; the
@@ -1006,6 +1027,9 @@ func (m Model) menuLines(indent string, inner int) []string {
 	return append(out, indent+accentBold.Render("╰"+strings.Repeat("─", inner)+"╯"))
 }
 
+// searchableCostNote is said in the detail of a Searchable skill.
+const searchableCostNote = "Searchable: costs nothing in the session listing; the assistant finds it by search."
+
 func (m Model) skillDetail(w, h int) []string {
 	s, ok := m.selectedSkill()
 	if !ok {
@@ -1030,6 +1054,9 @@ func (m Model) skillDetail(w, h int) []string {
 		if !s.Local {
 			notes = append(notes, "f forks it into a local copy you can edit")
 		}
+		if s.GlobalSearchable || s.ProjectSearchable {
+			notes = append(notes, searchableCostNote)
+		}
 		if names := m.elsewhere(s); len(names) > 0 {
 			notes = append(notes, "also used in "+usedText(names))
 		}
@@ -1044,6 +1071,9 @@ func (m Model) skillDetail(w, h int) []string {
 		}
 		if !s.Local {
 			out = append(out, faint.Render(clip("f forks it into a local copy you can edit", w)))
+		}
+		if s.GlobalSearchable || s.ProjectSearchable {
+			out = append(out, strings.Split(faint.Render(wrap(searchableCostNote, w)), "\n")...)
 		}
 		if names := m.elsewhere(s); len(names) > 0 {
 			out = append(out, faint.Render(clip("Also used in "+usedText(names), w)))

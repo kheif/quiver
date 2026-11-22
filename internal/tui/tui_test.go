@@ -120,6 +120,18 @@ func (f *fake) Load(projectID string) (Data, error) {
 			}
 		}
 		d.Skills = append(d.Skills, s)
+		// The cost of the scope: a listed skill is 40 characters, one token in
+		// four, as the real count would give.
+		switch {
+		case s.GlobalSearchable || s.ProjectSearchable:
+			d.Cost.Searchable++
+		case s.GlobalAlways || s.ProjectAlways:
+			d.Cost.AlwaysOn++
+		case s.Global || s.Project:
+			d.Cost.Listed++
+			d.Cost.ListedChars += 40
+			d.Cost.ListedTokens += 10
+		}
 	}
 	return d, nil
 }
@@ -1505,4 +1517,34 @@ func TestImportConfirmsBeforeItMovesFiles(t *testing.T) {
 		t.Errorf("calls %q", f.callList())
 	}
 	contains(t, m, "✓ Imported 2 skills.")
+}
+
+// The header of the Skills section says what the managed project's
+// assignments add to the start of a session, also for a project that is not
+// the one of the folder.
+func TestSkillsHeaderShowsTheCostOfTheManagedProject(t *testing.T) {
+	f := fixture()
+	m := start(t, f)
+	contains(t, m, "5 in library · 2 listed")
+	// With room, the estimate of the tokens follows.
+	contains(t, startSized(t, fixture(), 180, 40), "5 in library · 2 listed, about 20 tokens")
+
+	// The project api is in another folder: it has no assignment of its own,
+	// so only the global demo is listed.
+	m = goTo(t, keys(t, m, "2"), "api-1")
+	m = keys(t, m, "m")
+	if m.data.Project.Name != "api" {
+		t.Fatalf("managing %s", m.data.Project.Name)
+	}
+	contains(t, m, "5 in library · 1 listed")
+}
+
+func TestSearchableSkillSaysItCostsNothingInTheListing(t *testing.T) {
+	f := fixture()
+	f.glob["pdf"] = Searchable
+	m := goTo(t, start(t, f), "pdf")
+	contains(t, m, "costs nothing in the session listing", "finds it by search")
+	// A listed skill does not say it.
+	m = goTo(t, start(t, f), "demo")
+	lacks(t, m, "costs nothing in the session listing")
 }

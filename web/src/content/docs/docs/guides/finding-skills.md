@@ -60,6 +60,12 @@ quiver status       # the Searchable skills of this folder
 
 `quiver list --unassigned` leaves Searchable skills out, because they are assigned. `quiver update` previews changes to a Searchable skill like those of any assigned skill, and `quiver sync` lists skills that another machine made Searchable before it pulls them.
 
+## What a listing costs
+
+Every listed skill adds a line (its ID and description) to the text that starts each session. `quiver status` says how much: how many skills are listed, the size of the listing in characters and in estimated tokens (characters divided by four), the always-on skills counted apart because their whole text is loaded, and how many skills are Searchable, which add nothing. `quiver status -v` lists the ten listed skills with the longest descriptions, each with the command that makes it Searchable. The panel's Skills header shows the same count for the project it manages, and the detail of a Searchable skill says that it costs nothing in the listing. The numbers inform; Quiver never refuses an assignment or trims the listing.
+
+When the library has skills that are at no level in a folder and the folder has no Searchable skill, `quiver status` adds a line: `search_skills` finds only Searchable skills, where v1.5 searched the whole library, so those skills are not found. It names the source with the most of them and the command that makes them Searchable. The line goes away with the first Searchable skill.
+
 ## The search engine
 
 `quiver engine` shows the engine that `quiver search`, `search_skills` and the panel use, and `quiver engine use <engine>` writes the choice to `state/search.json`, a file of this machine that is never synced. `quiver search --engine words <text>` uses an engine for one search only.

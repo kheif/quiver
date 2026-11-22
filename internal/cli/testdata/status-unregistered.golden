@@ -5,4 +5,7 @@ Served in every folder:
   acme/review  global
   pdf          global  always-on
 
+Session start: 1 skill listed, 27 characters (about 7 tokens, an estimate); 1 always-on, loaded in full: N characters (about N tokens); 0 Searchable, which add nothing to the listing.
+
 Search engine: words
+Search finds only Searchable skills: 3 skills of the library are at no level here, so the assistant's search does not find them (1 of them in source acme). Make them findable with: quiver add --source acme --searchable --global (or quiver add <id> --searchable)

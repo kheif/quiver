@@ -404,3 +404,32 @@ func TestHookPassesTheSearchCue(t *testing.T) {
 		t.Errorf("a cue without a Searchable skill:\n%s", out)
 	}
 }
+
+// quiver status through the binary: what the listing costs, the longest
+// entries with -v, and the hint for a library that search does not find.
+func TestStatusCatalogCost(t *testing.T) {
+	e := newEnv(t)
+	app := e.dir("app")
+	e.write(filepath.Join(e.qhome, "local"), map[string]string{
+		"deploy-check/SKILL.md": skillMD("deploy-check", "Check a deploy before it goes out.", "Check."),
+		"slack-style/SKILL.md":  skillMD("slack-style", "How to write a Slack message.", "Style."),
+		"notes/SKILL.md":        skillMD("notes", "Keep notes.", "Notes."),
+	})
+
+	out := e.quiver(app, "status")
+	mustContain(t, "status", out, "Session start: 0 skills listed, 0 characters", "0 Searchable",
+		"Search finds only Searchable skills: 3 skills of the library are at no level here", "quiver add <id> --searchable")
+
+	e.quiver(app, "add", "deploy-check", "slack-style", "--global")
+	e.quiver(app, "add", "notes", "--searchable", "--global")
+	out = e.quiver(app, "status")
+	mustContain(t, "status", out, "Session start: 2 skills listed,", "an estimate", "1 Searchable, which add nothing to the listing.")
+	mustNotContain(t, "status", out, "Search finds only", "Longest listed entries")
+
+	out = e.quiver(app, "status", "-v")
+	mustContain(t, "status -v", out, "Longest listed entries", "quiver add deploy-check --searchable --global", "quiver add slack-style --searchable --global")
+
+	got := e.quiver(app, "status", "--json")
+	mustContain(t, "status --json", got, `"listed": 2`, `"listed_chars":`, `"listed_tokens_estimate":`, `"always_on": 0`, `"searchable": 1`)
+	mustNotContain(t, "status --json", got, "Search finds only")
+}

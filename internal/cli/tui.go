@@ -132,6 +132,11 @@ func (b *tuiBackend) Load(projectID string) (tui.Data, error) {
 		d.Opened = filepath.Base(w.Project.Root)
 	}
 
+	cost := server.Cost(r, l, scope)
+	d.Cost = tui.Cost{
+		Listed: cost.Listed, ListedChars: cost.ListedChars, ListedTokens: cost.ListedTokens,
+		AlwaysOn: cost.AlwaysOn, AlwaysOnChars: cost.AlwaysOnChars, Searchable: cost.Searchable,
+	}
 	for _, s := range l.All() {
 		ts := tui.Skill{
 			ID: s.ID, Name: s.Name, Source: s.Source, Description: s.Description,

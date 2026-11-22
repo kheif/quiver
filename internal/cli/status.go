@@ -5,6 +5,7 @@ import (
 	"io"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/registry"
@@ -20,14 +21,23 @@ func newStatusCmd() *cobra.Command {
 		Long: `Show the project in this folder and the skills the MCP server serves here.
 
 Like the server, it uses $` + server.ProjectEnv + ` instead of the current
-folder when it is set.`,
+folder when it is set.
+
+One line says what the assignments cost at the start of a session: how
+many skills are listed, the size of the listing in characters and in
+estimated tokens (characters divided by four), the always-on skills counted
+apart, and how many skills are Searchable, which add nothing. With -v it
+lists the ten listed skills with the longest descriptions and the command
+that makes each one Searchable. The numbers inform; nothing is refused or
+trimmed.`,
 		Example: `  quiver status
+  quiver status -v
   QUIVER_PROJECT=~/code/api quiver status
   quiver status --json`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return status(cmd.OutOrStdout(), asJSON)
+			return status(cmd.OutOrStdout(), asJSON, verbose)
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print JSON")
@@ -40,9 +50,26 @@ type statusJSON struct {
 	Project    *statusProject    `json:"project"` // null when the folder is not a project
 	Skills     []servedSkill     `json:"skills"`
 	Searchable []searchableSkill `json:"searchable"` // not in skills: found by searching
+	Catalog    statusCatalog     `json:"catalog"`
 	Search     statusSearch      `json:"search"`
 	Assistants []statusAssistant `json:"assistants"`
 	Warnings   []string          `json:"warnings"`
+}
+
+// statusCatalog is what the folder's assignments cost at the start of a
+// session. The token figures estimate the characters divided by four.
+type statusCatalog struct {
+	Listed         int `json:"listed"`
+	ListedChars    int `json:"listed_chars"`
+	ListedTokens   int `json:"listed_tokens_estimate"`
+	AlwaysOn       int `json:"always_on"`
+	AlwaysOnChars  int `json:"always_on_chars"`
+	AlwaysOnTokens int `json:"always_on_tokens_estimate"`
+	Searchable     int `json:"searchable"` // add nothing to the listing
+}
+
+func catalogOf(c server.CatalogCost) statusCatalog {
+	return statusCatalog{c.Listed, c.ListedChars, c.ListedTokens, c.AlwaysOn, c.AlwaysOnChars, c.AlwaysOnTokens, c.Searchable}
 }
 
 // statusSearch is the search engine, and what is wrong with its settings.
@@ -78,7 +105,7 @@ type searchableSkill struct {
 	InLibrary bool   `json:"in_library"`
 }
 
-func status(out io.Writer, asJSON bool) error {
+func status(out io.Writer, asJSON, verbose bool) error {
 	w, err := server.Resolve()
 	if err != nil {
 		return err
@@ -106,8 +133,9 @@ func status(out io.Writer, asJSON bool) error {
 		copied = r.EnsureProject(p.ID, p.Root)
 	}
 	engine := library.LoadEngine()
+	cost := server.Cost(r, l, w.ProjectID())
 	if asJSON {
-		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Searchable: []searchableSkill{}, Search: statusSearch{engine.Engine, engine.Problem}, Assistants: installedAssistants(), Warnings: []string{}}
+		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Searchable: []searchableSkill{}, Catalog: catalogOf(cost), Search: statusSearch{engine.Engine, engine.Problem}, Assistants: installedAssistants(), Warnings: []string{}}
 		if p := w.Project; p != nil {
 			st.Project = &statusProject{ID: p.ID, Name: where, Root: p.Root}
 		}
@@ -163,9 +191,13 @@ func status(out io.Writer, asJSON bool) error {
 	for _, c := range copies {
 		fmt.Fprintf(out, "warning: %s is also installed in Claude Code, so it may be loaded twice: %s\n", c.ID, describeCopy(c))
 	}
+	printCost(out, cost, verbose)
 	fmt.Fprintf(out, "\nSearch engine: %s\n", engine.Engine)
 	if engine.Problem != "" {
 		fmt.Fprintln(out, "warning:", engine.Problem)
+	}
+	if hint := unfoundHint(r, l, w.ProjectID()); hint != "" {
+		fmt.Fprintln(out, hint)
 	}
 	if engine.Engine == library.EngineWords && anySearchable(r) {
 		fmt.Fprintln(out, "search by meaning:", setupCommand)
@@ -213,4 +245,60 @@ func anySearchable(r *registry.Registry) bool {
 		}
 	}
 	return false
+}
+
+// printCost says what the assignments of the folder cost at session start.
+// The numbers inform; nothing refuses an assignment or trims the listing.
+func printCost(out io.Writer, c server.CatalogCost, verbose bool) {
+	fmt.Fprintf(out, "\nSession start: %s listed, %d characters (about %d tokens, an estimate)", plural(c.Listed, "skill"), c.ListedChars, c.ListedTokens)
+	if c.AlwaysOn > 0 {
+		fmt.Fprintf(out, "; %d always-on, loaded in full: %d characters (about %d tokens)", c.AlwaysOn, c.AlwaysOnChars, c.AlwaysOnTokens)
+	}
+	fmt.Fprintf(out, "; %d Searchable, which add nothing to the listing.\n", c.Searchable)
+	if !verbose || len(c.Largest) == 0 {
+		return
+	}
+	fmt.Fprintln(out, "Longest listed entries; move a skill to Searchable to take its line out of the listing:")
+	for _, e := range c.Largest {
+		cmd := "quiver add " + e.ID + " --searchable"
+		if e.Scope == "global" {
+			cmd += " --global"
+		}
+		fmt.Fprintf(out, "  %-30s %5d characters  %s\n", e.ID, e.Chars, cmd)
+	}
+}
+
+// unfoundHint is the line for a library whose skills the assistant's search
+// does not find: skills at no level in the folder, and no Searchable skill at
+// all. v1.5 searched the whole library; search_skills now finds only
+// Searchable skills. It names the source with the most such skills. It is
+// empty when the folder has a Searchable skill or nothing is unassigned.
+func unfoundHint(r *registry.Registry, l *library.Library, projectID string) string {
+	if len(r.SearchableServed(projectID)) > 0 {
+		return ""
+	}
+	n, bySource := 0, map[string]int{}
+	for _, s := range l.All() {
+		if r.LevelIn(projectID, s.ID) != registry.NotAssigned {
+			continue
+		}
+		n++
+		if src, _, ok := strings.Cut(s.ID, "/"); ok {
+			bySource[src]++
+		}
+	}
+	if n == 0 {
+		return ""
+	}
+	line := fmt.Sprintf("Search finds only Searchable skills: %s of the library are at no level here, so the assistant's search does not find them", plural(n, "skill"))
+	best := ""
+	for src, c := range bySource {
+		if c > bySource[best] || c == bySource[best] && src < best {
+			best = src
+		}
+	}
+	if best == "" {
+		return line + ". Make one findable with: quiver add <id> --searchable"
+	}
+	return fmt.Sprintf("%s (%d of them in source %s). Make them findable with: quiver add --source %s --searchable --global (or quiver add <id> --searchable)", line, bySource[best], best, best)
 }
