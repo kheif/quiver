@@ -27,7 +27,8 @@ func newListCmd() *cobra.Command {
 		Short: "List library skills and where each one is assigned",
 		Long: `List every skill in the library: your own (source "local") and those from
 sources. ASSIGNED says whether a skill is global and how many projects have
-it. Skills that cannot be loaded are listed as warnings at the end.
+it, and where it is Searchable (found by searching, not listed at session
+start), as stored for each scope. Skills that cannot be loaded are listed as warnings at the end.
 
 To see what one folder gets, use quiver status; for one skill, quiver where.`,
 		Example: `  quiver list
@@ -55,23 +56,43 @@ type listedSkill struct {
 	Description string   `json:"description"`
 	Global      bool     `json:"global"`
 	Projects    []string `json:"projects"` // project IDs
+	// Searchable is where the skill is Searchable. Global and Projects keep
+	// describing the served assignments.
+	Searchable searchableAt `json:"searchable"`
+}
+
+// searchableAt is where a skill is Searchable: in every folder, or in
+// these projects (IDs).
+type searchableAt struct {
+	Global   bool     `json:"global"`
+	Projects []string `json:"projects"`
 }
 
 // assigned describes where the skill is assigned: "global", "3 projects",
-// both, or "".
+// both, and "searchable (global, 2 projects)" for the Searchable level, or
+// "" when it is assigned nowhere.
 func (s listedSkill) assigned() string {
+	parts := scopes(s.Global, len(s.Projects))
+	if search := scopes(s.Searchable.Global, len(s.Searchable.Projects)); len(search) > 0 {
+		parts = append(parts, "searchable ("+strings.Join(search, ", ")+")")
+	}
+	return strings.Join(parts, ", ")
+}
+
+// scopes names the scopes of one level: "global" and "N projects".
+func scopes(global bool, projects int) []string {
 	var parts []string
-	if s.Global {
+	if global {
 		parts = append(parts, "global")
 	}
-	switch n := len(s.Projects); n {
+	switch projects {
 	case 0:
 	case 1:
 		parts = append(parts, "1 project")
 	default:
-		parts = append(parts, fmt.Sprintf("%d projects", n))
+		parts = append(parts, fmt.Sprintf("%d projects", projects))
 	}
-	return strings.Join(parts, ", ")
+	return parts
 }
 
 func list(out io.Writer, o listOptions) error {
@@ -102,9 +123,16 @@ func list(out io.Writer, o listOptions) error {
 			Description: s.Description,
 			Global:      slices.Contains(r.Global, s.ID),
 			Projects:    r.ProjectsUsing(s.ID),
+			Searchable: searchableAt{
+				Global:   slices.Contains(r.Searchable, s.ID),
+				Projects: r.SearchableProjects(s.ID),
+			},
 		}
 		if ls.Projects == nil {
 			ls.Projects = []string{}
+		}
+		if ls.Searchable.Projects == nil {
+			ls.Searchable.Projects = []string{}
 		}
 		if o.source != "" && ls.Source != o.source || o.unassigned && ls.assigned() != "" {
 			continue

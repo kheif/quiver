@@ -23,7 +23,7 @@ func newShowCmd() *cobra.Command {
 		Short: "Show a skill: where it comes from, where it is assigned, its text",
 		Long: `Show a skill of the library: its ID and name, where it comes from (local,
 or the source and its commit), its folder, where it is assigned and whether
-it is always-on there, its extra files, then the text of its SKILL.md.`,
+it is always-on there or only Searchable, its extra files, then the text of its SKILL.md.`,
 		Example: `  quiver show pdf
   quiver show anthropic/docx --json`,
 		ValidArgsFunction: skillIDs(false, 1),
@@ -46,6 +46,7 @@ type shownSkill struct {
 	Pinned      bool         `json:"pinned"`
 	Dir         string       `json:"dir"`
 	Assigned    []assignment `json:"assigned"`
+	Searchable  []assignment `json:"searchable"` // where it is Searchable; Assigned keeps the served places
 	Files       []string     `json:"files"`
 	Text        string       `json:"text"` // the whole SKILL.md
 }
@@ -81,7 +82,7 @@ func show(out io.Writer, id string, asJSON bool) error {
 	}
 	sh := shownSkill{
 		ID: s.ID, Name: s.Name, Description: s.Description, Source: s.Source, Dir: s.Dir,
-		Assigned: assignments(r, s.ID), Files: files, Text: string(text),
+		Assigned: assignments(r, s.ID), Searchable: searchables(r, s.ID), Files: files, Text: string(text),
 	}
 	repo := filepath.Dir(s.Dir)
 	if s.Source != library.LocalSource {
@@ -120,6 +121,22 @@ func assignments(r *registry.Registry, id string) []assignment {
 	return out
 }
 
+// searchables lists where id is Searchable: every folder first, then the
+// projects by name. Their AlwaysOn is always false.
+func searchables(r *registry.Registry, id string) []assignment {
+	out := []assignment{}
+	if slices.Contains(r.Searchable, id) {
+		out = append(out, assignment{})
+	}
+	using := r.SearchableProjects(id)
+	sort.Slice(using, func(i, j int) bool { return r.Projects[using[i]].Name < r.Projects[using[j]].Name })
+	for _, pid := range using {
+		p := r.Projects[pid]
+		out = append(out, assignment{Project: pid, Name: p.Name, Paths: p.Paths})
+	}
+	return out
+}
+
 func printShown(out io.Writer, sh shownSkill) {
 	source := sh.Source
 	switch {
@@ -149,6 +166,17 @@ func printShown(out io.Writer, sh shownSkill) {
 		where = []string{"nowhere"}
 	}
 	fmt.Fprintf(out, "Assigned: %s\n", strings.Join(where, "\n          "))
+	if len(sh.Searchable) > 0 {
+		var search []string
+		for _, a := range sh.Searchable {
+			w := "every folder"
+			if a.Project != "" {
+				w = "project " + registry.ProjectLabel(a.Name, a.Paths)
+			}
+			search = append(search, w)
+		}
+		fmt.Fprintf(out, "Searchable: %s\n", strings.Join(search, "\n            "))
+	}
 	if len(sh.Files) > 0 {
 		fmt.Fprintf(out, "Files:    %s\n", strings.Join(sh.Files, "\n          "))
 	}

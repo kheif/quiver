@@ -213,8 +213,9 @@ func printFiles(out io.Writer, files []git.FileChange) {
 	}
 }
 
-// assignedWhere lists where the skill is assigned: "global", "always-on"
-// and each project by name. It is nil when the skill is not assigned.
+// assignedWhere lists where the skill is assigned: "global", "always-on",
+// each project by name, and "searchable" for the Searchable level. It is nil
+// when the skill is not assigned.
 func assignedWhere(r *registry.Registry, id string) []string {
 	var where []string
 	if slices.Contains(r.Global, id) {
@@ -225,6 +226,9 @@ func assignedWhere(r *registry.Registry, id string) []string {
 	}
 	if slices.Contains(r.AlwaysOn, id) || slices.ContainsFunc(r.ProjectsUsing(id), func(pid string) bool { return slices.Contains(r.Projects[pid].AlwaysOn, id) }) {
 		where = append(where, "always-on")
+	}
+	if slices.Contains(r.Searchable, id) || len(r.SearchableProjects(id)) > 0 {
+		where = append(where, "searchable")
 	}
 	return where
 }

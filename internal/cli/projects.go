@@ -21,7 +21,8 @@ func newWhereCmd() *cobra.Command {
 		Use:   "where <id>",
 		Short: "Show where a skill is assigned",
 		Long: `Show where a skill is assigned: "global" if it is served in every folder,
-then each project that has it, with its folders.`,
+then each project that has it, with its folders. Where a skill is Searchable
+(found by searching, not listed at session start) it says so.`,
 		Example: `  quiver where pdf
   quiver where anthropic/docx --json`,
 		ValidArgsFunction: skillIDs(false, 1),
@@ -40,6 +41,16 @@ type whereJSON struct {
 	InLibrary bool          `json:"in_library"` // false: assigned but not served
 	Global    bool          `json:"global"`
 	Projects  []projectJSON `json:"projects"`
+	// Searchable is where the skill is Searchable. Global and Projects keep
+	// describing the served assignments.
+	Searchable searchableWhere `json:"searchable"`
+}
+
+// searchableWhere is where a skill is Searchable: in every folder, or in
+// these projects.
+type searchableWhere struct {
+	Global   bool          `json:"global"`
+	Projects []projectJSON `json:"projects"`
 }
 
 // projectJSON is one project in the JSON output of where and projects.
@@ -74,23 +85,34 @@ func where(out io.Writer, id string, asJSON bool) error {
 	}
 	global := slices.Contains(r.Global, id)
 	using := r.ProjectsUsing(id)
+	searchGlobal := slices.Contains(r.Searchable, id)
+	searchUsing := r.SearchableProjects(id)
 	l, err := library.Load()
 	if err != nil {
 		return err
 	}
 	_, missing := l.Get(id)
-	if missing != nil && !global && len(using) == 0 {
+	assigned := global || len(using) > 0 || searchGlobal || len(searchUsing) > 0
+	if missing != nil && !assigned {
 		return fmt.Errorf("skill %q not found; see quiver list", id)
 	}
-	sort.Slice(using, func(i, j int) bool { return r.Projects[using[i]].Name < r.Projects[using[j]].Name })
+	byName := func(ids []string) {
+		sort.Slice(ids, func(i, j int) bool { return r.Projects[ids[i]].Name < r.Projects[ids[j]].Name })
+	}
+	byName(using)
+	byName(searchUsing)
 	if asJSON {
-		wj := whereJSON{ID: id, InLibrary: missing == nil, Global: global, Projects: []projectJSON{}}
+		wj := whereJSON{ID: id, InLibrary: missing == nil, Global: global, Projects: []projectJSON{},
+			Searchable: searchableWhere{Global: searchGlobal, Projects: []projectJSON{}}}
 		for _, pid := range using {
 			wj.Projects = append(wj.Projects, newProjectJSON(pid, r.Projects[pid]))
 		}
+		for _, pid := range searchUsing {
+			wj.Searchable.Projects = append(wj.Searchable.Projects, newProjectJSON(pid, r.Projects[pid]))
+		}
 		return printJSON(out, wj)
 	}
-	if !global && len(using) == 0 {
+	if !assigned {
 		fmt.Fprintf(out, "%s is not assigned anywhere.\n", id)
 		return nil
 	}
@@ -100,6 +122,13 @@ func where(out io.Writer, id string, asJSON bool) error {
 	for _, pid := range using {
 		p := r.Projects[pid]
 		fmt.Fprintf(out, "project %s\n", registry.ProjectLabel(p.Name, p.Paths))
+	}
+	if searchGlobal {
+		fmt.Fprintln(out, "searchable, global")
+	}
+	for _, pid := range searchUsing {
+		p := r.Projects[pid]
+		fmt.Fprintf(out, "searchable, project %s\n", registry.ProjectLabel(p.Name, p.Paths))
 	}
 	if missing != nil {
 		fmt.Fprintf(out, "warning: %s is assigned but not in the library, so it is not served\n", id)

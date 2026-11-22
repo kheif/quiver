@@ -6,7 +6,11 @@
       "source": "acme",
       "description": "Test skill.",
       "global": false,
-      "projects": []
+      "projects": [],
+      "searchable": {
+        "global": false,
+        "projects": []
+      }
     },
     {
       "id": "acme/review",
@@ -16,7 +20,11 @@
       "global": true,
       "projects": [
         "app-000001"
-      ]
+      ],
+      "searchable": {
+        "global": false,
+        "projects": []
+      }
     },
     {
       "id": "notes",
@@ -24,7 +32,11 @@
       "source": "local",
       "description": "Keep notes.",
       "global": false,
-      "projects": []
+      "projects": [],
+      "searchable": {
+        "global": false,
+        "projects": []
+      }
     },
     {
       "id": "pdf",
@@ -32,7 +44,11 @@
       "source": "local",
       "description": "Fill in and read PDF forms.",
       "global": true,
-      "projects": []
+      "projects": [],
+      "searchable": {
+        "global": false,
+        "projects": []
+      }
     },
     {
       "id": "tdd",
@@ -43,7 +59,11 @@
       "projects": [
         "api-000002",
         "app-000001"
-      ]
+      ],
+      "searchable": {
+        "global": false,
+        "projects": []
+      }
     }
   ],
   "warnings": [

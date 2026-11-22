@@ -179,8 +179,8 @@ func TestWhereJSON(t *testing.T) {
 	}{
 		{"acme/review", whereJSON{ID: "acme/review", InLibrary: true, Global: true, Projects: []projectJSON{
 			{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Paths: []string{f.app}, Missing: []string{}},
-		}}},
-		{"notes", whereJSON{ID: "notes", InLibrary: true, Projects: []projectJSON{}}},
+		}, Searchable: searchableWhere{Projects: []projectJSON{}}}},
+		{"notes", whereJSON{ID: "notes", InLibrary: true, Projects: []projectJSON{}, Searchable: searchableWhere{Projects: []projectJSON{}}}},
 	} {
 		out, err := runIn(t, "", "where", c.id, "--json")
 		if err != nil {

@@ -150,3 +150,53 @@ func TestDoctorFix(t *testing.T) {
 	got, _ = e.run(app, "", "doctor")
 	mustNotContain(t, "doctor after --fix", got, "uncommitted", "project app: pdf", "left over", "error  library", "error  assigned")
 }
+
+// source add --searchable, source add without a terminal, add --searchable,
+// list, where and remove --source, through the binary.
+func TestSearchableAssignment(t *testing.T) {
+	e := newEnv(t)
+	source := func(name string, skills ...string) string {
+		work := e.dir(name)
+		e.git(work, "init", "--quiet", "--initial-branch=main")
+		files := map[string]string{}
+		for _, s := range skills {
+			files["skills/"+s+"/SKILL.md"] = skillMD(s, "Skill "+s+".", "Text of "+s+".")
+		}
+		e.write(work, files)
+		e.git(work, "add", "--all")
+		e.git(work, "commit", "--quiet", "-m", "v1")
+		return work
+	}
+	app := e.dir("app")
+
+	// A yes at no terminal is not read: without the flag nothing is assigned.
+	out, err := e.run(app, "y\n", "source", "add", source("plain", "p1", "p2"), "--name", "plain")
+	if err != nil {
+		t.Fatalf("source add: %v\n%s", err, out)
+	}
+	mustContain(t, "source add", out, "Read them with quiver show <id> before you assign them.")
+	mustNotContain(t, "source add", out, "Made", "To undo")
+	mustContain(t, "list --unassigned", e.quiver(app, "list", "--unassigned"), "plain/p1", "plain/p2")
+
+	// --searchable says yes and prints the command that undoes it.
+	out = e.quiver(app, "source", "add", source("tools", "t1", "t2"), "--name", "tools", "--searchable")
+	mustContain(t, "source add --searchable", out, "Made 2 skills Searchable in every folder.", "To undo: quiver remove --source tools --global")
+	got := e.quiver(app, "list")
+	mustContain(t, "list", got, "searchable (global)")
+	mustContain(t, "where", e.quiver(app, "where", "tools/t1"), "searchable, global")
+	mustNotContain(t, "list --unassigned", e.quiver(app, "list", "--unassigned"), "tools/")
+
+	// add --searchable in a project; a listed skill keeps its level under --source.
+	e.quiver(app, "add", "plain/p1")
+	out = e.quiver(app, "add", "--source", "plain", "--searchable")
+	mustContain(t, "add --source", out, "Made Searchable to app: plain/p2")
+	mustContain(t, "status", e.quiver(app, "status"), "plain/p1  project", "Searchable in app (not listed; found by searching): plain/p2, tools/t1, tools/t2")
+	e.quiver(app, "add", "plain/p1", "--searchable")
+	mustContain(t, "where after the move", e.quiver(app, "where", "plain/p1"), "searchable, project app")
+
+	// remove --source: the project first, then every folder.
+	mustContain(t, "remove --source", e.quiver(app, "remove", "--source", "plain"), "Removed from app: plain/p1, plain/p2")
+	mustContain(t, "where after remove", e.quiver(app, "where", "plain/p1"), "not assigned anywhere")
+	e.quiver(app, "remove", "--source", "tools", "--global")
+	mustContain(t, "list after undo", e.quiver(app, "list", "--unassigned"), "tools/t1", "tools/t2", "plain/p1")
+}

@@ -297,16 +297,16 @@ func (b *tuiBackend) set(id string, t target, to tui.Mode) (string, error) {
 	ids := []string{id}
 	switch {
 	case to == tui.NotAssigned:
-		err = remove(&out, t, ids)
+		err = remove(&out, t, "", ids)
 	case to == tui.AlwaysOn:
 		t.always = true
-		err = add(strings.NewReader(""), &out, t, ids)
+		err = add(strings.NewReader(""), &out, t, addOptions{}, ids)
 	case from == tui.AlwaysOn:
 		// Keep it assigned and drop only the always-on mark.
 		t.always = true
-		err = remove(&out, t, ids)
+		err = remove(&out, t, "", ids)
 	default:
-		err = add(strings.NewReader(""), &out, t, ids)
+		err = add(strings.NewReader(""), &out, t, addOptions{}, ids)
 	}
 	syncHooks(io.Discard)
 	if err != nil {

@@ -99,7 +99,7 @@ func assignedIDs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.
 		return nil, noFiles
 	}
 	if global, _ := cmd.Flags().GetBool("global"); global {
-		return suggest(r.Global, args, toComplete), noFiles
+		return suggest(slices.Concat(r.Global, r.Searchable), args, toComplete), noFiles
 	}
 	dir, _ := cmd.Flags().GetString("project")
 	if dir == "" {
@@ -111,7 +111,7 @@ func assignedIDs(cmd *cobra.Command, args []string, toComplete string) ([]cobra.
 	if err != nil || r.Projects[p.ID] == nil {
 		return nil, noFiles
 	}
-	return suggest(r.Projects[p.ID].Skills, args, toComplete), noFiles
+	return suggest(slices.Concat(r.Projects[p.ID].Skills, r.Projects[p.ID].Searchable), args, toComplete), noFiles
 }
 
 // completeSources completes configured source names; withLocal adds "local".

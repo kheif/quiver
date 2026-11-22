@@ -39,6 +39,7 @@ type statusJSON struct {
 	Folder     string            `json:"folder"`
 	Project    *statusProject    `json:"project"` // null when the folder is not a project
 	Skills     []servedSkill     `json:"skills"`
+	Searchable []searchableSkill `json:"searchable"` // not in skills: found by searching
 	Assistants []statusAssistant `json:"assistants"`
 	Warnings   []string          `json:"warnings"`
 }
@@ -61,6 +62,13 @@ type servedSkill struct {
 	Scope     string `json:"scope"` // global or project
 	AlwaysOn  bool   `json:"always_on"`
 	InLibrary bool   `json:"in_library"` // false: assigned but not served
+}
+
+// searchableSkill is one skill that is Searchable in a folder.
+type searchableSkill struct {
+	ID        string `json:"id"`
+	Scope     string `json:"scope"` // global or project
+	InLibrary bool   `json:"in_library"`
 }
 
 func status(out io.Writer, asJSON bool) error {
@@ -91,7 +99,7 @@ func status(out io.Writer, asJSON bool) error {
 		copied = r.EnsureProject(p.ID, p.Root)
 	}
 	if asJSON {
-		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Assistants: installedAssistants(), Warnings: []string{}}
+		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Searchable: []searchableSkill{}, Assistants: installedAssistants(), Warnings: []string{}}
 		if p := w.Project; p != nil {
 			st.Project = &statusProject{ID: p.ID, Name: where, Root: p.Root}
 		}
@@ -112,6 +120,15 @@ func status(out io.Writer, asJSON bool) error {
 			s.InLibrary = err == nil
 			st.Skills = append(st.Skills, s)
 		}
+		for _, id := range r.SearchableServed(w.ProjectID()) {
+			s := searchableSkill{ID: id, Scope: "project"}
+			if slices.Contains(r.Searchable, id) {
+				s.Scope = "global"
+			}
+			_, err := l.Get(id)
+			s.InLibrary = err == nil
+			st.Searchable = append(st.Searchable, s)
+		}
 		for _, c := range copies {
 			st.Warnings = append(st.Warnings, fmt.Sprintf("%s is also installed in Claude Code, so it may be loaded twice: %s", c.ID, describeCopy(c)))
 		}
@@ -130,7 +147,7 @@ func status(out io.Writer, asJSON bool) error {
 	if err := printServed(out, r, w.ProjectID(), where); err != nil {
 		return err
 	}
-	for _, id := range r.Served(w.ProjectID()) {
+	for _, id := range append(r.Served(w.ProjectID()), r.SearchableServed(w.ProjectID())...) {
 		if _, err := l.Get(id); err != nil {
 			fmt.Fprintf(out, "warning: %s is assigned but not in the library, so it is not served\n", id)
 		}

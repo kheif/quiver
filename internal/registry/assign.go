@@ -228,3 +228,41 @@ func scopeLevel(id string, served, always, searchable []string) Level {
 	}
 	return NotAssigned
 }
+
+// GlobalLevel is the level of the skill in the global scope alone.
+func (r *Registry) GlobalLevel(skillID string) Level {
+	return scopeLevel(skillID, r.Global, r.AlwaysOn, r.Searchable)
+}
+
+// ProjectLevel is the level of the skill in the project's own scope alone.
+// An unknown project gives NotAssigned.
+func (r *Registry) ProjectLevel(projectID, skillID string) Level {
+	p, ok := r.Projects[projectID]
+	if !ok {
+		return NotAssigned
+	}
+	return scopeLevel(skillID, p.Skills, p.AlwaysOn, p.Searchable)
+}
+
+// SearchableProjects returns the IDs of the projects in which the skill is
+// Searchable, sorted. Global use is not included; check r.Searchable.
+func (r *Registry) SearchableProjects(skillID string) []string {
+	var out []string
+	for id, p := range r.Projects {
+		if slices.Contains(p.Searchable, skillID) {
+			out = append(out, id)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// SearchableServed returns the skills that are Searchable in the project's
+// folder: Searchable in either scope and not served in either, sorted.
+func (r *Registry) SearchableServed(projectID string) []string {
+	ids := append([]string{}, r.Searchable...)
+	if p, ok := r.Projects[projectID]; ok {
+		ids = append(ids, p.Searchable...)
+	}
+	return without(sortedSet(ids), r.Served(projectID)...)
+}

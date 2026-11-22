@@ -20,7 +20,8 @@ func newSearchCmd() *cobra.Command {
 		Long: `Search the IDs, names and descriptions of every skill in the library,
 ignoring case. Exact names come first, then names that start with the text,
 then names that contain it, then descriptions. HERE says whether a skill is
-served in this folder: global or project.`,
+served in this folder: global or project, or "searchable" when the assistant
+only finds it by searching. The JSON gains a level field for this folder.`,
 		Example: `  quiver search pdf
   quiver search "pull request" --json`,
 		ValidArgsFunction: noArgs,
@@ -39,7 +40,21 @@ type foundSkill struct {
 	Name        string `json:"name"`
 	Source      string `json:"source"`
 	Description string `json:"description"`
-	Here        string `json:"here"` // "global", "project" or ""
+	Here        string `json:"here"`  // served here: "global", "project" or ""
+	Level       string `json:"level"` // in this folder: "always-on", "on-demand", "searchable" or ""
+}
+
+// levelName is the name of a level in the JSON output.
+func levelName(l registry.Level) string {
+	switch l {
+	case registry.AlwaysOn:
+		return "always-on"
+	case registry.OnDemand:
+		return "on-demand"
+	case registry.Searchable:
+		return "searchable"
+	}
+	return ""
 }
 
 func search(out io.Writer, text string, asJSON bool) error {
@@ -65,6 +80,7 @@ func search(out io.Writer, text string, asJSON bool) error {
 	found := []foundSkill{}
 	for _, m := range l.Search(text) {
 		f := foundSkill{ID: m.ID, Name: m.Name, Source: m.Source, Description: m.Description}
+		f.Level = levelName(r.LevelIn(w.ProjectID(), m.ID))
 		switch {
 		case slices.Contains(r.Global, m.ID):
 			f.Here = "global"
@@ -85,7 +101,7 @@ func search(out io.Writer, text string, asJSON bool) error {
 	idW, hereW := len("ID"), len("HERE")
 	for _, f := range found {
 		idW = max(idW, len(f.ID))
-		hereW = max(hereW, len(f.Here))
+		hereW = max(hereW, len(hereText(f)))
 	}
 	descW := 0
 	if width, _ := terminal(out); width > 0 {
@@ -96,7 +112,16 @@ func search(out io.Writer, text string, asJSON bool) error {
 	}
 	row("ID", "HERE", "DESCRIPTION")
 	for _, f := range found {
-		row(f.ID, f.Here, f.Description)
+		row(f.ID, hereText(f), f.Description)
 	}
 	return nil
+}
+
+// hereText is the HERE column: where the skill is served here, or
+// "searchable" when the assistant only finds it by searching.
+func hereText(f foundSkill) string {
+	if f.Here == "" && f.Level == "searchable" {
+		return "searchable"
+	}
+	return f.Here
 }

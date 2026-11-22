@@ -9,6 +9,7 @@ import (
 
 	"github.com/kheif/quiver/internal/config"
 	"github.com/kheif/quiver/internal/library"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/kheif/quiver/internal/source"
 	"github.com/spf13/cobra"
 )
@@ -32,20 +33,31 @@ assistant and can include scripts.`,
 }
 
 func newSourceAddCmd() *cobra.Command {
-	var name string
+	var (
+		name       string
+		searchable bool
+	)
 	cmd := &cobra.Command{
 		Use:   "add <repo>",
 		Short: "Clone a repository and add its skills to the library",
 		Long: `Clone a repository and add its skills to the library.
 
 <repo> is owner/repo (GitHub), host/owner/repo, a git URL or a local path.
-The source name defaults to the repository owner.`,
+The source name defaults to the repository owner.
+
+In a terminal it then asks whether to make the skills Searchable in every
+folder: not listed or loaded at session start, found by the assistant when it
+searches. The default is no. --searchable answers yes; without a terminal and
+without the flag nothing is assigned.`,
 		Example: `  # GitHub owner/repo
   quiver source add anthropics/skills --name anthropic
 
   # Any git URL, or a local folder
   quiver source add git@github.com:acme/skills.git
-  quiver source add ~/code/team-skills`,
+  quiver source add ~/code/team-skills
+
+  # Make its skills Searchable right away
+  quiver source add anthropics/skills --name anthropic --searchable`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, err := source.Parse(args[0])
@@ -58,10 +70,11 @@ The source name defaults to the repository owner.`,
 			if name == "" {
 				name = p.Name
 			}
-			return addSource(cmd, name, p.URL)
+			return addSource(cmd, name, p.URL, searchable)
 		},
 	}
 	cmd.Flags().StringVar(&name, "name", "", "source name (default: the repository owner)")
+	cmd.Flags().BoolVar(&searchable, "searchable", false, "make the skills Searchable in every folder, without asking")
 	return cmd
 }
 
@@ -82,7 +95,7 @@ func checkTransport(w io.Writer, url string) error {
 	return nil
 }
 
-func addSource(cmd *cobra.Command, name, url string) error {
+func addSource(cmd *cobra.Command, name, url string, searchable bool) error {
 	out := cmd.OutOrStdout()
 	fmt.Fprintf(out, "Cloning %s as source %q...\n", url, name)
 	s, err := library.StageSource(name, url)
@@ -106,7 +119,38 @@ func addSource(cmd *cobra.Command, name, url string) error {
 	for _, f := range s.Discovery.Skills {
 		fmt.Fprintf(out, "  %s/%s\n", name, f.ID)
 	}
-	fmt.Fprintln(out, "Note: skills give instructions to your assistant and may contain scripts. Review them before you assign them.")
+	fmt.Fprintln(out, "Note: skills give instructions to your assistant and may contain scripts. Read them with quiver show <id> before you assign them.")
+	ids := make([]string, len(s.Discovery.Skills))
+	for i, f := range s.Discovery.Skills {
+		ids[i] = name + "/" + f.ID
+	}
+	return offerSearchable(cmd.InOrStdin(), out, name, ids, searchable)
+}
+
+// offerSearchable makes the skills of a new source Searchable in every
+// folder when the user says yes: with the flag, or at the question in a
+// terminal. Without either nothing is assigned. A source that is new has no
+// other skill assigned, so the printed command undoes exactly this.
+func offerSearchable(in io.Reader, out io.Writer, name string, ids []string, flag bool) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	yes := flag
+	if !yes && interactive(in) {
+		yes = confirm(in, out, fmt.Sprintf("Make the %d skills searchable in every folder? The assistant will then load them without asking when a search finds them.", len(ids)))
+	}
+	if !yes {
+		return nil
+	}
+	err := registry.Update(func(r *registry.Registry) error {
+		r.AssignSearchableGlobal(ids...)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "Made %d skills Searchable in every folder.\n", len(ids))
+	fmt.Fprintf(out, "To undo: quiver remove --source %s --global\n", name)
 	return nil
 }
 
