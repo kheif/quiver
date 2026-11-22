@@ -17,6 +17,7 @@ Quiver writes to two places: the Quiver home, `~/.quiver` (or `$QUIVER_HOME`), a
   - state/ machine-local
     - projects.json the folders where each project was seen
     - version-check.json the latest release, checked once a day
+    - search.json the search engine of this machine
   - logs/
     - mcp.log the MCP server's log
     - hook.log what each session-start hook run passed, with a hash of the text
@@ -75,6 +76,16 @@ The assignments: global skills, always-on skills, and each project's skills by p
 ```
 
 Project folders are not in `registry.json`. They are machine-local, in `state/projects.json`, so [`quiver sync`](/docs/guides/multiple-machines/) can share the registry between machines.
+
+## Search settings
+
+`state/search.json` holds the search engine of this machine. It is never synced, because the engine and its model files may differ between machines.
+
+```json title="state/search.json"
+{ "version": 1, "engine": "words" }
+```
+
+`words` is the only engine now, and it is what a missing file or key means. An engine this Quiver does not know warns and uses `words`. A file with a newer `version` is refused: Quiver neither reads nor rewrites it, search runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show `search.json has version N, but this quiver supports only up to 1: update quiver`. Choose the engine with `quiver engine use <engine>`.
 
 ## In a project
 

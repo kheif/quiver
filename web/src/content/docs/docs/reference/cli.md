@@ -123,6 +123,42 @@ quiver edit <id> [flags]
 quiver edit release-notes
 ```
 
+## quiver engine
+
+Show the engine that quiver search, the search\_skills tool and the panel use, and any problem found in its settings file, state/search.json in the Quiver home. The file belongs to this machine and is never synced.
+
+The only engine now is "words": names and descriptions, ranked by words. A missing file or an engine this quiver does not know also means words.
+
+```sh
+quiver engine [flags]
+quiver engine [command]
+```
+
+| Flag | Description |
+| --- | --- |
+| `--json` | print JSON |
+
+**Examples**
+
+```sh
+quiver engine
+quiver engine use words
+```
+
+## quiver engine use
+
+Write the engine to state/search.json in the Quiver home. An engine this quiver does not know is an error, and so is a file written by a newer quiver, which is left as it is.
+
+```sh
+quiver engine use <engine> [flags]
+```
+
+**Examples**
+
+```sh
+quiver engine use words
+```
+
 ## quiver fork
 
 Copy a skill from a source into your own skills, so you can change it. Skills from sources are read-only, and quiver update replaces them with the upstream version.
@@ -501,7 +537,9 @@ quiver remove caveman --global --always
 
 ## quiver search
 
-Search the IDs, names and descriptions of every skill in the library, ignoring case. Exact names come first, then names that start with the text, then names that contain it, then descriptions. HERE says whether a skill is served in this folder: global or project, or "searchable" when the assistant only finds it by searching. The JSON gains a level field for this folder.
+Search the names and descriptions of every skill in the library, ignoring case. Exact names come first, then names that start with the text, then names that contain it, then skills whose descriptions fit the words, best first. HERE says whether a skill is served in this folder: global or project, or "searchable" when the assistant only finds it by searching. The JSON gains a level field for this folder.
+
+The engine is the one that "quiver engine" shows; --engine uses another for this search only.
 
 ```sh
 quiver search <text> [flags]
@@ -509,6 +547,7 @@ quiver search <text> [flags]
 
 | Flag | Description |
 | --- | --- |
+| `--engine <string>` | search engine for this search only (default: the one of quiver engine) |
 | `--json` | print JSON |
 
 **Examples**
@@ -516,6 +555,7 @@ quiver search <text> [flags]
 ```sh
 quiver search pdf
 quiver search "pull request" --json
+quiver search --engine words "review a contract"
 ```
 
 ## quiver show

@@ -59,6 +59,7 @@ Machine-local data. It is never synced.
 
 - `projects.json`: the folders where each project was seen on this machine. A project from a synced `registry.json` that this machine has not seen yet has no entry. Projects no longer in `registry.json` are dropped on the next write.
 - `version-check.json`: the last check for a new Quiver version (TASK39).
+- `search.json`: the search settings of this machine (TASK62.5). It is machine-local because the engine and its model files may differ between machines, and `config.json` is synced. `{"version": 1, "engine": "words"}`. A missing file or key means `words`; an unknown engine warns and uses `words`; a newer `version` is refused (`search.json has version N, but this quiver supports only up to 1: update quiver`): Quiver neither reads nor rewrites the file, search runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show the message. `quiver engine use <engine>` writes it.
 
 ```json
 {

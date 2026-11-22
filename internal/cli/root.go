@@ -93,7 +93,7 @@ search the library and assign skills.`,
 	}
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print more details")
 	cmd.SetVersionTemplate("quiver {{.Version}}\n")
-	cmd.AddCommand(newInitCmd(), newSourceCmd(), newNewCmd(), newEditCmd(), newDeleteCmd(), newImportCmd(), newForkCmd(), newPinCmd(), newUnpinCmd(), newListCmd(), newShowCmd(), newSearchCmd(), newAddCmd(), newRemoveCmd(), newStatusCmd(), newWhereCmd(), newProjectsCmd(), newUpdateCmd(), newDoctorCmd(), newSyncCmd(), newInstallCmd(), newUninstallCmd(), newMCPCmd(), newHookCmd())
+	cmd.AddCommand(newInitCmd(), newSourceCmd(), newNewCmd(), newEditCmd(), newDeleteCmd(), newImportCmd(), newForkCmd(), newPinCmd(), newUnpinCmd(), newListCmd(), newShowCmd(), newSearchCmd(), newEngineCmd(), newAddCmd(), newRemoveCmd(), newStatusCmd(), newWhereCmd(), newProjectsCmd(), newUpdateCmd(), newDoctorCmd(), newSyncCmd(), newInstallCmd(), newUninstallCmd(), newMCPCmd(), newHookCmd())
 	return cmd
 }
 

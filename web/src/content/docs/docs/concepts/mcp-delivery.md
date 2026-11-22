@@ -42,7 +42,7 @@ The assistant can also write to your library:
 
 - `create_skill` creates a local skill, commits it and assigns it to this project or globally.
 - `update_skill` changes a local skill served in this project and commits the change. Source skills are read-only, and so are always-on and Searchable skills: change those with `quiver edit`.
-- `search_skills` searches the whole library, also skills not assigned here. The assistant may suggest an unassigned skill, but asks before using it.
+- `search_skills` searches the skills that are Searchable here, at most 10 matches. The assistant loads the one that fits with `get_skill`. Before v1.6 it searched the whole library.
 
 See [MCP tools and prompts](/docs/reference/mcp/) for the inputs and results of every tool.
 

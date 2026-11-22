@@ -3,6 +3,7 @@ package e2e
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -199,4 +200,38 @@ func TestSearchableAssignment(t *testing.T) {
 	mustContain(t, "where after remove", e.quiver(app, "where", "plain/p1"), "not assigned anywhere")
 	e.quiver(app, "remove", "--source", "tools", "--global")
 	mustContain(t, "list after undo", e.quiver(app, "list", "--unassigned"), "tools/t1", "tools/t2", "plain/p1")
+}
+
+func TestSearchEngine(t *testing.T) {
+	e := newEnv(t)
+	app := e.dir("app")
+	e.write(filepath.Join(e.qhome, "local"), map[string]string{
+		"deploy-check/SKILL.md": skillMD("deploy-check", "Check a deploy.", "Check."),
+	})
+	mustContain(t, "engine", e.quiver(app, "engine"), "Search engine: words")
+	mustContain(t, "engine use", e.quiver(app, "engine", "use", "words"), "Search engine: words")
+	mustContain(t, "search", e.quiver(app, "search", "deploy"), "deploy-check")
+	mustContain(t, "search --engine", e.quiver(app, "search", "--engine", "words", "deploy"), "deploy-check")
+	mustContain(t, "status", e.quiver(app, "status"), "Search engine: words")
+	got, _ := e.run(app, "", "doctor")
+	mustContain(t, "doctor", got, "search engine: words")
+
+	// A file of a newer version is refused: search still runs as words, and
+	// the file is left as it is.
+	file := filepath.Join(e.qhome, "state", "search.json")
+	const newer = `{"version": 2, "engine": "local"}`
+	e.write(filepath.Dir(file), map[string]string{"search.json": newer})
+	msg := "search.json has version 2, but this quiver supports only up to 1: update quiver"
+	mustContain(t, "engine with a newer file", e.quiver(app, "engine"), msg)
+	mustContain(t, "status with a newer file", e.quiver(app, "status"), msg)
+	mustContain(t, "search with a newer file", e.quiver(app, "search", "deploy"), "deploy-check")
+	got, _ = e.run(app, "", "doctor")
+	mustContain(t, "doctor with a newer file", got, msg)
+	out, err := e.run(app, "", "engine", "use", "words")
+	if err == nil || !strings.Contains(out, msg) {
+		t.Errorf("engine use: %v\n%s", err, out)
+	}
+	if data, _ := os.ReadFile(file); string(data) != newer {
+		t.Errorf("the file was rewritten: %s", data)
+	}
 }

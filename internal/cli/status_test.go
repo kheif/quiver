@@ -140,6 +140,7 @@ func TestStatusJSON(t *testing.T) {
 			{ID: "tdd", Scope: "project", InLibrary: true},
 		},
 		Searchable: []searchableSkill{},
+		Search:     statusSearch{Engine: "words"},
 		Assistants: []statusAssistant{},
 		Warnings:   []string{},
 	}

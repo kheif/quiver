@@ -50,7 +50,7 @@ func newServer(opts Options) (*mcp.Server, *session, *prompts) {
 	addSkillTools(s, sess)
 	addCreateTool(s, sess)
 	addUpdateTool(s, sess)
-	addSearchTool(s, sess)
+	addSearchTool(s, sess, opts.Log)
 	p = &prompts{}
 	if _, err := p.sync(s, sess.projectID()); err != nil {
 		opts.Log.Warn("no skill prompts", "err", err)

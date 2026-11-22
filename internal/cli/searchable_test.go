@@ -309,15 +309,18 @@ func TestShowAndStatusShowTheLevel(t *testing.T) {
 
 func TestSearchShowsTheLevel(t *testing.T) {
 	searchableEnv(t)
-	var res struct {
-		Skills []foundSkill `json:"skills"`
-	}
-	if err := json.Unmarshal([]byte(mustRun(t, "", "search", "e", "--json")), &res); err != nil {
-		t.Fatal(err)
-	}
+	// A name finds a skill at every level: the search covers the library.
 	levels := map[string]foundSkill{}
-	for _, s := range res.Skills {
-		levels[s.ID] = s
+	for _, q := range []string{"deploy", "notes", "review", "pdf", "tdd"} {
+		var res struct {
+			Skills []foundSkill `json:"skills"`
+		}
+		if err := json.Unmarshal([]byte(mustRun(t, "", "search", q, "--json")), &res); err != nil {
+			t.Fatal(err)
+		}
+		for _, s := range res.Skills {
+			levels[s.ID] = s
+		}
 	}
 	for id, want := range map[string][2]string{
 		"acme/deploy": {"", "searchable"},

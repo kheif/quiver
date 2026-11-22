@@ -50,7 +50,7 @@ Quiver uses the standard Agent Skills format: a folder with a `SKILL.md` file (Y
 ~/.quiver/
 ├── config.json          # Remote sources and settings
 ├── registry.json        # Global skills, projects and their skills
-├── state/               # Machine-local: project folders, version check
+├── state/               # Machine-local: project folders, version check, search settings
 ├── local/               # Your own skills (a git repo)
 │   ├── db-migration/
 │   │   └── SKILL.md
@@ -97,7 +97,7 @@ The server's `instructions` stay short: how to use the tools, and the names of t
 | `get_skill_file` | Returns one extra file of a skill (`references/…`, templates, examples). |
 | `create_skill` | Creates a new skill from the conversation. `scope: "project"` assigns it to the current project only; `scope: "global"` makes it available everywhere. |
 | `update_skill` | Edits an existing local skill. Remote skills are read-only. |
-| `search_skills` | Searches the whole library, including skills not assigned to this project. Lets the assistant suggest one. |
+| `search_skills` | Searches the skills that are Searchable in this project, ranked by words, at most 10 matches. Every match is assigned here; the assistant loads the one that fits with `get_skill`. |
 
 ### Always-on skills
 
@@ -183,7 +183,8 @@ quiver list                         # All skills, and where each one is assigned
 quiver new <name>                   # Create a local skill
 quiver edit <name>                  # Open a local skill in $EDITOR
 quiver show <skill>                 # Where a skill comes from, where it is assigned, its SKILL.md
-quiver search <text>
+quiver search <text> [--engine <engine>]   # Rank every library skill by words
+quiver engine [use <engine>]                # The search engine of this machine (state/search.json)
 quiver fork <source/skill> [--as <name>]  # Copy a source skill into local/ to change it
 
 # Assignments (current project unless --project is given)

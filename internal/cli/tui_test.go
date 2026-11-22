@@ -277,8 +277,8 @@ func TestTUIBackendEditUsesTheEditCommand(t *testing.T) {
 	if _, err := b.Load(""); err != nil {
 		t.Fatal(err)
 	}
-	if ids, _ := b.Search("Changed"); len(ids) != 1 {
-		t.Errorf("the edit was not committed to the library: %v", ids)
+	if d, err := b.Details("pdf"); err != nil || !strings.Contains(d.Raw, "description: Changed.") {
+		t.Errorf("the edit was not committed to the library: %+v, %v", d, err)
 	}
 }
 
@@ -494,7 +494,7 @@ func TestTUIBackendImportsAFolderOfSkills(t *testing.T) {
 	if _, err := b.Load(""); err != nil {
 		t.Fatal(err)
 	}
-	if ids, _ := b.Search("hello"); len(ids) != 1 {
+	if ids, _ := b.Search("greeter"); len(ids) != 1 {
 		t.Errorf("the skill is not in the library: %v", ids)
 	}
 }

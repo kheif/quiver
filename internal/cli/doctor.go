@@ -93,7 +93,7 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 // checks are the checks that read only the machine; checkVersion asks the
 // network, so the panel leaves it out.
 func (d *doc) checks() []func() {
-	return []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkPins, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP}
+	return []func(){d.checkHome, d.checkLocalRepo, d.checkSkills, d.checkAssigned, d.checkSources, d.checkPins, d.checkProjects, d.checkClashes, d.checkNative, d.checkMCP, d.checkSearch}
 }
 
 // report prints one result. level is "ok", "warn" or "error"; details are
@@ -127,6 +127,17 @@ func (d *doc) fixed(level string, err error, done string) {
 
 func (d *doc) skip(title, reason string) {
 	fmt.Fprintf(d.out, "%-5s  %s (skipped: %s)\n", "-", title, reason)
+}
+
+// checkSearch shows the search engine and a problem found in its settings
+// file. Search is best effort, so the problem is a warning.
+func (d *doc) checkSearch() {
+	cur := library.LoadEngine()
+	if cur.Problem != "" {
+		d.report("warn", "search engine: "+cur.Engine, cur.Problem)
+		return
+	}
+	d.report("ok", "search engine: "+cur.Engine)
 }
 
 // 1. The layout of the Quiver home and its JSON files.

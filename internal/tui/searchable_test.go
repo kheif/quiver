@@ -154,3 +154,39 @@ func TestAddSourceOffersSearchable(t *testing.T) {
 		t.Error("asked about a source without skills")
 	}
 }
+
+// The panel searches the whole library once and keeps, in every view, the
+// results that belong to it.
+func TestSearchResultsAreIntersectedWithEveryView(t *testing.T) {
+	f := fixture()
+	f.glob["pdf"] = Searchable
+	m := keys(t, start(t, f), "/")
+	m = typed(t, m, "migrat")
+	found, _ := f.Search("migrat")
+	if len(found) != 2 {
+		t.Fatalf("the engine found %v", found)
+	}
+	for v := skillView(0); v < viewCount; v++ {
+		var want []string
+		for _, id := range found {
+			i := slices.IndexFunc(m.data.Skills, func(s Skill) bool { return s.ID == id })
+			if inView(m.data.Skills[i], v) {
+				want = append(want, id)
+			}
+		}
+		if m.skillCounts[v] != len(want) {
+			t.Errorf("view %d: count %d, want %d (%v)", v, m.skillCounts[v], len(want), want)
+		}
+		m.skillView = v
+		m.refilter([secCount]string{}, true)
+		var got []string
+		for _, i := range m.shown[secSkills] {
+			got = append(got, m.data.Skills[i].ID)
+		}
+		slices.Sort(got)
+		slices.Sort(want)
+		if !slices.Equal(got, want) {
+			t.Errorf("view %d shows %v, want %v", v, got, want)
+		}
+	}
+}

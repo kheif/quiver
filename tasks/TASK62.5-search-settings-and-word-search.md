@@ -4,7 +4,7 @@
 
 **Part of:** [TASK62](TASK62-finding-unassigned-skills.md): Finding unassigned skills
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK61, TASK62.1, TASK62.4
 

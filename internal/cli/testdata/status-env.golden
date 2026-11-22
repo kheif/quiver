@@ -6,3 +6,5 @@ Served in api:
   acme/review  global
   pdf          global  always-on
   tdd          project
+
+Search engine: words

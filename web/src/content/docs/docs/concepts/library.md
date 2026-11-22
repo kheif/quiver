@@ -44,7 +44,7 @@ quiver list                 # every skill and where it is assigned
 quiver list --unassigned    # skills not assigned anywhere
 quiver list --source local  # only your own skills
 quiver show anthropic/pdf   # one skill: origin, folder, assignments, files, SKILL.md
-quiver search "pull request" # IDs, names and descriptions of every skill
+quiver search "pull request" # every skill whose name or description fits, best first
 ```
 
 `list`, `show`, `search`, `status` and `where` take `--json` for scripts.

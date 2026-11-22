@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -245,8 +246,14 @@ func (b *tuiBackend) Search(text string) ([]string, error) {
 	if l == nil {
 		return nil, errors.New("the library is not loaded")
 	}
+	// The panel searches the whole library once, and the view picks from it.
+	se, err := l.NewSearch("")
+	if err != nil {
+		return nil, err
+	}
+	matches, _ := se.Find(context.Background(), text, l.All())
 	var ids []string
-	for _, m := range l.Search(text) {
+	for _, m := range matches {
 		ids = append(ids, m.ID)
 	}
 	return ids, nil

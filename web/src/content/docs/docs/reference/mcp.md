@@ -25,7 +25,11 @@ The skills themselves come from the session-start hook: the always-on skills in 
 | `get_skill_file` | `id`, `path` | One extra file of a skill, such as `references/checklist.md`. Large and binary files return their path instead. |
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |
 | `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. It changes only skills served in the session's project, and never an always-on or Searchable skill: change those with `quiver edit`, or make a Searchable skill listed with `quiver add <id>` first. |
-| `search_skills` | `query` | Searches the whole library, also skills not assigned here, and marks each match as assigned here (`global` or `project`) or not. The assistant may suggest an unassigned skill, but asks before using it. |
+| `search_skills` | `query` | Searches the skills that are [Searchable](/docs/guides/finding-skills/) in this project, ranked by words, and returns at most 10, with `more` for the matches left out. Every match is assigned here (`assigned` is true, `scope` is `project` or `global`); the assistant loads the one that fits with `get_skill`. Listed skills and skills that are not assigned are not searched. |
+
+:::note[Next release]
+`search_skills` searches only the Searchable skills of the folder and returns at most 10 matches, ranked by words. Before v1.6 it searched the whole library, returned up to 50 matches by the text of the ID, name and description, and marked each match as assigned here or not. Skills that are listed are already in the assistant's list, and skills that are not assigned are not your choice, so the tool no longer returns them.
+:::
 
 ## Prompts
 

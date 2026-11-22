@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"slices"
@@ -14,22 +15,32 @@ import (
 
 func newSearchCmd() *cobra.Command {
 	var asJSON bool
+	var engine string
 	cmd := &cobra.Command{
 		Use:   "search <text>",
 		Short: "Search every skill of the library, also unassigned ones",
-		Long: `Search the IDs, names and descriptions of every skill in the library,
+		Long: `Search the names and descriptions of every skill in the library,
 ignoring case. Exact names come first, then names that start with the text,
-then names that contain it, then descriptions. HERE says whether a skill is
-served in this folder: global or project, or "searchable" when the assistant
-only finds it by searching. The JSON gains a level field for this folder.`,
+then names that contain it, then skills whose descriptions fit the words,
+best first. HERE says whether a skill is served in this folder: global or
+project, or "searchable" when the assistant only finds it by searching. The
+JSON gains a level field for this folder.
+
+The engine is the one that "quiver engine" shows; --engine uses another for
+this search only.`,
 		Example: `  quiver search pdf
-  quiver search "pull request" --json`,
+  quiver search "pull request" --json
+  quiver search --engine words "review a contract"`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return search(cmd.OutOrStdout(), strings.Join(args, " "), asJSON)
+			return search(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), strings.Join(args, " "), engine, asJSON)
 		},
 	}
+	cmd.Flags().StringVar(&engine, "engine", "", "search engine for this search only (default: the one of quiver engine)")
+	_ = cmd.RegisterFlagCompletionFunc("engine", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return library.Engines(), cobra.ShellCompDirectiveNoFileComp
+	})
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print JSON")
 	return cmd
 }
@@ -57,7 +68,7 @@ func levelName(l registry.Level) string {
 	return ""
 }
 
-func search(out io.Writer, text string, asJSON bool) error {
+func search(ctx context.Context, out, errOut io.Writer, text, engine string, asJSON bool) error {
 	if strings.TrimSpace(text) == "" {
 		return fmt.Errorf("give the text to search for")
 	}
@@ -77,8 +88,19 @@ func search(out io.Writer, text string, asJSON bool) error {
 	if p, ok := r.Projects[w.ProjectID()]; ok {
 		own = p.Skills
 	}
+	se, err := l.NewSearch(engine)
+	if err != nil {
+		return err
+	}
+	if se.Problem != "" {
+		fmt.Fprintln(errOut, "quiver: "+se.Problem)
+	}
+	matches, note := se.Find(ctx, text, l.All())
+	if note != "" {
+		fmt.Fprintln(errOut, "quiver: "+note)
+	}
 	found := []foundSkill{}
-	for _, m := range l.Search(text) {
+	for _, m := range matches {
 		f := foundSkill{ID: m.ID, Name: m.Name, Source: m.Source, Description: m.Description}
 		f.Level = levelName(r.LevelIn(w.ProjectID(), m.ID))
 		switch {

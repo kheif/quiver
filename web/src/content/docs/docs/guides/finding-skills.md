@@ -30,6 +30,8 @@ A skill moves between them: `--searchable` takes it off the listed skills of tha
 
 A Searchable skill is not an MCP prompt and is not in `list_skills`. The assistant calls `search_skills` with a query that names what it needs, and gets the ID and description of the best matches, not their text. If one fits, it calls `get_skill` and follows it. It does not ask you first: assigning a skill is your statement that you trust it, which is why you should read a skill with `quiver show <id>` before you make it Searchable, and why the assistant cannot change one through `update_skill`.
 
+Search is ranked by words. A name that is, starts with or contains your text comes first; after that, skills whose name and description fit the words of the text, best first. A query that fits nothing returns nothing. `search_skills` searches only the Searchable skills of the folder and returns at most 10, so a few skills are never crowded out by the rest of the library; `quiver search` and the panel search the whole library and show the level of each match.
+
 ## Make skills Searchable
 
 ```sh
@@ -57,3 +59,7 @@ quiver status       # the Searchable skills of this folder
 ```
 
 `quiver list --unassigned` leaves Searchable skills out, because they are assigned. `quiver update` previews changes to a Searchable skill like those of any assigned skill, and `quiver sync` lists skills that another machine made Searchable before it pulls them.
+
+## The search engine
+
+`quiver engine` shows the engine that `quiver search`, `search_skills` and the panel use. Only `words` exists now, so there is nothing to choose yet; `quiver engine use words` writes the choice to `state/search.json`, a file of this machine that is never synced. `quiver search --engine words <text>` uses an engine for one search only. A missing or unusable settings file never stops a search: it runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show what is wrong. See [the files of the Quiver home](/docs/reference/files/).

@@ -40,8 +40,15 @@ type statusJSON struct {
 	Project    *statusProject    `json:"project"` // null when the folder is not a project
 	Skills     []servedSkill     `json:"skills"`
 	Searchable []searchableSkill `json:"searchable"` // not in skills: found by searching
+	Search     statusSearch      `json:"search"`
 	Assistants []statusAssistant `json:"assistants"`
 	Warnings   []string          `json:"warnings"`
+}
+
+// statusSearch is the search engine, and what is wrong with its settings.
+type statusSearch struct {
+	Engine  string `json:"engine"`
+	Problem string `json:"problem,omitempty"`
 }
 
 // statusAssistant is one installed assistant and how always-on skills reach it.
@@ -98,8 +105,9 @@ func status(out io.Writer, asJSON bool) error {
 		// EnsureProject changes only this copy; status writes nothing.
 		copied = r.EnsureProject(p.ID, p.Root)
 	}
+	engine := library.LoadEngine()
 	if asJSON {
-		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Searchable: []searchableSkill{}, Assistants: installedAssistants(), Warnings: []string{}}
+		st := statusJSON{Folder: w.Dir, Skills: []servedSkill{}, Searchable: []searchableSkill{}, Search: statusSearch{engine.Engine, engine.Problem}, Assistants: installedAssistants(), Warnings: []string{}}
 		if p := w.Project; p != nil {
 			st.Project = &statusProject{ID: p.ID, Name: where, Root: p.Root}
 		}
@@ -154,6 +162,10 @@ func status(out io.Writer, asJSON bool) error {
 	}
 	for _, c := range copies {
 		fmt.Fprintf(out, "warning: %s is also installed in Claude Code, so it may be loaded twice: %s\n", c.ID, describeCopy(c))
+	}
+	fmt.Fprintf(out, "\nSearch engine: %s\n", engine.Engine)
+	if engine.Problem != "" {
+		fmt.Fprintln(out, "warning:", engine.Problem)
 	}
 	if len(copies) > 0 {
 		fmt.Fprintln(out, "Run quiver doctor --fix to delete the copies.")
