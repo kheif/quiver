@@ -41,6 +41,10 @@ type fake struct {
 	health      []HealthItem
 	hookMissing bool
 	noHome      bool
+
+	// addedSkills is the number of skills a source added with AddSource has;
+	// the panel asks about making them Searchable when it is not zero.
+	addedSkills int
 }
 
 func (f *fake) HasUpdate(source string) (bool, error) {
@@ -75,11 +79,16 @@ func (f *fake) Load(projectID string) (Data, error) {
 		scope = here
 	}
 	for _, p := range f.projects {
-		p.Skills = nil
-		for id := range f.proj[p.ID] {
-			p.Skills = append(p.Skills, id)
+		p.Skills, p.Searchable = nil, nil
+		for id, mode := range f.proj[p.ID] {
+			if mode == Searchable {
+				p.Searchable = append(p.Searchable, id)
+			} else {
+				p.Skills = append(p.Skills, id)
+			}
 		}
 		sort.Strings(p.Skills)
+		sort.Strings(p.Searchable)
 		d.Projects = append(d.Projects, p)
 		if p.ID == scope {
 			cp := p
@@ -88,10 +97,18 @@ func (f *fake) Load(projectID string) (Data, error) {
 	}
 	for _, s := range f.skills {
 		g := f.glob[s.ID]
-		s.Global, s.GlobalAlways = g != NotAssigned, g == AlwaysOn
+		s.Global, s.GlobalAlways, s.GlobalSearchable = g == OnDemand || g == AlwaysOn, g == AlwaysOn, g == Searchable
 		if scope != "" {
 			pm := f.proj[scope][s.ID]
-			s.Project, s.ProjectAlways = pm != NotAssigned, pm == AlwaysOn
+			s.Project, s.ProjectAlways, s.ProjectSearchable = pm == OnDemand || pm == AlwaysOn, pm == AlwaysOn, pm == Searchable
+		}
+		for pid, modes := range f.proj {
+			switch modes[s.ID] {
+			case OnDemand, AlwaysOn:
+				s.UsedIn = append(s.UsedIn, pid)
+			case Searchable:
+				s.SearchableIn = append(s.SearchableIn, pid)
+			}
 		}
 		d.Skills = append(d.Skills, s)
 	}
@@ -197,9 +214,14 @@ func (f *fake) ForgetProject(id string) error {
 	return nil
 }
 
-func (f *fake) AddSource(repo, name string) (string, error) {
+func (f *fake) AddSource(repo, name string) (Added, error) {
 	f.calls = append(f.calls, "add-source "+repo+" "+name)
-	return "Added source " + name + " with 2 skills.", f.err
+	return Added{Text: "Added source " + name + " with 2 skills.", Source: name, Skills: f.addedSkills}, f.err
+}
+
+func (f *fake) MakeSearchable(source string) (string, error) {
+	f.calls = append(f.calls, "searchable "+source)
+	return "Made the skills of " + source + " searchable.", f.err
 }
 
 func (f *fake) NewSkill(name, description, projectPath string, global bool) (string, error) {
@@ -628,8 +650,8 @@ func TestTheAcceptanceScenarioAlwaysOnInOneProjectOnly(t *testing.T) {
 	m = keys(t, m, "enter")
 	contains(t, m, "Project · api", "Not assigned", "enter change api assignment")
 	m = keys(t, m, "enter")
-	contains(t, m, "Project · api", "› Not assigned", "On demand", "Always on", "✓")
-	m = keys(t, m, "down", "down", "enter")
+	contains(t, m, "Project · api", "› Not assigned", "Searchable", "On demand", "Always on", "✓")
+	m = keys(t, m, "down", "down", "down", "enter")
 	if f.callList() != "project demo /code/api Always on" {
 		t.Fatalf("calls %q", f.callList())
 	}
@@ -648,7 +670,7 @@ func TestTheAcceptanceScenarioAlwaysOnInOneProjectOnly(t *testing.T) {
 
 	// Remove the api assignment: it stays available globally.
 	m = goTo(t, m, "demo")
-	m = keys(t, m, "enter", "enter", "up", "up", "enter")
+	m = keys(t, m, "enter", "enter", "up", "up", "up", "enter")
 	if !strings.HasSuffix(f.callList(), "project demo /code/api Not assigned") {
 		t.Fatalf("calls %q", f.callList())
 	}
@@ -743,7 +765,7 @@ func TestAProjectWithoutAFolderCannotBeChanged(t *testing.T) {
 	contains(t, m, "managing project gone")
 	m = keys(t, m, "right", "right")
 	m = goTo(t, m, "pdf")
-	m = keys(t, m, "enter", "enter", "2", "enter")
+	m = keys(t, m, "enter", "enter", "3", "enter")
 	contains(t, m, "Project gone has no folder on this machine")
 	if len(f.calls) != 0 {
 		t.Errorf("calls %v", f.calls)
@@ -754,7 +776,7 @@ func TestChangesThatFailSayWhy(t *testing.T) {
 	f := fixture()
 	f.err = errors.New("open /very/long/path/registry.json.tmp: permission denied")
 	m := goTo(t, start(t, f), "db-migration")
-	m = keys(t, m, "enter", "enter", "3", "enter")
+	m = keys(t, m, "enter", "enter", "4", "enter")
 	contains(t, m, "✗ permission denied (open /very/long/path/registry.json.tmp)")
 	lacks(t, m, "✓")
 }

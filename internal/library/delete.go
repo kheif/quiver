@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -33,15 +34,16 @@ func (e *SkillInUseError) Error() string {
 	return b.String()
 }
 
-// skillUsage lists where id is assigned.
+// skillUsage lists where id is assigned, at any level: listed, always-on or
+// Searchable.
 func skillUsage(r *registry.Registry, id string) Usage {
 	var u Usage
-	for _, g := range r.Global {
+	for _, g := range slices.Concat(r.Global, r.Searchable) {
 		if g == id {
 			u.Global = []string{id}
 		}
 	}
-	for _, pid := range r.ProjectsUsing(id) {
+	for _, pid := range slices.Compact(slices.Sorted(slices.Values(slices.Concat(r.ProjectsUsing(id), r.SearchableProjects(id))))) {
 		p := r.Projects[pid]
 		u.Projects = append(u.Projects, ProjectUse{ID: pid, Name: p.Name, Paths: p.Paths, Skills: []string{id}})
 	}

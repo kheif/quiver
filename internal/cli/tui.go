@@ -88,6 +88,8 @@ func (b *tuiBackend) Load(projectID string) (tui.Data, error) {
 		sort.Strings(skills)
 		always := slices.Clone(p.AlwaysOn)
 		sort.Strings(always)
+		searchable := slices.Clone(p.Searchable)
+		sort.Strings(searchable)
 		folders := 0
 		for _, f := range p.Paths {
 			if firstExisting([]string{f}) != "" {
@@ -97,7 +99,7 @@ func (b *tuiBackend) Load(projectID string) (tui.Data, error) {
 		d.Projects = append(d.Projects, tui.Project{
 			Name: p.Name, ID: id, Skills: slices.Compact(skills), Paths: p.Paths, Path: path,
 			Current: id == here, Missing: len(p.Paths) > 0 && path == "",
-			AlwaysOn: slices.Compact(always), Folders: folders,
+			AlwaysOn: slices.Compact(always), Searchable: slices.Compact(searchable), Folders: folders,
 		})
 	}
 	sort.Slice(d.Projects, func(i, j int) bool {
@@ -134,7 +136,9 @@ func (b *tuiBackend) Load(projectID string) (tui.Data, error) {
 			ID: s.ID, Name: s.Name, Source: s.Source, Description: s.Description,
 			Local:  library.CheckEditable(s) == nil,
 			Global: slices.Contains(r.Global, s.ID), GlobalAlways: slices.Contains(r.AlwaysOn, s.ID),
-			UsedIn: r.ProjectsUsing(s.ID),
+			GlobalSearchable: slices.Contains(r.Searchable, s.ID),
+			UsedIn:           r.ProjectsUsing(s.ID),
+			SearchableIn:     r.SearchableProjects(s.ID),
 		}
 		if pin, ok := cfg.Pins[s.ID]; ok {
 			ts.Pin = pin.Commit[:min(7, len(pin.Commit))]
@@ -142,6 +146,7 @@ func (b *tuiBackend) Load(projectID string) (tui.Data, error) {
 		if managed != nil {
 			ts.Project = slices.Contains(managed.Skills, s.ID)
 			ts.ProjectAlways = ts.Project && slices.Contains(managed.AlwaysOn, s.ID)
+			ts.ProjectSearchable = slices.Contains(managed.Searchable, s.ID)
 		}
 		d.Skills = append(d.Skills, ts)
 	}
@@ -263,22 +268,22 @@ func (b *tuiBackend) Details(id string) (tui.Details, error) {
 // modeIn is how the registry has a skill in one scope: the global one, or the
 // project in the folder at path.
 func modeIn(r *registry.Registry, id string, global bool, path string) tui.Mode {
-	assigned, always := slices.Contains(r.Global, id), slices.Contains(r.AlwaysOn, id)
+	level := r.GlobalLevel(id)
 	if !global {
-		assigned, always = false, false
+		level = registry.NotAssigned
 		if p, err := project.Find(path); err == nil {
-			if rp, ok := r.Projects[p.ID]; ok {
-				assigned, always = slices.Contains(rp.Skills, id), slices.Contains(rp.AlwaysOn, id)
-			}
+			level = r.ProjectLevel(p.ID, id)
 		}
 	}
-	switch {
-	case !assigned:
-		return tui.NotAssigned
-	case always:
+	switch level {
+	case registry.AlwaysOn:
 		return tui.AlwaysOn
+	case registry.OnDemand:
+		return tui.OnDemand
+	case registry.Searchable:
+		return tui.Searchable
 	}
-	return tui.OnDemand
+	return tui.NotAssigned
 }
 
 // set moves a skill to a mode in one scope with the same functions as
@@ -298,6 +303,8 @@ func (b *tuiBackend) set(id string, t target, to tui.Mode) (string, error) {
 	switch {
 	case to == tui.NotAssigned:
 		err = remove(&out, t, "", ids)
+	case to == tui.Searchable:
+		err = add(strings.NewReader(""), &out, t, addOptions{searchable: true}, ids)
 	case to == tui.AlwaysOn:
 		t.always = true
 		err = add(strings.NewReader(""), &out, t, addOptions{}, ids)
@@ -455,29 +462,29 @@ func (b *tuiBackend) SplitHere() (string, error) {
 	return fmt.Sprintf("%s is now project %s, with the skills of %s.", p.Root, p.ID, oldID), nil
 }
 
-func (b *tuiBackend) AddSource(repo, name string) (string, error) {
+func (b *tuiBackend) AddSource(repo, name string) (tui.Added, error) {
 	p, err := source.Parse(repo)
 	if err != nil {
-		return "", err
+		return tui.Added{}, err
 	}
 	var warn bytes.Buffer
 	if err := checkTransport(&warn, p.URL); err != nil {
-		return "", err
+		return tui.Added{}, err
 	}
 	if name == "" {
 		name = p.Name
 	}
 	s, err := library.StageSource(name, p.URL)
 	if err != nil {
-		return "", err
+		return tui.Added{}, err
 	}
 	if len(s.Discovery.Skills) == 0 {
 		_ = s.Discard()
-		return "", fmt.Errorf("no skills found in %s; the source was not added", repo)
+		return tui.Added{}, fmt.Errorf("no skills found in %s; the source was not added", repo)
 	}
 	if err := s.Keep(); err != nil {
 		_ = s.Discard()
-		return "", err
+		return tui.Added{}, err
 	}
 	syncHooks(io.Discard)
 	text := fmt.Sprintf("Added source %s with %s. Review them before you assign them.", name, plural(len(s.Discovery.Skills), "skill"))
@@ -487,7 +494,19 @@ func (b *tuiBackend) AddSource(repo, name string) (string, error) {
 	for _, w := range s.Discovery.Warnings {
 		text += " warning: " + w
 	}
-	return text, nil
+	return tui.Added{Text: text, Source: name, Skills: len(s.Discovery.Skills)}, nil
+}
+
+// MakeSearchable makes the skills of the source that are not assigned in every
+// folder yet Searchable, as quiver add --source --searchable --global.
+func (b *tuiBackend) MakeSearchable(source string) (string, error) {
+	var out bytes.Buffer
+	err := add(strings.NewReader(""), &out, target{global: true, yes: true}, addOptions{searchable: true, source: source}, nil)
+	syncHooks(io.Discard)
+	if err != nil {
+		return "", err
+	}
+	return firstLine(out.String()) + " Undo: quiver remove --source " + source + " --global", nil
 }
 
 func (b *tuiBackend) NewSkill(name, description, projectPath string, global bool) (string, error) {

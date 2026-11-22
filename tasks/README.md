@@ -166,7 +166,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK62.1](TASK62.1-discovery-spike.md) | Discovery spike | TASK61 |
 | ✅ | ↳ [TASK62.2](TASK62.2-searchable-level-in-the-registry.md) | Searchable level in the registry | TASK61, TASK62.1 |
 | ✅ | ↳ [TASK62.3](TASK62.3-assigning-the-searchable-level.md) | Assigning the Searchable level | TASK62.2 |
-|  | ↳ [TASK62.4](TASK62.4-searchable-delivery-readers-and-panel.md) | Searchable skills in delivery, readers and the panel | TASK62.2, TASK62.3 |
+| ✅ | ↳ [TASK62.4](TASK62.4-searchable-delivery-readers-and-panel.md) | Searchable skills in delivery, readers and the panel | TASK62.2, TASK62.3 |
 |  | ↳ [TASK62.5](TASK62.5-search-settings-and-word-search.md) | Search settings and word search | TASK61, TASK62.1, TASK62.4 |
 |  | ↳ [TASK62.6](TASK62.6-local-vector-search.md) | Local vector search | TASK62.1, TASK62.5 |
 |  | ↳ [TASK62.7](TASK62.7-guided-local-model-setup.md) | Guided setup of the local model | TASK62.1, TASK62.4, TASK62.6 |

@@ -412,9 +412,9 @@ func TestTUIBackendAddsASourceLikeQuiverSourceAdd(t *testing.T) {
 		t.Fatal(err)
 	}
 	b := &tuiBackend{}
-	text, err := b.AddSource(skillRepo(t, "team", "pdf", "docx"), "acme")
-	if err != nil || !strings.Contains(text, "Added source acme with 2 skills") {
-		t.Fatalf("text %q, err %v", text, err)
+	added, err := b.AddSource(skillRepo(t, "team", "pdf", "docx"), "acme")
+	if err != nil || !strings.Contains(added.Text, "Added source acme with 2 skills") || added.Source != "acme" || added.Skills != 2 {
+		t.Fatalf("added %+v, err %v", added, err)
 	}
 	d, err := b.Load("")
 	if err != nil {

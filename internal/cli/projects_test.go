@@ -158,8 +158,8 @@ func TestProjectsJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []projectJSON{
-		{ID: "api-000002", Name: "api", Skills: []string{"tdd"}, Paths: []string{f.api}, Missing: []string{f.api}},
-		{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Paths: []string{f.app}, Missing: []string{}},
+		{ID: "api-000002", Name: "api", Skills: []string{"tdd"}, Searchable: []string{}, Paths: []string{f.api}, Missing: []string{f.api}},
+		{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Searchable: []string{}, Paths: []string{f.app}, Missing: []string{}},
 	}
 	if !reflect.DeepEqual(got.Projects, want) {
 		t.Errorf("got  %+v\nwant %+v", got.Projects, want)
@@ -178,7 +178,7 @@ func TestWhereJSON(t *testing.T) {
 		want whereJSON
 	}{
 		{"acme/review", whereJSON{ID: "acme/review", InLibrary: true, Global: true, Projects: []projectJSON{
-			{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Paths: []string{f.app}, Missing: []string{}},
+			{ID: "app-000001", Name: "app", Skills: []string{"acme/review", "tdd"}, Searchable: []string{}, Paths: []string{f.app}, Missing: []string{}},
 		}, Searchable: searchableWhere{Projects: []projectJSON{}}}},
 		{"notes", whereJSON{ID: "notes", InLibrary: true, Projects: []projectJSON{}, Searchable: searchableWhere{Projects: []projectJSON{}}}},
 	} {

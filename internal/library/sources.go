@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -201,8 +202,9 @@ func (e *InUseError) Error() string {
 	return b.String()
 }
 
-// usage collects the assigned IDs that start with "<name>/". IDs that no
-// longer exist in the source count too.
+// usage collects the assigned IDs that start with "<name>/", at any level
+// (Searchable skills count). IDs that no longer exist in the source count
+// too.
 func usage(r *registry.Registry, name string) Usage {
 	prefix := name + "/"
 	from := func(ids []string) []string {
@@ -214,9 +216,9 @@ func usage(r *registry.Registry, name string) Usage {
 		}
 		return out
 	}
-	u := Usage{Global: from(r.Global)}
+	u := Usage{Global: from(slices.Concat(r.Global, r.Searchable))}
 	for id, p := range r.Projects {
-		if skills := from(p.Skills); len(skills) > 0 {
+		if skills := from(slices.Concat(p.Skills, p.Searchable)); len(skills) > 0 {
 			u.Projects = append(u.Projects, ProjectUse{ID: id, Name: p.Name, Paths: p.Paths, Skills: skills})
 		}
 	}

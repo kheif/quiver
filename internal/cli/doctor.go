@@ -245,7 +245,7 @@ func (d *doc) checkAssigned() {
 	var details []string
 	global := []string{}
 	projects := map[string][]string{}
-	for _, id := range d.reg.Global {
+	for _, id := range slices.Concat(d.reg.Global, d.reg.Searchable) {
 		if inLib(id) {
 			continue
 		}
@@ -263,7 +263,7 @@ func (d *doc) checkAssigned() {
 	sort.Strings(ids)
 	for _, pid := range ids {
 		p := d.reg.Projects[pid]
-		for _, id := range p.Skills {
+		for _, id := range slices.Concat(p.Skills, p.Searchable) {
 			if inLib(id) {
 				continue
 			}
@@ -462,14 +462,19 @@ func (d *doc) checkClashes() {
 		}
 	}
 	// Global clashes first, so they are reported once, not per project.
-	check(d.reg.Served(""), "every folder")
+	// A Searchable skill is loaded by its ID, but a name that two skills
+	// share is as ambiguous there as in the list.
+	reachable := func(projectID string) []string {
+		return slices.Concat(d.reg.Served(projectID), d.reg.SearchableServed(projectID))
+	}
+	check(reachable(""), "every folder")
 	ids := make([]string, 0, len(d.reg.Projects))
 	for id := range d.reg.Projects {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 	for _, id := range ids {
-		check(d.reg.Served(id), "project "+d.reg.Projects[id].Name)
+		check(reachable(id), "project "+d.reg.Projects[id].Name)
 	}
 	if len(found) == 0 {
 		d.report("ok", title)

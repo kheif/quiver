@@ -17,24 +17,31 @@ type Incoming struct {
 	// AlwaysOn lists skills that become always-on, as "<skill>" for global
 	// ones and "<skill> (project <name>)" for a project's.
 	AlwaysOn []string
+	// Searchable lists skills that become Searchable, in the same form. The
+	// assistant loads them without asking when a search finds them.
+	Searchable []string
 	// Changed lists always-on local skills whose files change.
 	Changed []string
+	// ChangedSearchable lists Searchable local skills whose files change.
+	ChangedSearchable []string
 	// Sources lists sources that are added or point to another repository.
 	Sources []string
 }
 
 // Empty reports whether nothing that sessions start with changes.
 func (i Incoming) Empty() bool {
-	return len(i.AlwaysOn) == 0 && len(i.Changed) == 0 && len(i.Sources) == 0
+	return len(i.AlwaysOn) == 0 && len(i.Searchable) == 0 && len(i.Changed) == 0 && len(i.ChangedSearchable) == 0 && len(i.Sources) == 0
 }
 
 // registryFile and configFile are the parts of the synced files that matter
 // here.
 type registryFile struct {
-	AlwaysOn []string `json:"alwaysOn"`
-	Projects map[string]struct {
-		Name     string   `json:"name"`
-		AlwaysOn []string `json:"alwaysOn"`
+	AlwaysOn   []string `json:"alwaysOn"`
+	Searchable []string `json:"searchable"`
+	Projects   map[string]struct {
+		Name       string   `json:"name"`
+		AlwaysOn   []string `json:"alwaysOn"`
+		Searchable []string `json:"searchable"`
 	} `json:"projects"`
 }
 
@@ -52,10 +59,14 @@ func review(home, upstream string) (Incoming, error) {
 	if err != nil {
 		return in, err
 	}
-	// Always-on skills, in either version, whose files may change.
-	watch := map[string]bool{}
+	// Always-on and Searchable skills, in either version, whose files may
+	// change: the assistant loads both without asking.
+	watch, watchSearch := map[string]bool{}, map[string]bool{}
 	for _, id := range ours.AlwaysOn {
 		watch[id] = true
+	}
+	for _, id := range ours.Searchable {
+		watchSearch[id] = true
 	}
 	for _, id := range theirs.AlwaysOn {
 		watch[id] = true
@@ -63,9 +74,18 @@ func review(home, upstream string) (Incoming, error) {
 			in.AlwaysOn = append(in.AlwaysOn, id)
 		}
 	}
+	for _, id := range theirs.Searchable {
+		watchSearch[id] = true
+		if !slices.Contains(ours.Searchable, id) {
+			in.Searchable = append(in.Searchable, id)
+		}
+	}
 	for _, p := range ours.Projects {
 		for _, id := range p.AlwaysOn {
 			watch[id] = true
+		}
+		for _, id := range p.Searchable {
+			watchSearch[id] = true
 		}
 	}
 	for pid, p := range theirs.Projects {
@@ -73,10 +93,17 @@ func review(home, upstream string) (Incoming, error) {
 		if name == "" {
 			name = pid
 		}
+		o, known := ours.Projects[pid]
 		for _, id := range p.AlwaysOn {
 			watch[id] = true
-			if o, ok := ours.Projects[pid]; !ok || !slices.Contains(o.AlwaysOn, id) {
+			if !known || !slices.Contains(o.AlwaysOn, id) {
 				in.AlwaysOn = append(in.AlwaysOn, id+" (project "+name+")")
+			}
+		}
+		for _, id := range p.Searchable {
+			watchSearch[id] = true
+			if !known || !slices.Contains(o.Searchable, id) {
+				in.Searchable = append(in.Searchable, id+" (project "+name+")")
 			}
 		}
 	}
@@ -88,22 +115,32 @@ func review(home, upstream string) (Incoming, error) {
 	if err != nil {
 		return in, err
 	}
-	changed := map[string]bool{}
+	changed, changedSearch := map[string]bool{}, map[string]bool{}
 	for _, f := range files {
 		if rest, ok := strings.CutPrefix(f, "local/"); ok {
-			if id, _, found := strings.Cut(rest, "/"); found && watch[id] {
-				changed[id] = true
+			if id, _, found := strings.Cut(rest, "/"); found {
+				switch {
+				case watch[id]:
+					changed[id] = true
+				case watchSearch[id]:
+					changedSearch[id] = true
+				}
 			}
 		}
 	}
 	for id := range changed {
 		in.Changed = append(in.Changed, id)
 	}
+	for id := range changedSearch {
+		in.ChangedSearchable = append(in.ChangedSearchable, id)
+	}
 	if in.Sources, err = changedSources(home, upstream); err != nil {
 		return in, err
 	}
 	sort.Strings(in.AlwaysOn)
+	sort.Strings(in.Searchable)
 	sort.Strings(in.Changed)
+	sort.Strings(in.ChangedSearchable)
 	return in, nil
 }
 

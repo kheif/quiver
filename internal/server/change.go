@@ -43,14 +43,18 @@ func addUpdateTool(s *mcp.Server, sess *session) {
 	})
 }
 
-// checkChangeable refuses a change to a skill the session is not served, and
-// to an always-on skill. An assistant that follows a prompt injection could
+// checkChangeable refuses a change to a skill the session is not served, to
+// a Searchable skill (loaded without asking when a search finds it) and to
+// an always-on skill. An assistant that follows a prompt injection could
 // otherwise rewrite the rules of another project, or the text that every
 // later session starts with. Those are changed with quiver edit.
 func checkChangeable(projectID, id string) error {
 	r, err := registry.Load()
 	if err != nil {
 		return err
+	}
+	if r.LevelIn(projectID, id) == registry.Searchable {
+		return fmt.Errorf("%s is only searchable: the assistant loads it without asking, so update_skill does not change it. The user can make it listed with \"quiver add %s\" first, or change it with \"quiver edit %s\"", id, id, id)
 	}
 	if !slices.Contains(r.Served(projectID), id) {
 		return fmt.Errorf("%s is not served in this project, so update_skill does not change it. The user can assign it with \"quiver add %s\", or change it with \"quiver edit %s\"", id, id, id)

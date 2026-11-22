@@ -504,7 +504,7 @@ func (m Model) skillRows() []listRow {
 		switch {
 		case (s.Global && s.GlobalAlways) || (s.Project && s.ProjectAlways):
 			r.tone = toneStrong
-		case !s.Project && !s.Global:
+		case !s.assignedHere():
 			r.tone = toneQuiet
 		}
 		if grouped {
@@ -545,9 +545,16 @@ func (m Model) projectRows() []listRow {
 		if p.Folders > 1 {
 			tags = append(tags, fmt.Sprintf("in %d folders", p.Folders))
 		}
-		scope := plural(len(p.Skills), "skill", "skills")
+		scope := plural(len(p.Skills)+len(p.Searchable), "skill", "skills")
+		var levels []string
 		if n := len(p.AlwaysOn); n > 0 {
-			scope += fmt.Sprintf(" (%d always on)", n)
+			levels = append(levels, fmt.Sprintf("%d always on", n))
+		}
+		if n := len(p.Searchable); n > 0 {
+			levels = append(levels, fmt.Sprintf("%d searchable", n))
+		}
+		if len(levels) > 0 {
+			scope += " (" + strings.Join(levels, ", ") + ")"
 		}
 		if len(tags) > 0 {
 			scope += " · " + strings.Join(tags, " · ")
@@ -746,7 +753,7 @@ func rowsBefore(entries []listEntry, i int) int {
 // skill that no one uses here is not taken for unused.
 func (m Model) elsewhere(s Skill) []string {
 	var names []string
-	for _, id := range s.UsedIn {
+	for _, id := range slices.Compact(slices.Sorted(slices.Values(slices.Concat(s.UsedIn, s.SearchableIn)))) {
 		if m.data.Project != nil && id == m.data.Project.ID {
 			continue
 		}
@@ -774,20 +781,24 @@ func usedText(names []string) string {
 func (m Model) scopeLabel(s Skill) string {
 	withLoad := true
 	var base string
+	here, every := s.Project || s.ProjectSearchable, s.Global || s.GlobalSearchable
 	switch {
-	case s.Project && s.Global:
+	case here && every:
 		base = "Project + global"
-	case s.Project:
+	case here:
 		base = "Project"
-	case s.Global:
+	case every:
 		base = "Global"
 	case len(m.elsewhere(s)) > 0:
 		base, withLoad = "Other projects", false
 	default:
 		base = "Unassigned"
 	}
-	if withLoad && ((s.Global && s.GlobalAlways) || (s.Project && s.ProjectAlways)) {
+	switch {
+	case withLoad && ((s.Global && s.GlobalAlways) || (s.Project && s.ProjectAlways)):
 		base += " · always on"
+	case withLoad && !s.Global && !s.Project:
+		base += " · searchable"
 	}
 	return base
 }
@@ -1151,16 +1162,20 @@ func (m Model) projectDetail(w, h int) []string {
 	out = append(out, m.actionLines(w)...)
 
 	direct := map[string]bool{}
-	for _, id := range p.Skills {
+	for _, id := range slices.Concat(p.Skills, p.Searchable) {
 		direct[id] = true
 	}
 	var inherited []string
 	for _, s := range m.data.Skills {
-		if s.Global && !direct[s.ID] {
+		switch {
+		case direct[s.ID]:
+		case s.Global:
 			inherited = append(inherited, "  "+s.ID)
+		case s.GlobalSearchable:
+			inherited = append(inherited, "  "+s.ID+faint.Render("  searchable"))
 		}
 	}
-	sorted := slices.Clone(p.Skills)
+	sorted := slices.Concat(p.Skills, p.Searchable)
 	sort.Strings(sorted)
 	inLibrary := map[string]bool{}
 	for _, s := range m.data.Skills {
@@ -1174,6 +1189,8 @@ func (m Model) projectDetail(w, h int) []string {
 			items[i] += faint.Render("  not in the library")
 		case slices.Contains(p.AlwaysOn, id):
 			items[i] += accent.Render("  always on")
+		case slices.Contains(p.Searchable, id):
+			items[i] += faint.Render("  searchable")
 		}
 	}
 	room := h - len(out) - 4
@@ -1229,11 +1246,11 @@ func (m Model) sourceDetail(w, h int) []string {
 			continue
 		}
 		var scopes []string
-		if sk.Project && m.data.Project != nil {
-			scopes = append(scopes, "project "+m.data.Project.Name)
+		if (sk.Project || sk.ProjectSearchable) && m.data.Project != nil {
+			scopes = append(scopes, "project "+m.data.Project.Name+searchableTag(sk.ProjectSearchable))
 		}
-		if sk.Global {
-			scopes = append(scopes, "global")
+		if sk.Global || sk.GlobalSearchable {
+			scopes = append(scopes, "global"+searchableTag(sk.GlobalSearchable))
 		}
 		if names := m.elsewhere(sk); len(names) > 0 {
 			verb := "used in "
@@ -1252,6 +1269,14 @@ func (m Model) sourceDetail(w, h int) []string {
 		out = append(out, faint.Render(clip("  Assign them in Skills: press 1, then → for all skills.", w)))
 	}
 	return append(out, limited(items, max(h-len(out), 1), w)...)
+}
+
+// searchableTag marks a Searchable assignment in a list of places.
+func searchableTag(searchable bool) string {
+	if searchable {
+		return " (searchable)"
+	}
+	return ""
 }
 
 // --- dialogs -------------------------------------------------------------
@@ -1276,7 +1301,8 @@ func (m Model) dialogLines(cw int) []string {
 	}
 	return append(out, "",
 		faint.Render(clip("Not assigned: "+d.id+" is not available in "+where+".", cw)),
-		faint.Render(clip("On demand: the assistant loads it when the task fits.", cw)),
+		faint.Render(clip("Searchable: not listed; the assistant finds it by searching and loads it.", cw)),
+		faint.Render(clip("On demand: listed; the assistant loads it when the task fits.", cw)),
 		faint.Render(clip("Always on: loaded before the first reply, from the next session.", cw)))
 }
 
@@ -1386,7 +1412,7 @@ func (m Model) footerKeys(cw int) []string {
 			keys = append(keys, what)
 		}
 	case m.dlg != nil:
-		keys, essential = []string{"↑↓ choose", "1-3 pick", "enter apply", "esc cancel"}, nil
+		keys, essential = []string{"↑↓ choose", "1-4 pick", "enter apply", "esc cancel"}, nil
 	case m.asking != nil:
 		keys, essential = []string{"enter " + m.asking.verb, "esc cancel"}, nil
 	case m.searching:

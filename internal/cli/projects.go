@@ -55,17 +55,22 @@ type searchableWhere struct {
 
 // projectJSON is one project in the JSON output of where and projects.
 type projectJSON struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	Skills  []string `json:"skills"`
-	Paths   []string `json:"paths"`
-	Missing []string `json:"missing"` // the paths that no longer exist
+	ID     string   `json:"id"`
+	Name   string   `json:"name"`
+	Skills []string `json:"skills"`
+	// Searchable lists the project's Searchable skills; Skills keeps the served ones.
+	Searchable []string `json:"searchable"`
+	Paths      []string `json:"paths"`
+	Missing    []string `json:"missing"` // the paths that no longer exist
 }
 
 func newProjectJSON(id string, p *registry.Project) projectJSON {
-	pj := projectJSON{ID: id, Name: p.Name, Skills: p.Skills, Paths: p.Paths, Missing: []string{}}
+	pj := projectJSON{ID: id, Name: p.Name, Skills: p.Skills, Searchable: p.Searchable, Paths: p.Paths, Missing: []string{}}
 	if pj.Skills == nil {
 		pj.Skills = []string{}
+	}
+	if pj.Searchable == nil {
+		pj.Searchable = []string{}
 	}
 	if pj.Paths == nil {
 		pj.Paths = []string{}
@@ -200,7 +205,7 @@ func listProjects(out io.Writer, asJSON bool) error {
 		if len(paths) == 0 {
 			paths = []string{"(not seen on this machine)"}
 		}
-		fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", p.Name, id, len(p.Skills), strings.Join(paths, ", "))
+		fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", p.Name, id, len(p.Skills)+len(p.Searchable), strings.Join(paths, ", "))
 	}
 	return w.Flush()
 }
@@ -263,7 +268,7 @@ func forget(in io.Reader, out io.Writer, ref string, yes bool) error {
 		return err
 	}
 	p := r.Projects[id]
-	question := fmt.Sprintf("Forget project %s [%s] and its %s?", registry.ProjectLabel(p.Name, p.Paths), id, plural(len(p.Skills), "skill assignment"))
+	question := fmt.Sprintf("Forget project %s [%s] and its %s?", registry.ProjectLabel(p.Name, p.Paths), id, plural(len(p.Skills)+len(p.Searchable), "skill assignment"))
 	if !yes && !confirm(in, out, question) {
 		fmt.Fprintln(out, "Project not forgotten.")
 		return nil

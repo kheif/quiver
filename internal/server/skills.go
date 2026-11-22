@@ -64,6 +64,17 @@ func loadServed(projectID string) (*library.Library, []servedSkill, error) {
 	return l, out, nil
 }
 
+// levelIn reports whether the skill is assigned in the project's folder at
+// any level: listed, always-on or Searchable. A Searchable skill is loaded
+// without the "not assigned" note.
+func levelIn(projectID, id string) (bool, error) {
+	r, err := registry.Load()
+	if err != nil {
+		return false, err
+	}
+	return r.LevelIn(projectID, id) != registry.NotAssigned, nil
+}
+
 // readOnly marks a tool that changes nothing, so assistants may run it
 // without asking, as Codex does.
 var readOnly = &mcp.ToolAnnotations{ReadOnlyHint: true}
@@ -76,7 +87,7 @@ func addSkillTools(s *mcp.Server, sess *session) {
 	mcp.AddTool(s, &mcp.Tool{
 		Name:        "list_skills",
 		Annotations: readOnly,
-		Description: "List every skill available in this project with its whole description: the project's own skills first, then the global ones, including skills assigned during this session. Always-on skills are marked.",
+		Description: "List every listed skill of this project with its whole description: the project's own skills first, then the global ones, including skills assigned during this session. Always-on skills are marked. Skills that are only searchable are not listed; search_skills finds them.",
 	}, func(context.Context, *mcp.CallToolRequest, struct{}) (*mcp.CallToolResult, listOut, error) {
 		_, skills, err := loadServed(sess.projectID())
 		if err != nil {
@@ -117,7 +128,11 @@ func addSkillTools(s *mcp.Server, sess *session) {
 		if err != nil {
 			return nil, nil, err
 		}
-		if !slices.ContainsFunc(skills, func(s servedSkill) bool { return s.ID == sk.ID }) {
+		assigned, err := levelIn(sess.projectID(), sk.ID)
+		if err != nil {
+			return nil, nil, err
+		}
+		if !slices.ContainsFunc(skills, func(s servedSkill) bool { return s.ID == sk.ID }) && !assigned {
 			content = fmt.Sprintf("Note: %s is not assigned in this project. The user can assign it with \"quiver add %s\".\n\n", sk.ID, sk.ID) + content
 		}
 		return text(content), nil, nil

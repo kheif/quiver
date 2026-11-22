@@ -72,7 +72,7 @@ In a terminal, `quiver` without arguments opens a panel for everything above, wi
 
 | Section | What it does |
 |---|---|
-| **1 Skills** | Your skills in four views (available here, the project's, global, all), grouped by source. Assign a skill to the project and to every folder independently, each as *On demand* or *Always on*. `n` creates a skill, `i` imports, `e` edits, `f` forks a source skill, `d` deletes, `p` pins. `/` searches. |
+| **1 Skills** | Your skills in four views (available here, the project's, global, all), grouped by source. Assign a skill to the project and to every folder independently, each as *Not assigned*, *Searchable*, *On demand* or *Always on*. `n` creates a skill, `i` imports, `e` edits, `f` forks a source skill, `d` deletes, `p` pins. `/` searches. |
 | **2 Projects** | The registered projects. Choose one to manage it from anywhere, rename it, forget it, or split a copied folder. |
 | **3 Sources** | The skill repositories. `a` adds one, `u` checks for updates and shows what would change (`d` shows the patches) before it applies them, `x` removes one. While the panel is open, Quiver checks the sources for updates in the background, one at a time and only when online, and shows a notice; it pulls nothing without a key press. `updateCheckInterval` in `config.json` (a duration such as `"12h"`, default 6 hours) sets how often. |
 | **4 Health** | The checks of `quiver doctor` and how always-on skills reach each assistant. `i` sets up the MCP server and hooks, `f` applies the safe fixes. Without a Quiver home, the panel offers to set it up. |
@@ -105,19 +105,19 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver import` | Move the skills in this project's `.claude/skills` into the library (`--deep`: every folder of the project). Originals committed in git are kept; `--keep` keeps all. |
 | `quiver import <folder>` | Move every skill in a folder and its subfolders into the library. Files that are not valid skills are listed at the end. |
 | `quiver import <skill>` | Move one skill: its `SKILL.md`, its folder or a markdown file with frontmatter. `--name` renames it. |
-| `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. |
-| `quiver remove <id>...` | Unassign skills. They stay in the library. |
-| `quiver list` | List the library's skills and where each is assigned (`--source`, `--unassigned`, `--json`). |
+| `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. `--searchable` makes them Searchable: not listed or loaded at session start, found by the assistant when it searches and loaded without asking. `--source <name> --searchable` does that for every skill of a source that is not assigned yet in the scope. A skill is at one level per scope: `--searchable` takes it off the listed skills of that scope, and `add` without it takes it off the Searchable ones. |
+| `quiver remove <id>...` | Unassign skills, from every level of the scope. They stay in the library. `--source <name>` removes every skill of a source. |
+| `quiver list` | List the library's skills and where each is assigned, with the Searchable ones marked (`--source`, `--unassigned`, `--json`). |
 | `quiver show <id>` | Show a skill: where it comes from, where it is assigned, its files and its `SKILL.md` (`--json`). |
 | `quiver search <text>` | Search the IDs, names and descriptions of every library skill, also unassigned ones, and show whether each is served here (`--json`). |
 | `quiver status` | Show the project in this folder and the skills served here, with a warning for each copy Claude Code also loads (`--json`). |
 | `quiver where <id>` | Show where one skill is assigned (`--json`). |
-| `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. An `http://` or `git://` address is refused, because it is not encrypted; set `"allowInsecureSources": true` in `~/.quiver/config.json` to allow it, and Quiver still warns. |
+| `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. An `http://` or `git://` address is refused, because it is not encrypted; set `"allowInsecureSources": true` in `~/.quiver/config.json` to allow it, and Quiver still warns. In a terminal it then asks whether to make the skills Searchable in every folder (the default is no; `--searchable` answers yes) and prints the command that undoes it. |
 | `quiver source list` | List sources with their skill count and commit. |
 | `quiver source remove <name>` | Delete a source. Refuses while its skills are assigned, unless `--force`. |
 | `quiver update [<name>...]` | Download the latest skills of all or some sources and show what would change: the changed files of each assigned skill, with scripts marked "needs review". Asks before it applies changes to assigned skills (`--yes` does not ask, `--diff` shows the whole change). Pinned skills stay at their commit. |
 | `quiver pin <source/skill> [<commit>]` | Keep a source skill at its current commit, or the one given, so `quiver update` leaves it alone. `quiver unpin` goes back to the source's current version. |
-| `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. Before it pulls changes that make a skill always-on, change an always-on skill's files or add a source, it lists them and asks (`--yes` takes them). |
+| `quiver sync init <git-remote>` | Keep the Quiver home in a git remote, so your other machines get the same skills, sources and assignments. Run it on each machine; then `quiver sync` commits, pulls and pushes, merges assignment changes from both machines and clones sources added elsewhere. Before it pulls changes that make a skill always-on or searchable, change the files of such a skill or add a source, it lists them and asks (`--yes` takes them). |
 | `quiver projects` | List projects (`--json`); `rename`, `forget` and `split` manage them. |
 | `quiver doctor` | Check the library, the assignments, copies of served skills in Claude Code and its setup (`--fix` applies the safe fixes). |
 | `quiver install [assistant...]` | Register the MCP server and add the session-start hook where the assistant has one, in every supported assistant that is installed, or only in the assistants named. See [MCP server](#mcp-server). |
@@ -175,14 +175,14 @@ Claude Code starts the server in the project folder. Other assistants may start 
 
 | Tool | Input | Result |
 |---|---|---|
-| `list_skills` | — | Every skill served here, project skills first: ID, name, whole description, `global` or `project`, and whether it is always-on. |
-| `get_skill` | `id` | The skill's instructions, its extra files and its folder. |
+| `list_skills` | — | Every listed skill here, project skills first: ID, name, whole description, `global` or `project`, and whether it is always-on. Searchable skills are not listed. |
+| `get_skill` | `id` | The skill's instructions, its extra files and its folder. A Searchable skill loads without the note that it is not assigned. |
 | `get_skill_file` | `id`, `path` | One extra file of a skill, such as `references/checklist.md`. Large and binary files return their path instead. |
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |
 | `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. |
 | `search_skills` | `query` | Searches the whole library, also skills not assigned here, and marks each match as assigned here (`global` or `project`) or not. The assistant may suggest an unassigned skill, but asks before using it. |
 
-**Prompts.** Every served skill is also an MCP prompt. In Claude Code it appears as `/quiver:<id>`; text after the command is passed to the skill as the task.
+**Prompts.** Every listed skill is also an MCP prompt; Searchable skills are not. In Claude Code it appears as `/quiver:<id>`; text after the command is passed to the skill as the task.
 
 **Live updates.** While a session runs, the server watches the library. Skills you add, remove or change show up in `list_skills` and the prompts right away. The hook's text is built when a session starts, so it changes from the next session on.
 
@@ -199,9 +199,9 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - Add only sources you trust, and read their skills before you assign them.
 - `quiver update` downloads new commits before it applies them, lists the changed files of every assigned skill, marks scripts and executable files "needs review", and asks before it applies the changes. Read them with `quiver update --diff`; answering no leaves the source as it was. To review changes to a skill before it reaches your sessions, pin it with `quiver pin` and move the pin when you have read them.
 - Source skills are read-only in Quiver. To change one, fork it into your own skills with `quiver fork`.
-- `quiver sync` takes in what another machine pushed, so it lists changes that make a skill always-on, change an always-on skill or add a source, and asks first; use a private remote.
+- `quiver sync` takes in what another machine pushed, so it lists changes that make a skill always-on or searchable, change the files of such a skill or add a source, and asks first; use a private remote.
 - `get_skill` and `search_skills` read the whole library, not only the skills assigned to the project; assign only what you want a project's sessions to see by name.
-- `update_skill` changes only skills served in the session's project, and never an always-on skill: change those yourself with `quiver edit`.
+- `update_skill` changes only skills served in the session's project, and never an always-on or Searchable skill (the assistant loads both without asking): change those yourself with `quiver edit`, or make a Searchable skill listed with `quiver add <id>` first.
 - `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`. Every change is a commit in `~/.quiver/local` (in `~/.quiver` once you use `quiver sync`), so `git -C ~/.quiver/local log -p` shows it and `git revert` undoes it.
 
 To report a vulnerability in Quiver itself, see [SECURITY.md](SECURITY.md).

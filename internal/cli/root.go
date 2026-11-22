@@ -167,11 +167,15 @@ func overview(out io.Writer) error {
 		}
 		count += ")"
 	}
+	searchable := r.SearchableServed(w.ProjectID())
+	if len(searchable) > 0 {
+		count += fmt.Sprintf(", %d searchable", len(searchable))
+	}
 	next := "quiver status"
 	switch {
 	case len(l.All()) == 0:
 		next = "quiver new <name> to write a skill, or quiver source add <repo>"
-	case len(served) == 0:
+	case len(served) == 0 && len(searchable) == 0:
 		next = "quiver add <id> (see quiver list)"
 	}
 	fmt.Fprintf(out, "%s\nServed:  %s\nNext:    %s\n", here, count, next)

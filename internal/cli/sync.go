@@ -17,8 +17,14 @@ func syncConfirm(in io.Reader, out io.Writer, yes bool) homesync.Confirm {
 		for _, id := range inc.AlwaysOn {
 			fmt.Fprintf(out, "  becomes always-on: %s\n", id)
 		}
+		for _, id := range inc.Searchable {
+			fmt.Fprintf(out, "  becomes searchable (the assistant loads it without asking): %s\n", id)
+		}
 		for _, id := range inc.Changed {
 			fmt.Fprintf(out, "  always-on skill with changed files: %s (see quiver show %s)\n", id, id)
+		}
+		for _, id := range inc.ChangedSearchable {
+			fmt.Fprintf(out, "  searchable skill with changed files: %s (see quiver show %s)\n", id, id)
 		}
 		for _, s := range inc.Sources {
 			fmt.Fprintf(out, "  source added or changed: %s\n", s)
@@ -47,8 +53,8 @@ and says how to resolve it. Sources added on another machine are cloned
 afterwards.
 
 Whatever another machine pushed becomes live here, so when it makes a skill
-always-on, changes the files of an always-on skill or adds a source, sync
-lists those changes and asks before it pulls. --yes takes them without
+always-on or searchable, changes the files of such a skill or adds a source,
+sync lists those changes and asks before it pulls. --yes takes them without
 asking; without a terminal and without --yes, sync pulls nothing.
 
 Only local/, config.json and registry.json are synced. sources/ is cloned

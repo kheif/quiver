@@ -24,11 +24,14 @@ type Mode int
 
 const (
 	NotAssigned Mode = iota
+	// Searchable: not listed and not loaded at session start; the assistant
+	// finds the skill by searching.
+	Searchable
 	OnDemand
 	AlwaysOn
 )
 
-var modeNames = [...]string{"Not assigned", "On demand", "Always on"}
+var modeNames = [...]string{"Not assigned", "Searchable", "On demand", "Always on"}
 
 func (m Mode) String() string { return modeNames[m] }
 
@@ -41,37 +44,53 @@ type Skill struct {
 	Local       bool   // it can be edited; skills from a source are read-only
 	Pin         string // the commit a source skill is pinned to, if any
 
+	// Global and Project are the listed assignments (On demand or Always on);
+	// GlobalSearchable and ProjectSearchable are the Searchable ones, which
+	// exclude them in the same scope.
 	Global, GlobalAlways   bool
 	Project, ProjectAlways bool // in the managed project
-	UsedIn                 []string
+	GlobalSearchable       bool
+	ProjectSearchable      bool
+	UsedIn                 []string // IDs of the projects that list it
+	SearchableIn           []string // IDs of the projects where it is Searchable
 }
 
-func modeOf(assigned, always bool) Mode {
+func modeOf(assigned, always, searchable bool) Mode {
 	switch {
-	case !assigned:
-		return NotAssigned
-	case always:
+	case assigned && always:
 		return AlwaysOn
+	case assigned:
+		return OnDemand
+	case searchable:
+		return Searchable
 	}
-	return OnDemand
+	return NotAssigned
 }
 
 // ProjectMode is the assignment in the managed project.
-func (s Skill) ProjectMode() Mode { return modeOf(s.Project, s.ProjectAlways) }
+func (s Skill) ProjectMode() Mode { return modeOf(s.Project, s.ProjectAlways, s.ProjectSearchable) }
 
 // GlobalMode is the assignment for every folder.
-func (s Skill) GlobalMode() Mode { return modeOf(s.Global, s.GlobalAlways) }
+func (s Skill) GlobalMode() Mode { return modeOf(s.Global, s.GlobalAlways, s.GlobalSearchable) }
+
+// assignedHere reports whether the skill is assigned at any level in the
+// managed project or for every folder.
+func (s Skill) assignedHere() bool {
+	return s.Global || s.Project || s.GlobalSearchable || s.ProjectSearchable
+}
 
 // Project is a registered project.
 type Project struct {
 	Name, ID string
 	Skills   []string // IDs of the skills assigned to it directly, each once
-	Paths    []string // folders where it was seen on this machine
-	Path     string   // the first of Paths that exists, or ""
-	Current  bool     // the folder quiver was started in
-	Missing  bool     // it has folders, and none exists
-	AlwaysOn []string // IDs of the skills assigned to it that are always-on
-	Folders  int      // how many of Paths exist; more than one is a copy
+	// Searchable lists the IDs of its Searchable skills; they are not in Skills.
+	Searchable []string
+	Paths      []string // folders where it was seen on this machine
+	Path       string   // the first of Paths that exists, or ""
+	Current    bool     // the folder quiver was started in
+	Missing    bool     // it has folders, and none exists
+	AlwaysOn   []string // IDs of the skills assigned to it that are always-on
+	Folders    int      // how many of Paths exist; more than one is a copy
 }
 
 // Source is a configured remote source of skills.
@@ -137,6 +156,13 @@ type Preview struct {
 // was rewritten upstream. The panel then offers to take the remote history.
 var ErrDiverged = errors.New("the remote history was rewritten")
 
+// Added is the result of adding a source.
+type Added struct {
+	Text   string // what to tell the person
+	Source string // the name it was added under
+	Skills int
+}
+
 // Backend is what the panel needs from the rest of quiver. Every change goes
 // through the code the commands use.
 type Backend interface {
@@ -169,7 +195,10 @@ type Backend interface {
 	SplitHere() (string, error)
 	// AddSource clones a repository as a source; name "" is the repository
 	// owner.
-	AddSource(repo, name string) (string, error)
+	AddSource(repo, name string) (Added, error)
+	// MakeSearchable makes the skills of a source that are not assigned yet
+	// Searchable in every folder, and returns what it did.
+	MakeSearchable(source string) (string, error)
 	// NewSkill creates a local skill and assigns it to the project in the
 	// folder at projectPath, or to none when that is "". Without a
 	// description it opens the editor, so the caller gives it the terminal.
@@ -271,6 +300,9 @@ type (
 		text string
 		err  error
 		keep string // skill ID to select after the reload
+		// offer is set after a source with skills was added: the person is
+		// asked whether to make them Searchable.
+		offer *Added
 	}
 	healthMsg struct {
 		report HealthReport
@@ -504,6 +536,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		keys := m.selectedKeys()
 		if msg.keep != "" {
 			keys[secSkills] = msg.keep
+		}
+		if o := msg.offer; o != nil {
+			src := o.Source
+			m.confirm = &confirmation{
+				prompt: fmt.Sprintf("Make the %s of %s searchable in every folder? The assistant will then load them without asking when a search finds them. To undo it: quiver remove --source %s --global.", plural(o.Skills, "skill", "skills"), src, src),
+				run: func(m Model) (Model, tea.Cmd) {
+					return m.runProject("searchable:"+src, "making "+src+" searchable", func() (string, error) { return m.be.MakeSearchable(src) })
+				},
+			}
 		}
 		switch msg.key {
 		case "setup", "install", "uninstall", "fix":
@@ -1056,11 +1097,11 @@ func (m Model) selectedKeys() [secCount]string {
 func inView(s Skill, v skillView) bool {
 	switch v {
 	case viewHere:
-		return s.Global || s.Project
+		return s.assignedHere()
 	case viewProject:
-		return s.Project
+		return s.Project || s.ProjectSearchable
 	case viewGlobal:
-		return s.Global
+		return s.Global || s.GlobalSearchable
 	}
 	return true
 }
@@ -1072,10 +1113,10 @@ func (m Model) sourceUse(name string) (global, project []Skill) {
 		if s.Source != name {
 			continue
 		}
-		if s.Global {
+		if s.Global || s.GlobalSearchable {
 			global = append(global, s)
 		}
-		if s.Project {
+		if s.Project || s.ProjectSearchable {
 			project = append(project, s)
 		}
 	}
@@ -1254,7 +1295,7 @@ func (m Model) dialogKey(k string) (tea.Model, tea.Cmd) {
 		d.cursor = max(d.cursor-1, 0)
 	case "down", "j":
 		d.cursor = min(d.cursor+1, len(modeNames)-1)
-	case "1", "2", "3":
+	case "1", "2", "3", "4":
 		d.cursor = int(k[0] - '1')
 	case "enter", " ":
 		m.dlg = nil
@@ -1300,6 +1341,10 @@ func (m Model) setMode(s Skill, global bool, to Mode) (Model, tea.Cmd) {
 		q = fmt.Sprintf("Remove %s from every folder? It is always-on there, and that mark goes too.", s.ID)
 	case to == NotAssigned:
 		q = fmt.Sprintf("Remove %s from every folder?", s.ID)
+	case to == Searchable && from == AlwaysOn:
+		q = fmt.Sprintf("Make %s searchable in every folder? It is always-on there, and that mark goes too: it is no longer listed or loaded before the first reply, and the assistant loads it without asking when a search finds it.", s.ID)
+	case to == Searchable:
+		q = fmt.Sprintf("Make %s searchable in every folder? It is no longer listed; the assistant loads it without asking when a search finds it.", s.ID)
 	case to == OnDemand && from == AlwaysOn:
 		q = fmt.Sprintf("Stop loading %s before the first reply in every folder? It stays available.", s.ID)
 	case to == OnDemand:
@@ -1362,6 +1407,8 @@ func setMessage(s Skill, project string, global bool, to Mode, hookMissing bool)
 		if other != NotAssigned {
 			b.WriteString(" Still available " + otherWhere + ".")
 		}
+	case Searchable:
+		b.WriteString("Searchable " + where + ": not listed, found by searching.")
 	case OnDemand:
 		b.WriteString("On demand " + where + ".")
 	case AlwaysOn:
@@ -1377,7 +1424,7 @@ func setMessage(s Skill, project string, global bool, to Mode, hookMissing bool)
 	switch {
 	case to == AlwaysOn && hookMissing:
 		b.WriteString(" It does not load before the first reply yet: an assistant has no session-start hook. Press 4, then i.")
-	case to == AlwaysOn || from == AlwaysOn:
+	case to == AlwaysOn || from == AlwaysOn || to == Searchable || from == Searchable:
 		b.WriteString(" Applies from the next session.")
 	}
 	return b.String()
@@ -1451,7 +1498,7 @@ func (m Model) askAddSource() (Model, tea.Cmd) {
 				hint: "The skills get IDs like <name>/<skill>. Leave it empty to use the repository owner.",
 				submit: func(m Model, name string) (Model, tea.Cmd) {
 					m.sec = secSources
-					return m.runProject("source:"+repo, "cloning "+repo, func() (string, error) { return m.be.AddSource(repo, name) })
+					return m.runAddSource(repo, name)
 				},
 			})
 		},
@@ -1512,6 +1559,24 @@ func (m Model) projectAction(i int) (Model, tea.Cmd) {
 		}
 	}
 	return m, nil
+}
+
+// runAddSource clones a source. When it has skills, the person is asked
+// afterwards whether to make them Searchable (see doneMsg).
+func (m Model) runAddSource(repo, name string) (Model, tea.Cmd) {
+	key := "source:" + repo
+	if !m.start(key, "cloning "+repo) {
+		return m, nil
+	}
+	be := m.be
+	return m, func() tea.Msg {
+		a, err := be.AddSource(repo, name)
+		msg := doneMsg{key: key, text: a.Text, err: err}
+		if err == nil && a.Skills > 0 {
+			msg.offer = &a
+		}
+		return msg
+	}
 }
 
 func (m Model) runProject(key, label string, fn func() (string, error)) (Model, tea.Cmd) {

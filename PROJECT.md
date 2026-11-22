@@ -109,6 +109,17 @@ quiver add caveman/caveman --global --always
 
 The session-start hook puts their full text into the context before the first reply, for the main session and, in Claude Code, Codex, Antigravity and VS Code, for every sub-agent. Cursor has no sub-agent hook. An assistant without a hook gets only the names and loads them with `get_skill`; `quiver install` and `quiver status` say which assistants those are. Changes take effect in the next session. Plugin hooks are not run; only the skill text is delivered.
 
+### Searchable skills
+
+A skill that is only needed when its topic comes up (a style guide for Slack messages) should cost nothing until then. Assign it at the *Searchable* level: it is not listed at session start and not loaded. The assistant finds it by searching with `search_skills`, and loads it with `get_skill` without asking, because assigning a skill is the statement that you trust it.
+
+```bash
+quiver add slack-style --searchable --global
+quiver add --source anthropic --searchable --global   # every skill of a source that is not assigned yet
+```
+
+The four levels of a scope are *Not assigned*, *Searchable*, *On demand* (listed) and *Always on* (loaded in full). A skill is at one of them per scope, and across the global and the project scope its level in a folder is the most served of the two. Searchable skills are not MCP prompts, and `update_skill` does not change them, since the assistant would load the new text without asking. `quiver source add` asks once whether to make the skills of a new source Searchable (`--searchable` says yes); the default is no.
+
 ### Prompts
 
 Every available skill is also exposed as an MCP prompt. In Claude Code, this means a skill can be invoked directly as a slash command, such as `/mcp__quiver__db-migration`.
@@ -149,7 +160,7 @@ quiver update
 
 Running `quiver` with no arguments in a terminal opens a management panel with four sections:
 
-- **Skills.** `n` creates a skill, `i` imports skills from a folder, `e` edits one, `f` forks a source skill, `d` deletes a local one, `p` pins a source skill or unpins it. Four views: what is available here (global and project assignments together), the project's assignments, the global assignments, and the whole library. `/` searches the active view. The detail of a skill shows two independent settings, for the managed project and for every folder, each *Not assigned*, *On demand* or *Always on*.
+- **Skills.** `n` creates a skill, `i` imports skills from a folder, `e` edits one, `f` forks a source skill, `d` deletes a local one, `p` pins a source skill or unpins it. Four views: what is available here (global and project assignments together), the project's assignments, the global assignments, and the whole library. `/` searches the active view. The detail of a skill shows two independent settings, for the managed project and for every folder, each *Not assigned*, *Searchable*, *On demand* or *Always on*.
 - **Projects.** The registered projects with their folders and skills. Choose one to manage (the header then says `Managing: api`), rename it, forget it, or split a copied folder.
 - **Sources.** `a` adds a source. The remote sources, which of them the project and the global scope actually use, and their update state. Checking a source shows the same preview as `quiver update` (`d` adds the patches, like `--diff`) and waits for a yes when an assigned skill changes; a rewritten history asks before it takes the remote one (`--reset`).
 - **Health.** The checks of `quiver doctor`, how always-on skills reach each assistant, and `i`, `x`, `f` to set Quiver up in the assistants, remove it, or apply the safe fixes. A header badge counts the problems. Without a Quiver home, the panel opens on a first-run screen that sets it up.
