@@ -88,7 +88,7 @@ func search(ctx context.Context, out, errOut io.Writer, text, engine string, asJ
 	if p, ok := r.Projects[w.ProjectID()]; ok {
 		own = p.Skills
 	}
-	se, err := l.NewSearch(engine)
+	se, err := l.NewSearchWith(engine, library.Options{Progress: indexProgress(errOut)})
 	if err != nil {
 		return err
 	}
@@ -146,4 +146,21 @@ func hereText(f foundSkill) string {
 		return "searchable"
 	}
 	return f.Here
+}
+
+// indexProgress returns the progress line of an index that is built while
+// searching: on stderr, one updating line in a terminal and a line per batch
+// otherwise.
+func indexProgress(errOut io.Writer) func(done, total int) {
+	_, tty := terminal(errOut)
+	return func(done, total int) {
+		switch {
+		case tty && done >= total:
+			fmt.Fprintf(errOut, "\rIndexing skills for the search: %d of %d\n", done, total)
+		case tty:
+			fmt.Fprintf(errOut, "\rIndexing skills for the search: %d of %d", done, total)
+		default:
+			fmt.Fprintf(errOut, "Indexing skills for the search: %d of %d\n", done, total)
+		}
+	}
 }

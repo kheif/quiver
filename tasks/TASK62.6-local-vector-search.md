@@ -4,7 +4,7 @@
 
 **Part of:** [TASK62](TASK62-finding-unassigned-skills.md): Finding unassigned skills
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK62.1, TASK62.5
 
@@ -24,3 +24,13 @@ The `local` engine: search by meaning ("send a note to the team channel" finds t
 9. **Docs.** tasks/data-model.md gets a `cache/` section that covers `cache/hook`, `cache/models/` and the index. The README gives the measured rates of `local` and of the ranked word search side by side, the sizes, and the memory of five processes. The guide page "Finding skills" (TASK62.4) gets the engine and says that it understands English. `reference/files.mdx` lists `cache/embeddings.json` and `cache/models/`, and the security page ("Network access") says that a search makes no network call and that the only call is the one download of TASK62.7.
 
 **Done when:** tests cover: golden token ids and vectors of the model (a cosine of at least 0.9999 against the reference vectors) for texts with accents, punctuation, an empty text and a text over 256 tokens; a malformed, cut and oversized weight file, each check of the loader, with no crash and no large allocation; the fusion (an exact name stays first even when its vector rank is low; a query that fits nothing returns only `words` matches; equal `words` ranks share a rank; a vector-only match gets `RankMeaning`; a skill without a vector score); `minScore`; no embedding and no output under the engine `words` or with a missing model file, no embedding at the moment a command adds a skill, a failed embedding that falls back to `words` with one line, and an interruption after a save; a batched incremental refresh after a changed, a deleted and a pinned skill, and the dropped entry of a deleted one; a changed model file and a changed dimension; a cold index in the CLI (the progress line, the 60 seconds, the incomplete message) and in the server; two processes writing at once with the embedding outside the lock and the merge after each batch; a process killed between two saves; `quiver engine reindex` rebuilding the whole index; a model file that is missing or fails its check (`words` and one line, `doctor` names the step); an index of another format version; the panel dropping a stale reply and showing `words` first for typing, a change of view, a reload and a change of another section's query; and `doctor`. The tests use a tiny model with random weights that a test generates, so they do not need the real file. An end-to-end test runs `engine use local`, `engine reindex` and `search` against that tiny model. A test that only runs when an environment variable names the real model file checks a few known queries, and before the release the memory of five processes searching at once is measured with it and recorded in this task.
+
+## Measured
+
+On an Apple M1 (8 cores), macOS, the real all-MiniLM-L6-v2 files (the pinned size and both hashes verified by `quiver doctor`), a library of 263 skills, the English queries of the spike's test half (`TestRealModelOnTheSpikeQueries`):
+
+- A fitting skill among the first five matches: 55 of 60 (the spike measured 56 of 60); queries that fit nothing and return nothing: 22 of 27 (the spike: 22 of 27).
+- `quiver engine reindex`: 23 s for 263 skills (117 s of processor time).
+- One `quiver search`, with the index and the query embedded: 0.12 s, 74 MB resident (maximum resident set size), 21 MB peak memory footprint. The `words` engine alone: 0.09 s, 25 MB resident.
+- Five processes searching at once: 0.17 to 0.19 s each, 74 MB resident and 21 MB footprint each; the mapped weight file is shared between them.
+- The golden vectors of `internal/embed` were made by the spike's implementation, which TASK62.1 checked against Ollama's all-minilm (cosine 1.00000 for 472 texts); the port gives a cosine of at least 0.9999 against them for texts with accents, punctuation, an empty text, a text over 256 tokens and a Chinese text.

@@ -62,4 +62,11 @@ quiver status       # the Searchable skills of this folder
 
 ## The search engine
 
-`quiver engine` shows the engine that `quiver search`, `search_skills` and the panel use. Only `words` exists now, so there is nothing to choose yet; `quiver engine use words` writes the choice to `state/search.json`, a file of this machine that is never synced. `quiver search --engine words <text>` uses an engine for one search only. A missing or unusable settings file never stops a search: it runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show what is wrong. See [the files of the Quiver home](/docs/reference/files/).
+`quiver engine` shows the engine that `quiver search`, `search_skills` and the panel use, and `quiver engine use <engine>` writes the choice to `state/search.json`, a file of this machine that is never synced. `quiver search --engine words <text>` uses an engine for one search only.
+
+- **`words`** is the default. It ranks skills by the words of their names and descriptions.
+- **`local`** adds meaning: "send a note to the team channel" finds the Slack skill, though the skill shares no word with the query. A small model, all-MiniLM-L6-v2, runs inside the Quiver process, with no server and no network call. It understands English only; a query in another language gets the `words` matches. It needs the model file in `~/.quiver/cache/models/all-minilm-l6-v2/`. On the English test queries of the discovery spike, a fitting skill was among the first five matches for 55 of 60 queries, against 44 of 60 for `words`.
+
+The first search after you add or change skills embeds them, about 0.1 s a skill. `quiver search` builds the missing part for up to a minute and then answers with what it has; the server and the panel build in the background and answer with `words` meanwhile. `quiver engine reindex` rebuilds all of it, and `quiver doctor` shows the model file and how many skills are indexed.
+
+A missing or unusable settings file or model file never stops a search: it runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show what is wrong. See [the files of the Quiver home](/docs/reference/files/).

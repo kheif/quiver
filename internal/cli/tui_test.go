@@ -243,13 +243,13 @@ func TestTUIBackendCountsEachProjectSkillOnce(t *testing.T) {
 func TestTUIBackendSearchAndDetails(t *testing.T) {
 	assignEnv(t, "pdf", "tdd:test-driven")
 	b := &tuiBackend{}
-	if _, err := b.Search("pdf"); err == nil {
+	if _, err := b.SearchWords("pdf"); err == nil {
 		t.Error("search before Load did not fail")
 	}
 	if _, err := b.Load(""); err != nil {
 		t.Fatal(err)
 	}
-	ids, err := b.Search("test driven")
+	ids, err := b.SearchWords("test driven")
 	if err != nil || len(ids) != 1 || ids[0] != "tdd" {
 		t.Errorf("ids %v, err %v", ids, err)
 	}
@@ -494,7 +494,7 @@ func TestTUIBackendImportsAFolderOfSkills(t *testing.T) {
 	if _, err := b.Load(""); err != nil {
 		t.Fatal(err)
 	}
-	if ids, _ := b.Search("greeter"); len(ids) != 1 {
+	if ids, _ := b.SearchWords("greeter"); len(ids) != 1 {
 		t.Errorf("the skill is not in the library: %v", ids)
 	}
 }

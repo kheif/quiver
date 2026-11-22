@@ -59,7 +59,7 @@ Machine-local data. It is never synced.
 
 - `projects.json`: the folders where each project was seen on this machine. A project from a synced `registry.json` that this machine has not seen yet has no entry. Projects no longer in `registry.json` are dropped on the next write.
 - `version-check.json`: the last check for a new Quiver version (TASK39).
-- `search.json`: the search settings of this machine (TASK62.5). It is machine-local because the engine and its model files may differ between machines, and `config.json` is synced. `{"version": 1, "engine": "words"}`. A missing file or key means `words`; an unknown engine warns and uses `words`; a newer `version` is refused (`search.json has version N, but this quiver supports only up to 1: update quiver`): Quiver neither reads nor rewrites the file, search runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show the message. `quiver engine use <engine>` writes it.
+- `search.json`: the search settings of this machine (TASK62.5). It is machine-local because the engine and its model files may differ between machines, and `config.json` is synced. `{"version": 1, "engine": "words"}`; with the engine `local`, `{"version": 1, "engine": "local", "local": {"model": "all-minilm-l6-v2", "minScore": 0.287}}` (TASK62.6: `model` is the folder under `cache/models/`, `minScore` the cosine below which a vector match is dropped; both are optional and default to these values). A missing file or key means `words`; an unknown engine warns and uses `words`; a newer `version` is refused (`search.json has version N, but this quiver supports only up to 1: update quiver`): Quiver neither reads nor rewrites the file, search runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show the message. `quiver engine use <engine>` writes it.
 
 ```json
 {
@@ -70,6 +70,26 @@ Machine-local data. It is never synced.
   }
 }
 ```
+
+## `~/.quiver/cache/`
+
+Derived data. It is never synced or committed, and a file of another format version is ignored and rebuilt, never refused.
+
+- `hook/`: the parts of a session-start text, shared by its hook commands.
+- `models/<name>/`: the files of an embedding model for the `local` engine, `model.safetensors` and `tokenizer.json` (TASK62.6; TASK62.7 downloads them). The weight file is mapped, read-only, and only ever replaced by a rename.
+- `embeddings.json`: the vectors of the `local` engine for the whole library (TASK62.6).
+
+```json
+{
+  "version": 1,
+  "model": "all-minilm-l6-v2",
+  "sha256": "53aa5117…",
+  "dim": 384,
+  "entries": [{ "id": "anthropics/pdf", "hash": "…", "vector": [0.01, …] }]
+}
+```
+
+`sha256` is the pinned hash of the model's weight file and `hash` the SHA-256 of the text that was embedded (the ID, the name and the description). An index of another format version, model file or dimension is ignored and rebuilt. A search embeds the skills whose hash is missing or changed, in batches of 8, each merged into the file under the home lock; entries of skills that no longer exist are dropped when the file is next written.
 
 ## Synced home (`quiver sync`)
 

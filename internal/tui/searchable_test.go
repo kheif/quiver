@@ -1,10 +1,14 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 	"testing"
+	"time"
+
+	tea "charm.land/bubbletea/v2"
 )
 
 // The scope setting has four states, in this order.
@@ -162,7 +166,7 @@ func TestSearchResultsAreIntersectedWithEveryView(t *testing.T) {
 	f.glob["pdf"] = Searchable
 	m := keys(t, start(t, f), "/")
 	m = typed(t, m, "migrat")
-	found, _ := f.Search("migrat")
+	found, _ := f.SearchWords("migrat")
 	if len(found) != 2 {
 		t.Fatalf("the engine found %v", found)
 	}
@@ -188,5 +192,171 @@ func TestSearchResultsAreIntersectedWithEveryView(t *testing.T) {
 		if !slices.Equal(got, want) {
 			t.Errorf("view %d shows %v, want %v", v, got, want)
 		}
+	}
+}
+
+// shownIDs are the skills the Skills section lists, in order.
+func shownIDs(m Model) []string {
+	var out []string
+	for _, i := range m.shown[secSkills] {
+		out = append(out, m.data.Skills[i].ID)
+	}
+	return out
+}
+
+// A key never runs the engine: the words results show at once, and the engine
+// runs as a command after the pause.
+func TestSearchEngineRunsAsACommandNotOnTheKeystroke(t *testing.T) {
+	f := fixture()
+	f.fused = map[string][]string{"migrat": {"team/migrate-check", "pdf", "db-migration"}}
+	m := keys(t, start(t, f), "right", "right", "right") // the whole library
+	m = keys(t, m, "/")
+	m = typed(t, m, "migra")
+	f.mu.Lock()
+	f.engineCalls = nil
+	f.mu.Unlock()
+
+	next, cmd := m.Update(keyMsg("t"))
+	m = next.(Model)
+	if len(f.engineCalls) != 0 {
+		t.Fatalf("the engine ran on the keystroke: %v", f.engineCalls)
+	}
+	if got := shownIDs(m); !slices.Equal(got, []string{"db-migration", "team/migrate-check"}) {
+		t.Errorf("words results first: %v", got)
+	}
+	if cmd == nil {
+		t.Fatal("no command for the engine")
+	}
+	// The command asks the engine and answers with the fused results, which
+	// replace the words ones.
+	var reply searchedMsg
+	found := false
+	var run func(tea.Cmd)
+	run = func(c tea.Cmd) {
+		switch out := c().(type) {
+		case searchedMsg:
+			reply, found = out, true
+		case tea.BatchMsg:
+			for _, c := range out {
+				if c != nil {
+					run(c)
+				}
+			}
+		}
+	}
+	run(cmd)
+	if !found || reply.text != "migrat" || len(f.engineCalls) != 1 || f.engineCalls[0] != "migrat" {
+		t.Fatalf("reply %+v (%v), engine calls %v", reply, found, f.engineCalls)
+	}
+	next, _ = m.Update(reply)
+	m = next.(Model)
+	if got := shownIDs(m); !slices.Equal(got, []string{"team/migrate-check", "pdf", "db-migration"}) {
+		t.Errorf("fused results: %v", got)
+	}
+}
+
+// A reply for a query that is no longer the current one is dropped.
+func TestSearchDropsAStaleReply(t *testing.T) {
+	f := fixture()
+	m := keys(t, start(t, f), "/")
+	m = typed(t, m, "migrat")
+	before := shownIDs(m)
+	next, _ := m.Update(searchedMsg{text: "mig", ids: []string{"pdf"}})
+	m = next.(Model)
+	if got := shownIDs(m); !slices.Equal(got, before) {
+		t.Errorf("a stale reply changed the list: %v, was %v", got, before)
+	}
+	if m.fusedText == "mig" {
+		t.Error("a stale reply was kept")
+	}
+	// A failed search leaves the words results.
+	next, _ = m.Update(searchedMsg{text: "migrat", err: errors.New("no engine")})
+	if got := shownIDs(next.(Model)); !slices.Equal(got, before) {
+		t.Errorf("a failed search changed the list: %v", got)
+	}
+}
+
+// A search that waited behind a newer key never runs.
+func TestSearchThatWaitedBehindANewerKeyDoesNotRun(t *testing.T) {
+	f := fixture()
+	m := keys(t, start(t, f), "/")
+	m.searchPause = 20 * time.Millisecond
+	f.mu.Lock()
+	f.engineCalls = nil
+	f.mu.Unlock()
+	var cmds []tea.Cmd
+	for _, k := range []string{"m", "i", "g"} {
+		next, cmd := m.Update(keyMsg(k))
+		m = next.(Model)
+		cmds = append(cmds, cmd)
+	}
+	var replies []searchedMsg
+	var run func(tea.Cmd)
+	run = func(c tea.Cmd) {
+		switch out := c().(type) {
+		case searchedMsg:
+			replies = append(replies, out)
+		case tea.BatchMsg:
+			for _, c := range out {
+				if c != nil {
+					run(c)
+				}
+			}
+		}
+	}
+	for _, c := range cmds {
+		if c != nil {
+			run(c)
+		}
+	}
+	if len(replies) != 1 || replies[0].text != "mig" {
+		t.Errorf("replies %+v", replies)
+	}
+	if len(f.engineCalls) != 1 {
+		t.Errorf("the engine ran %d times: %v", len(f.engineCalls), f.engineCalls)
+	}
+}
+
+// The results of the engine stay while a view, a reload or the query of another
+// section changes: the engine is asked once for the text, and every view takes
+// its part of the result.
+func TestFusedResultsSurviveViewReloadAndOtherQueries(t *testing.T) {
+	f := fixture()
+	f.glob["pdf"] = Searchable
+	f.fused = map[string][]string{"migrat": {"team/migrate-check", "pdf", "db-migration"}}
+	m := keys(t, start(t, f), "/")
+	m = typed(t, m, "migrat")
+	calls := len(f.engineCalls)
+	if calls == 0 {
+		t.Fatal("the engine was never asked")
+	}
+
+	// Another view takes its part of the same result, in the order of the engine.
+	m = keys(t, m, "enter") // leaves the field and keeps the query
+	for _, v := range []skillView{viewProject, viewGlobal, viewAll} {
+		m.skillView = v
+		m.refilter([secCount]string{}, true)
+		var want []string
+		for _, id := range f.fused["migrat"] {
+			i := slices.IndexFunc(m.data.Skills, func(s Skill) bool { return s.ID == id })
+			if inView(m.data.Skills[i], v) {
+				want = append(want, id)
+			}
+		}
+		if got := shownIDs(m); !slices.Equal(got, want) {
+			t.Errorf("view %d: %v, want %v", v, got, want)
+		}
+	}
+	// A reload and a query typed in another section do not ask again.
+	data, _ := f.Load("")
+	next, _ := m.Update(loadedMsg{data: data, keys: m.selectedKeys()})
+	m = next.(Model)
+	m = keys(t, m, "2", "/")
+	m = typed(t, m, "ap")
+	if len(f.engineCalls) != calls {
+		t.Errorf("the engine was asked again: %v", f.engineCalls[calls:])
+	}
+	if m.fusedText != "migrat" {
+		t.Errorf("fused text %q", m.fusedText)
 	}
 }

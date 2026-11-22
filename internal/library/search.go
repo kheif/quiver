@@ -212,10 +212,18 @@ func (w *Words) Search(_ context.Context, text string, skills []*skill.Skill) ([
 	return out, nil
 }
 
+// engineEnv is what an engine is built from.
+type engineEnv struct {
+	opts     Options
+	settings EngineSetting
+	words    *Words
+}
+
 // engines are the engines Quiver knows, by the name of the settings file. An
 // engine is built from the whole library.
-var engines = map[string]func(*Library) (Searcher, error){
-	EngineWords: func(l *Library) (Searcher, error) { return NewWords(l.All()), nil },
+var engines = map[string]func(*Library, engineEnv) (Searcher, error){
+	EngineWords: func(_ *Library, env engineEnv) (Searcher, error) { return env.words, nil },
+	EngineLocal: newLocal,
 }
 
 // Search is the search of one run: the engine that was chosen and the words
@@ -231,22 +239,32 @@ type Search struct {
 	words  *Words
 }
 
-// NewSearch chooses the engine: override when it is not empty, otherwise the
-// one of the settings file. An unknown override is an error; a settings file
-// that cannot be used is a Problem, and the words engine runs.
+// NewSearch chooses the engine as NewSearchWith does, with the default
+// options: a search builds a missing index for up to a minute.
 func (l *Library) NewSearch(override string) (*Search, error) {
+	return l.NewSearchWith(override, Options{})
+}
+
+// NewSearchWith chooses the engine: override when it is not empty, otherwise
+// the one of the settings file. An unknown override is an error; a settings
+// file that cannot be used, or an engine that cannot run, is a Problem, and
+// the words engine runs.
+func (l *Library) NewSearchWith(override string, opts Options) (*Search, error) {
 	s := &Search{Engine: EngineWords, words: NewWords(l.All())}
-	name := override
-	if name == "" {
-		cur := LoadEngine()
-		name, s.Problem = cur.Engine, cur.Problem
-	} else if _, ok := engines[name]; !ok {
-		return nil, unknownEngine(name)
+	cur := LoadEngine()
+	name := cur.Engine
+	if override != "" {
+		name = override
+		if _, ok := engines[name]; !ok {
+			return nil, unknownEngine(name)
+		}
+	} else {
+		s.Problem = cur.Problem
 	}
 	s.Engine = name
 	if name != EngineWords {
 		var err error
-		if s.engine, err = engines[name](l); err != nil {
+		if s.engine, err = engines[name](l, engineEnv{opts: opts, settings: cur, words: s.words}); err != nil {
 			s.Problem = joinProblems(s.Problem, fmt.Sprintf("search engine %s cannot run (%v); searching with words", name, err))
 			s.Engine = EngineWords
 		}
@@ -256,11 +274,15 @@ func (l *Library) NewSearch(override string) (*Search, error) {
 
 // Find searches the set with the engine. It never fails because of the engine:
 // an engine that cannot run gives way to words, and note says so in one line.
+// An engine may also have a line to say, such as an incomplete index.
 func (s *Search) Find(ctx context.Context, query string, skills []*skill.Skill) (matches []Match, note string) {
 	if s.engine != nil {
 		out, err := s.engine.Search(ctx, query, skills)
 		if err == nil {
-			return out, ""
+			if n, ok := s.engine.(interface{ Note() string }); ok {
+				note = n.Note()
+			}
+			return out, note
 		}
 		note = fmt.Sprintf("search engine %s cannot run (%v); searched with words", s.Engine, err)
 	}

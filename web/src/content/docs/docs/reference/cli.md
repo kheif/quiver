@@ -127,8 +127,6 @@ quiver edit release-notes
 
 Show the engine that quiver search, the search\_skills tool and the panel use, and any problem found in its settings file, state/search.json in the Quiver home. The file belongs to this machine and is never synced.
 
-The only engine now is "words": names and descriptions, ranked by words. A missing file or an engine this quiver does not know also means words.
-
 ```sh
 quiver engine [flags]
 quiver engine [command]
@@ -143,6 +141,20 @@ quiver engine [command]
 ```sh
 quiver engine
 quiver engine use words
+```
+
+## quiver engine reindex
+
+Embed every skill of the library again and replace cache/embeddings.json, with no time limit. A search builds only what is missing, and stops after a minute; use this to build it all at once, or after a model file was replaced. It needs the model file of the local engine.
+
+```sh
+quiver engine reindex [flags]
+```
+
+**Examples**
+
+```sh
+quiver engine reindex
 ```
 
 ## quiver engine use

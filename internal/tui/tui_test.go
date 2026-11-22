@@ -1,11 +1,13 @@
 package tui
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -21,6 +23,13 @@ type fake struct {
 	sources  []Source
 	glob     map[string]Mode
 	proj     map[string]map[string]Mode
+
+	// The engine of the search: results other than the words ones, by query;
+	// a gate that holds a search until the test opens it; the queries it got.
+	mu          sync.Mutex
+	fused       map[string][]string
+	gate        chan struct{}
+	engineCalls []string
 
 	calls   []string
 	edited  []string
@@ -115,7 +124,24 @@ func (f *fake) Load(projectID string) (Data, error) {
 	return d, nil
 }
 
-func (f *fake) Search(text string) ([]string, error) {
+// Search is the engine: the words results, unless the test gave the query
+// other results, and it waits for the gate when the test set one.
+func (f *fake) Search(_ context.Context, text string) ([]string, error) {
+	f.mu.Lock()
+	gate, fused, ok := f.gate, f.fused[text], false
+	_, ok = f.fused[text]
+	f.engineCalls = append(f.engineCalls, text)
+	f.mu.Unlock()
+	if gate != nil {
+		<-gate
+	}
+	if ok {
+		return fused, nil
+	}
+	return f.SearchWords(text)
+}
+
+func (f *fake) SearchWords(text string) ([]string, error) {
 	var ids []string
 	for _, s := range f.skills {
 		hay := strings.ToLower(s.ID + " " + s.Description)
@@ -430,6 +456,7 @@ func startSized(t *testing.T, f *fake, w, h int) Model {
 	t.Helper()
 	m := New(f)
 	m.probePause = 0
+	m.searchPause = 0
 	m = drive(t, m, tea.WindowSizeMsg{Width: w, Height: h})
 	m = drive(t, m, m.checkHealth()())
 	f.calls = slices.DeleteFunc(f.calls, func(c string) bool { return c == "health" })

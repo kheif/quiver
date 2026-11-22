@@ -110,7 +110,7 @@ Run `quiver help <command>` for the details and examples of each.
 | `quiver list` | List the library's skills and where each is assigned, with the Searchable ones marked (`--source`, `--unassigned`, `--json`). |
 | `quiver show <id>` | Show a skill: where it comes from, where it is assigned, its files and its `SKILL.md` (`--json`). |
 | `quiver search <text>` | Search the names and descriptions of every library skill, also unassigned ones, ranked by words, and show whether each is served here and at which level (`--engine`, `--json`). |
-| `quiver engine` | Show the search engine and any problem in its settings file; `quiver engine use <engine>` chooses it. Only `words` exists now. The setting is in `~/.quiver/state/search.json` and belongs to this machine. |
+| `quiver engine` | Show the search engine and any problem in its settings file; `quiver engine use <engine>` chooses `words` or `local`, and `quiver engine reindex` rebuilds the index of `local` without a time limit. The setting is in `~/.quiver/state/search.json` and belongs to this machine. |
 | `quiver status` | Show the project in this folder and the skills served here, with a warning for each copy Claude Code also loads (`--json`). |
 | `quiver where <id>` | Show where one skill is assigned (`--json`). |
 | `quiver source add <repo>` | Clone a skill repository: `owner/repo` (GitHub), a git URL or a local path. An `http://` or `git://` address is refused, because it is not encrypted; set `"allowInsecureSources": true` in `~/.quiver/config.json` to allow it, and Quiver still warns. In a terminal it then asks whether to make the skills Searchable in every folder (the default is no; `--searchable` answers yes) and prints the command that undoes it. |
@@ -187,6 +187,22 @@ Claude Code starts the server in the project folder. Other assistants may start 
 
 **Live updates.** While a session runs, the server watches the library. Skills you add, remove or change show up in `list_skills` and the prompts right away. The hook's text is built when a session starts, so it changes from the next session on.
 
+## Searching by meaning
+
+The `words` engine ranks skills by the words of their names and descriptions. The `local` engine adds meaning: "send a note to the team channel" finds the Slack skill, though the skill shares no word with the query. It runs a small model, all-MiniLM-L6-v2 (22 million parameters, English only), inside the Quiver process in plain Go: no server, no runtime, no cgo, and a search makes no network call. A query in another language gets the `words` matches. Choose it with `quiver engine use local`; it needs the 91 MB weight file in `~/.quiver/cache/models/all-minilm-l6-v2/`.
+
+The first search after you add or change skills embeds them (about 0.1 s a skill on 8 cores; a `quiver search` builds the missing part for up to a minute and then answers with what it has, and `quiver engine reindex` builds it all). The vectors of 263 skills are one file of about 1 MB, `~/.quiver/cache/embeddings.json`. The server and the panel build in the background and answer with `words` meanwhile. Without the model file the search runs as `words` with one line, and `quiver doctor` names the missing file.
+
+Measured on a library of 263 skills and the English queries of its test half (60 that fit a skill, 27 that fit none), on an Apple M1:
+
+| Engine | A fitting skill among the first five | Queries that fit nothing and return nothing |
+| --- | --- | --- |
+| matching of earlier versions | 10 of 60 | 27 of 27 |
+| `words` | 44 of 60 | 26 of 27 |
+| `local` (fused with `words`) | 55 of 60 | 22 of 27 |
+
+The index of the 263 skills takes 23 s. One search, the query included, takes 0.12 s and 74 MB resident, of which 21 MB are private to the process: the weight file is mapped, so the pages are shared. Five processes that search at once take 0.17 to 0.19 s each and the same 74 MB resident each.
+
 ## Always-on skills: limits
 
 - Changes take effect in the next session, because the hook runs when a session starts.
@@ -201,6 +217,7 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - `quiver update` downloads new commits before it applies them, lists the changed files of every assigned skill, marks scripts and executable files "needs review", and asks before it applies the changes. Read them with `quiver update --diff`; answering no leaves the source as it was. To review changes to a skill before it reaches your sessions, pin it with `quiver pin` and move the pin when you have read them.
 - Source skills are read-only in Quiver. To change one, fork it into your own skills with `quiver fork`.
 - `quiver sync` takes in what another machine pushed, so it lists changes that make a skill always-on or searchable, change the files of such a skill or add a source, and asks first; use a private remote.
+- Search makes no network call, and the `local` engine runs its model inside the Quiver process. The only download is the one of the model file.
 - `get_skill` reads the whole library, not only the skills assigned to the project; assign only what you want a project's sessions to see by name. `search_skills` finds only the skills that are Searchable in the project.
 - `update_skill` changes only skills served in the session's project, and never an always-on or Searchable skill (the assistant loads both without asking): change those yourself with `quiver edit`, or make a Searchable skill listed with `quiver add <id>` first.
 - `create_skill` and `update_skill` let the assistant write skills into your library. A global skill's description reaches the assistant in every folder, so review new global skills with `quiver list` and `quiver edit`. Every change is a commit in `~/.quiver/local` (in `~/.quiver` once you use `quiver sync`), so `git -C ~/.quiver/local log -p` shows it and `git revert` undoes it.

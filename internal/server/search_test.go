@@ -11,7 +11,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/kheif/quiver/internal/embed"
+	"github.com/kheif/quiver/internal/embed/embedtest"
+	"github.com/kheif/quiver/internal/library"
 	"github.com/kheif/quiver/internal/registry"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -210,5 +214,42 @@ func TestSearchSkillsSettingsProblem(t *testing.T) {
 	}
 	if n := strings.Count(logged.String(), "search.json has version 2, but this quiver supports only up to 1: update quiver"); n != 1 {
 		t.Errorf("logged %d times:\n%s", n, logged.String())
+	}
+}
+
+// With the local engine a cold index does not hold the answer: the server
+// answers at once with the matches of words, builds the index in the
+// background, and the next search uses it.
+func TestSearchSkillsColdLocalIndexIsBuiltInTheBackground(t *testing.T) {
+	w := searchEnv(t)
+	home := os.Getenv("QUIVER_HOME")
+	embedtest.WriteModel(t, filepath.Join(home, "cache", "models", "tiny"), 1)
+	t.Cleanup(library.RegisterModel(library.ModelSpec{Name: "tiny", Config: embed.Config(embedtest.Tiny), MinScore: -1}))
+	writeFiles(t, filepath.Join(home, "state"), map[string]string{
+		"search.json": `{"version": 1, "engine": "local", "local": {"model": "tiny", "minScore": -1}}`,
+	})
+	cs := connect(t, New(Options{Version: "dev", Log: discard, Where: w}))
+
+	text, out, isErr := searchCall(t, cs, "draft")
+	if isErr || len(out.Skills) == 0 || out.Skills[0].ID != "draft" {
+		t.Fatalf("answer %v %+v\n%s", isErr, out.Skills, text)
+	}
+	index := filepath.Join(home, "cache", "embeddings.json")
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		data, err := os.ReadFile(index)
+		if err == nil && strings.Count(string(data), `"id":`) >= 5 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the index was not built in the background")
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	// With the index every Searchable skill is a vector match (minScore is
+	// -1 here), the name match first; nothing that is not Searchable is.
+	_, out, _ = searchCall(t, cs, "draft")
+	if len(out.Skills) != 2 || out.Skills[0].ID != "draft" || out.Skills[1].ID != "pipeline-notes" {
+		t.Errorf("with the index: %+v", out.Skills)
 	}
 }

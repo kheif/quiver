@@ -201,7 +201,7 @@ func (brokenEngine) Search(context.Context, string, []*skill.Skill) ([]Match, er
 }
 
 func TestSearchFallsBackToWords(t *testing.T) {
-	engines["broken"] = func(*Library) (Searcher, error) { return brokenEngine{}, nil }
+	engines["broken"] = func(*Library, engineEnv) (Searcher, error) { return brokenEngine{}, nil }
 	defer delete(engines, "broken")
 	l := libraryOf(map[string][2]string{"pdf": {"pdf", "Read PDF files."}})
 	s, err := l.NewSearch("broken")
@@ -215,7 +215,7 @@ func TestSearchFallsBackToWords(t *testing.T) {
 }
 
 func TestSearchEngineThatCannotBeBuiltFallsBack(t *testing.T) {
-	engines["unbuilt"] = func(*Library) (Searcher, error) { return nil, errors.New("no model") }
+	engines["unbuilt"] = func(*Library, engineEnv) (Searcher, error) { return nil, errors.New("no model") }
 	defer delete(engines, "unbuilt")
 	l := libraryOf(map[string][2]string{"pdf": {"pdf", "Read PDF files."}})
 	s, err := l.NewSearch("unbuilt")
@@ -232,7 +232,7 @@ func TestSearchEngineThatCannotBeBuiltFallsBack(t *testing.T) {
 
 func TestNewSearchUnknownOverride(t *testing.T) {
 	l := libraryOf(nil)
-	if _, err := l.NewSearch("vectors"); err == nil || !strings.Contains(err.Error(), `unknown search engine "vectors": use words`) {
+	if _, err := l.NewSearch("vectors"); err == nil || !strings.Contains(err.Error(), `unknown search engine "vectors": use local or words`) {
 		t.Errorf("err = %v", err)
 	}
 }

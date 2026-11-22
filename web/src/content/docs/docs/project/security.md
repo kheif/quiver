@@ -38,7 +38,8 @@ npm packages are published from CI with npm trusted publishing and provenance; n
 Quiver makes network requests only for:
 
 - git operations on the sources and the sync remote you configure,
-- a daily check of the latest release on GitHub, off with `QUIVER_NO_UPDATE_CHECK=1`.
+- a daily check of the latest release on GitHub, off with `QUIVER_NO_UPDATE_CHECK=1`,
+- the one download of the model file of the `local` search engine. A search makes no network call: the model runs inside the Quiver process.
 
 There is no telemetry.
 

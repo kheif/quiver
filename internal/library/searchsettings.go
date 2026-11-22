@@ -37,6 +37,16 @@ func unknownEngine(name string) error {
 	return fmt.Errorf("unknown search engine %q: use %s", name, strings.Join(Engines(), " or "))
 }
 
+// LocalSettings is the "local" block of the settings file. Nothing else is
+// configurable now.
+type LocalSettings struct {
+	// Model is the folder under cache/models/; empty means DefaultModel.
+	Model string `json:"model,omitempty"`
+	// MinScore is the cosine below which a vector match is dropped; nil means
+	// the default of the model.
+	MinScore *float64 `json:"minScore,omitempty"`
+}
+
 // EngineSetting is what the settings file says about the engine.
 type EngineSetting struct {
 	// Engine is the engine to use: words when the file is missing, has no
@@ -44,6 +54,8 @@ type EngineSetting struct {
 	Engine string
 	// Problem says what is wrong with the file; empty when nothing is.
 	Problem string
+	// Local is the block "local" of the file, for the engine of that name.
+	Local LocalSettings
 	// Refused is true when the file has a newer version. Quiver then neither
 	// reads nor rewrites it.
 	Refused bool
@@ -71,8 +83,9 @@ func LoadEngine() EngineSetting {
 		return cur
 	}
 	var f struct {
-		Version int    `json:"version"`
-		Engine  string `json:"engine"`
+		Version int           `json:"version"`
+		Engine  string        `json:"engine"`
+		Local   LocalSettings `json:"local"`
 	}
 	if err := fsutil.ReadJSON(path, &f); err != nil {
 		if !errors.Is(err, fsutil.ErrNotExist) {
@@ -80,12 +93,15 @@ func LoadEngine() EngineSetting {
 		}
 		return cur
 	}
+	cur.Local = f.Local
 	switch {
 	case f.Version > SearchSettingsVersion:
-		cur.Problem, cur.Refused = newerSettings(f.Version).Error()+"; searching with words", true
+		cur.Problem, cur.Refused, cur.Local = newerSettings(f.Version).Error()+"; searching with words", true, LocalSettings{}
 	case f.Engine == "":
 	case !slices.Contains(Engines(), f.Engine):
 		cur.Problem = fmt.Sprintf("search.json: unknown engine %q, searching with words", f.Engine)
+	case f.Local.MinScore != nil && (*f.Local.MinScore < -1 || *f.Local.MinScore > 1):
+		cur.Problem = fmt.Sprintf("search.json: local.minScore %v is not a cosine between -1 and 1, searching with words", *f.Local.MinScore)
 	default:
 		cur.Engine = f.Engine
 	}

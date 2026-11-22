@@ -108,7 +108,7 @@ func searchSkills(ctx context.Context, warned *onceLog, projectID, query string)
 	out := SearchResult{Skills: []FoundSkill{}}
 	// The engine ranks and caps within the Searchable set, but takes its
 	// statistics from the whole library.
-	search, err := l.NewSearch("")
+	search, err := l.NewSearchWith("", library.Options{Refresh: library.RefreshBackground})
 	if err != nil {
 		return nil, SearchResult{}, err
 	}

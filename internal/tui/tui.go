@@ -6,12 +6,14 @@
 package tui
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"image/color"
 	"io"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"charm.land/bubbles/v2/textinput"
@@ -169,8 +171,14 @@ type Backend interface {
 	// Load reads everything. projectID names the project to manage; "" is the
 	// one of the current folder.
 	Load(projectID string) (Data, error)
-	// Search returns the IDs of the library skills that match, best first.
-	Search(text string) ([]string, error)
+	// SearchWords returns the IDs of the library skills that match, best
+	// first, with the words engine only. It is quick and runs on the keystroke
+	// path.
+	SearchWords(text string) ([]string, error)
+	// Search is SearchWords with the engine that is set, which may embed the
+	// text (20 to 75 ms of processor time). The panel runs it as a command and
+	// never on a keystroke.
+	Search(ctx context.Context, text string) ([]string, error)
 	Details(id string) (Details, error)
 	// SetProject and SetGlobal move a skill to a mode in one scope and leave
 	// the other scope alone. They return the warnings the commands print.
@@ -330,7 +338,10 @@ const updatesAvailable = "Updates available"
 // How the background check paces itself, and when it gives up: two sources in
 // a row that cannot be reached mean the network is down.
 const (
-	probePause        = 2 * time.Second
+	probePause = 2 * time.Second
+	// searchPause is how long the panel waits after the last key before it
+	// asks the engine.
+	searchPause       = 150 * time.Millisecond
 	probeFailuresStop = 2
 )
 
@@ -414,10 +425,21 @@ type Model struct {
 	// probeFailures counts the unanswered background checks in a row.
 	probeFailures int
 	probePause    time.Duration
-	pending       map[string]string // running operations, by key, with what to say
-	status        string
-	failed        bool
-	note          bool // the status is a hint, not the result of a change
+
+	// The search of the Skills section: wantText is what the query asks for;
+	// the words results show at once, and the results of the engine replace
+	// them when they arrive (fusedText and fusedIDs). A reply for another
+	// text is dropped.
+	searchPause time.Duration
+	search      *searchState
+	wantText    string
+	fusedText   string
+	fusedIDs    []string
+	sentText    string
+	pending     map[string]string // running operations, by key, with what to say
+	status      string
+	failed      bool
+	note        bool // the status is a hint, not the result of a change
 
 	// bg is the terminal background, once the terminal has answered; nil
 	// until then, and for terminals that never do.
@@ -435,6 +457,7 @@ func New(be Backend) Model {
 		be: be, filter: in, vp: viewport.New(),
 		details: map[string]Details{}, checks: map[string]string{}, pending: map[string]string{},
 		width: 80, height: 24, probePause: probePause,
+		searchPause: searchPause, search: &searchState{},
 	}
 }
 
@@ -470,6 +493,22 @@ func (m Model) checkHealth() tea.Cmd {
 func (m Model) wide() bool { return m.width >= wideWidth }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if reply, ok := msg.(searchedMsg); ok {
+		return m.searched(reply), nil
+	}
+	next, cmd := m.update(msg)
+	nm, ok := next.(Model)
+	if !ok {
+		return next, cmd
+	}
+	if c := nm.startSearch(); c != nil {
+		nm.sentText = nm.wantText
+		return nm, tea.Batch(cmd, c)
+	}
+	return nm, cmd
+}
+
+func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
@@ -1134,6 +1173,7 @@ func (m *Model) refilter(keys [secCount]string, reset bool) {
 	text := strings.TrimSpace(m.queries[secSkills])
 	order := make([]int, 0, len(m.data.Skills))
 	if text == "" {
+		m.wantText = ""
 		for i := range m.data.Skills {
 			order = append(order, i)
 		}
@@ -1151,7 +1191,14 @@ func (m *Model) refilter(keys [secCount]string, reset bool) {
 			return strings.Compare(ga, gb)
 		})
 	} else {
-		ids, err := m.be.Search(text)
+		m.wantText = text
+		var ids []string
+		var err error
+		if m.fusedText == text {
+			ids = m.fusedIDs
+		} else {
+			ids, err = m.be.SearchWords(text)
+		}
 		if err != nil {
 			m.say(errText(err), true, false)
 		}
@@ -1949,4 +1996,64 @@ func cleanAll(in []string) []string {
 		out[i] = oneLine(s)
 	}
 	return out
+}
+
+// searchState is shared by the copies of the model: the text of the newest
+// search, so that a search that waited behind a newer keystroke never runs.
+type searchState struct {
+	mu     sync.Mutex
+	latest string
+}
+
+func (s *searchState) set(text string) {
+	s.mu.Lock()
+	s.latest = text
+	s.mu.Unlock()
+}
+
+func (s *searchState) isLatest(text string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.latest == text
+}
+
+// searchedMsg is the answer of the engine to a query.
+type searchedMsg struct {
+	text string
+	ids  []string
+	err  error
+}
+
+// startSearch returns the command that asks the engine for the results of the
+// query, after a short pause in typing, unless they are there or it is already
+// asked.
+func (m Model) startSearch() tea.Cmd {
+	if m.wantText == "" || m.wantText == m.fusedText || m.wantText == m.sentText {
+		return nil
+	}
+	be, text, wait, state := m.be, m.wantText, m.searchPause, m.search
+	state.set(text)
+	return func() tea.Msg {
+		if wait > 0 {
+			time.Sleep(wait)
+		}
+		if !state.isLatest(text) {
+			return nil
+		}
+		ids, err := be.Search(context.Background(), text)
+		return searchedMsg{text, ids, err}
+	}
+}
+
+// searched shows the results of the engine in place of the words results, with
+// the cursor on the skill that was selected. A reply for a query that is no
+// longer the current one is dropped, and so is a failed search: the words
+// results stay.
+func (m Model) searched(r searchedMsg) Model {
+	if r.err != nil || r.text != m.wantText {
+		return m
+	}
+	m.fusedText, m.fusedIDs = r.text, r.ids
+	m.refilter(m.selectedKeys(), false)
+	return m
 }

@@ -2,9 +2,13 @@ package e2e
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/kheif/quiver/internal/embed/embedtest"
 )
 
 // new → add → list_skills shows it → remove → gone.
@@ -234,4 +238,67 @@ func TestSearchEngine(t *testing.T) {
 	if data, _ := os.ReadFile(file); string(data) != newer {
 		t.Errorf("the file was rewritten: %s", data)
 	}
+}
+
+// The local engine, against the tiny model with random weights that the tests
+// generate: quiver is built with the tag tinymodel, which knows the model
+// "tiny" and nothing else.
+func TestLocalEngine(t *testing.T) {
+	dir := t.TempDir()
+	tiny := filepath.Join(dir, "quiver-tiny")
+	if runtime.GOOS == "windows" {
+		tiny += ".exe"
+	}
+	build := exec.Command("go", "build", "-tags", "tinymodel", "-o", tiny, "../cmd/quiver")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build: %v\n%s", err, out)
+	}
+	saved := bin
+	bin = tiny
+	defer func() { bin = saved }()
+
+	e := newEnv(t)
+	app := e.dir("app")
+	e.write(filepath.Join(e.qhome, "local"), map[string]string{
+		"deploy-check/SKILL.md": skillMD("deploy-check", "Check a deploy.", "Check."),
+		"slack-style/SKILL.md":  skillMD("slack-style", "How to write a Slack message.", "Style."),
+	})
+	embedtest.WriteModel(t, filepath.Join(e.qhome, "cache", "models", "tiny"), 1)
+	e.write(filepath.Join(e.qhome, "state"), map[string]string{
+		"search.json": `{"version": 1, "engine": "words", "local": {"model": "tiny", "minScore": -1}}`,
+	})
+
+	// Under words nothing is embedded and no index is made.
+	mustContain(t, "search under words", e.quiver(app, "search", "deploy"), "deploy-check")
+	if _, err := os.Stat(filepath.Join(e.qhome, "cache", "embeddings.json")); !os.IsNotExist(err) {
+		t.Errorf("an index under words: %v", err)
+	}
+
+	mustContain(t, "engine use", e.quiver(app, "engine", "use", "local"), "Search engine: local")
+	mustContain(t, "engine", e.quiver(app, "engine"), "Search engine: local")
+	mustContain(t, "engine reindex", e.quiver(app, "engine", "reindex"), "Indexed 2 skills with tiny.")
+	mustContain(t, "search", e.quiver(app, "search", "deploy"), "deploy-check")
+	data, err := os.ReadFile(filepath.Join(e.qhome, "cache", "embeddings.json"))
+	if err != nil || !strings.Contains(string(data), `"model": "tiny"`) || strings.Count(string(data), `"id":`) != 2 {
+		t.Errorf("index %s, %v", data, err)
+	}
+	// The block of the file stays when the engine is chosen again.
+	e.quiver(app, "engine", "use", "local")
+	if data, _ := os.ReadFile(filepath.Join(e.qhome, "state", "search.json")); !strings.Contains(string(data), `"minScore": -1`) {
+		t.Errorf("the local block was dropped: %s", data)
+	}
+	got, _ := e.run(app, "", "doctor")
+	mustContain(t, "doctor", got, "search engine: local, model tiny", "2 of 2 skills indexed")
+
+	// The model file goes: search runs as words, with one line, and doctor
+	// names the missing file.
+	if err := os.Remove(filepath.Join(e.qhome, "cache", "models", "tiny", "model.safetensors")); err != nil {
+		t.Fatal(err)
+	}
+	out, err := e.run(app, "", "search", "deploy")
+	if err != nil || !strings.Contains(out, "deploy-check") || strings.Count(out, "searching with words") != 1 {
+		t.Errorf("search without the model file: %v\n%s", err, out)
+	}
+	got, _ = e.run(app, "", "doctor")
+	mustContain(t, "doctor without the model file", got, "model.safetensors is missing")
 }

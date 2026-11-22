@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -130,14 +131,41 @@ func (d *doc) skip(title, reason string) {
 }
 
 // checkSearch shows the search engine and a problem found in its settings
-// file. Search is best effort, so the problem is a warning.
+// file. Search is best effort, so a problem is a warning. For the local engine
+// it checks the model file, the dimension and how much of the library the
+// index covers.
 func (d *doc) checkSearch() {
 	cur := library.LoadEngine()
 	if cur.Problem != "" {
 		d.report("warn", "search engine: "+cur.Engine, cur.Problem)
 		return
 	}
-	d.report("ok", "search engine: "+cur.Engine)
+	if cur.Engine != library.EngineLocal {
+		d.report("ok", "search engine: "+cur.Engine)
+		return
+	}
+	name := cmp.Or(cur.Local.Model, library.DefaultModel)
+	spec, ok := library.KnownModel(name)
+	if !ok {
+		d.report("warn", "search engine: local", fmt.Sprintf("unknown model %q: search runs as words", name))
+		return
+	}
+	if err := spec.VerifyModelFile(); err != nil {
+		d.report("warn", "search engine: local, model "+name, err.Error(), "Search runs as words until the model file is there.")
+		return
+	}
+	l, err := library.Load()
+	if err != nil {
+		d.report("warn", "search engine: local, model "+name, err.Error())
+		return
+	}
+	st, _ := l.IndexStatus(name)
+	line := fmt.Sprintf("model file intact, %d values per vector, %d of %d skills indexed", spec.Config.Hidden, st.Indexed, st.Total)
+	if st.Stale > 0 {
+		d.report("warn", "search engine: local, model "+name, line, fmt.Sprintf("%d skills are stale; the next search embeds them, or run quiver engine reindex", st.Stale))
+		return
+	}
+	d.report("ok", "search engine: local, model "+name, line)
 }
 
 // 1. The layout of the Quiver home and its JSON files.

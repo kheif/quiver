@@ -241,22 +241,38 @@ func parseChecks(text string) []tui.HealthItem {
 	return items
 }
 
-func (b *tuiBackend) Search(text string) ([]string, error) {
+// SearchWords searches the whole library with the words engine only.
+func (b *tuiBackend) SearchWords(text string) ([]string, error) {
 	l := b.library()
 	if l == nil {
 		return nil, errors.New("the library is not loaded")
 	}
-	// The panel searches the whole library once, and the view picks from it.
-	se, err := l.NewSearch("")
+	matches, _ := library.NewWords(l.All()).Search(context.Background(), text, l.All())
+	return matchIDs(matches), nil
+}
+
+// Search searches the whole library once with the engine that is set; the
+// panel intersects the result with its view. The panel is a long-lived
+// process, so a missing index is built in the background.
+func (b *tuiBackend) Search(ctx context.Context, text string) ([]string, error) {
+	l := b.library()
+	if l == nil {
+		return nil, errors.New("the library is not loaded")
+	}
+	se, err := l.NewSearchWith("", library.Options{Refresh: library.RefreshBackground})
 	if err != nil {
 		return nil, err
 	}
-	matches, _ := se.Find(context.Background(), text, l.All())
+	matches, _ := se.Find(ctx, text, l.All())
+	return matchIDs(matches), nil
+}
+
+func matchIDs(matches []library.Match) []string {
 	var ids []string
 	for _, m := range matches {
 		ids = append(ids, m.ID)
 	}
-	return ids, nil
+	return ids
 }
 
 func (b *tuiBackend) Details(id string) (tui.Details, error) {

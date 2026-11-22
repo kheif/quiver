@@ -95,7 +95,7 @@ func TestUseEngine(t *testing.T) {
 		t.Errorf("a key was dropped: %s", data)
 	}
 	err = UseEngine("telepathy")
-	if err == nil || !strings.Contains(err.Error(), `unknown search engine "telepathy": use words`) {
+	if err == nil || !strings.Contains(err.Error(), `unknown search engine "telepathy": use local or words`) {
 		t.Errorf("unknown: %v", err)
 	}
 }

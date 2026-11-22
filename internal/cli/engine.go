@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"cmp"
 	"fmt"
 	"io"
 
@@ -17,8 +18,14 @@ func newEngineCmd() *cobra.Command {
 use, and any problem found in its settings file, state/search.json in the
 Quiver home. The file belongs to this machine and is never synced.
 
-The only engine now is "words": names and descriptions, ranked by words. A
-missing file or an engine this quiver does not know also means words.`,
+Engines:
+  words  names and descriptions, ranked by words (the default)
+  local  words and meaning: a small model that Quiver runs itself finds a
+         skill that shares no word with the query. It understands English
+         only, and needs the model file in the cache folder; without it
+         the search runs as words.
+
+A missing file or an engine this quiver does not know also means words.`,
 		Example: `  quiver engine
   quiver engine use words`,
 		ValidArgsFunction: noArgs,
@@ -28,7 +35,7 @@ missing file or an engine this quiver does not know also means words.`,
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print JSON")
-	cmd.AddCommand(newEngineUseCmd())
+	cmd.AddCommand(newEngineUseCmd(), newEngineReindexCmd())
 	return cmd
 }
 
@@ -52,6 +59,33 @@ which is left as it is.`,
 				return err
 			}
 			fmt.Fprintf(cmd.OutOrStdout(), "Search engine: %s\n", args[0])
+			return nil
+		},
+	}
+}
+
+func newEngineReindexCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "reindex",
+		Short: "Rebuild the search index of the local engine",
+		Long: `Embed every skill of the library again and replace cache/embeddings.json,
+with no time limit. A search builds only what is missing, and stops after a
+minute; use this to build it all at once, or after a model file was replaced.
+It needs the model file of the local engine.`,
+		Example:           `  quiver engine reindex`,
+		ValidArgsFunction: noArgs,
+		Args:              cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			l, err := library.Load()
+			if err != nil {
+				return err
+			}
+			model := cmp.Or(library.LoadEngine().Local.Model, library.DefaultModel)
+			n, err := l.Reindex(cmd.Context(), model, indexProgress(cmd.ErrOrStderr()))
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "Indexed %d skills with %s.\n", n, model)
 			return nil
 		},
 	}

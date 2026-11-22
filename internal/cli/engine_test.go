@@ -5,8 +5,13 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/kheif/quiver/internal/embed"
+	"github.com/kheif/quiver/internal/embed/embedtest"
+	"github.com/kheif/quiver/internal/library"
 )
 
 // runSplit runs quiver and returns stdout and stderr apart.
@@ -69,7 +74,7 @@ func TestEngineUse(t *testing.T) {
 func TestEngineUseUnknownWritesNothing(t *testing.T) {
 	searchableEnv(t)
 	_, err := runIn(t, "", "engine", "use", "telepathy")
-	if err == nil || !strings.Contains(err.Error(), `unknown search engine "telepathy": use words`) {
+	if err == nil || !strings.Contains(err.Error(), `unknown search engine "telepathy": use local or words`) {
 		t.Errorf("err = %v", err)
 	}
 	if _, err := os.Stat(searchFile(t)); !os.IsNotExist(err) {
@@ -178,8 +183,100 @@ func TestTUIBackendSearchesTheWholeLibrary(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, q := range []string{"deploy", "notes", "pdf"} {
-		if ids, err := b.Search(q); err != nil || len(ids) == 0 {
+		if ids, err := b.SearchWords(q); err != nil || len(ids) == 0 {
 			t.Errorf("%s: %v, %v", q, ids, err)
 		}
+		if ids, err := b.Search(t.Context(), q); err != nil || len(ids) == 0 {
+			t.Errorf("%s with the engine: %v, %v", q, ids, err)
+		}
 	}
+}
+
+// tinyModel installs the tiny model of embedtest as the model "tiny" of the
+// local engine and chooses it.
+func tinyModel(t *testing.T) {
+	t.Helper()
+	dir, err := library.ModelDir("tiny")
+	if err != nil {
+		t.Fatal(err)
+	}
+	embedtest.WriteModel(t, dir, 1)
+	st, err := os.Stat(filepath.Join(dir, "model.safetensors"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(library.RegisterModel(library.ModelSpec{Name: "tiny", Config: embed.Config(embedtest.Tiny), Size: st.Size(), MinScore: -1}))
+	writeSearchFile(t, `{"version": 1, "engine": "local", "local": {"model": "tiny", "minScore": -1}}`)
+}
+
+// A search that finds the index cold builds it and says so on stderr; the
+// next one does not.
+func TestSearchBuildsAColdIndexWithAProgressLine(t *testing.T) {
+	searchableEnv(t)
+	tinyModel(t)
+	out, errOut, err := runSplit(t, "search", "deploy")
+	if err != nil || !strings.Contains(out, "acme/deploy") {
+		t.Fatalf("out %q, err %v", out, err)
+	}
+	if !regexp.MustCompile(`Indexing skills for the search: \d+ of \d+\n`).MatchString(errOut) {
+		t.Errorf("stderr %q", errOut)
+	}
+	if strings.Contains(out, "Indexing") {
+		t.Errorf("progress on stdout: %q", out)
+	}
+	if _, errOut, _ := runSplit(t, "search", "deploy"); errOut != "" {
+		t.Errorf("the second search said %q", errOut)
+	}
+}
+
+func TestEngineReindex(t *testing.T) {
+	searchableEnv(t)
+	tinyModel(t)
+	out, errOut, err := runSplit(t, "engine", "reindex")
+	if err != nil || !regexp.MustCompile(`^Indexed \d+ skills with tiny\.\n$`).MatchString(out) {
+		t.Fatalf("out %q, err %v", out, err)
+	}
+	if !strings.Contains(errOut, "Indexing skills for the search:") {
+		t.Errorf("stderr %q", errOut)
+	}
+	if _, err := os.Stat(filepath.Join(os.Getenv("QUIVER_HOME"), "cache", "embeddings.json")); err != nil {
+		t.Error(err)
+	}
+	if _, _, err := runSplit(t, "engine", "reindex", "extra"); err == nil {
+		t.Error("an argument was accepted")
+	}
+}
+
+func TestEngineReindexWithoutTheModelFile(t *testing.T) {
+	searchableEnv(t)
+	writeSearchFile(t, `{"version": 1, "engine": "local"}`)
+	_, err := runIn(t, "", "engine", "reindex")
+	if err == nil || !strings.Contains(err.Error(), "model file") || !strings.Contains(err.Error(), "is missing") {
+		t.Errorf("err = %v", err)
+	}
+	// A search still works, as words, with one line.
+	out, errOut, err := runSplit(t, "search", "deploy")
+	if err != nil || !strings.Contains(out, "acme/deploy") || strings.Count(errOut, "searching with words") != 1 {
+		t.Errorf("out %q, stderr %q, err %v", out, errOut, err)
+	}
+}
+
+func TestDoctorChecksTheLocalEngine(t *testing.T) {
+	searchableEnv(t)
+	writeSearchFile(t, `{"version": 1, "engine": "local"}`)
+	out, _ := runIn(t, "", "doctor")
+	wantOut(t, out, "warn   search engine: local, model all-minilm-l6-v2", "is missing", "Search runs as words")
+
+	tinyModel(t)
+	out, _ = runIn(t, "", "doctor")
+	wantOut(t, out, "warn   search engine: local, model tiny", "model file intact, 8 values per vector, 0 of 5 skills indexed", "5 skills are stale")
+	if _, _, err := runSplit(t, "engine", "reindex"); err != nil {
+		t.Fatal(err)
+	}
+	out, _ = runIn(t, "", "doctor")
+	wantOut(t, out, "ok     search engine: local, model tiny", "model file intact, 8 values per vector, 5 of 5 skills indexed")
+
+	writeSearchFile(t, `{"version": 1, "engine": "local", "local": {"model": "nope"}}`)
+	out, _ = runIn(t, "", "doctor")
+	wantOut(t, out, `unknown model "nope"`)
 }
