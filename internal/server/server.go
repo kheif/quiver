@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kheif/quiver/internal/project"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -151,7 +152,13 @@ func instructions(opts Options) string {
 		opts.Log.Warn("no always-on pointer in the instructions", "err", err)
 		return usage + createHint
 	}
-	return usage + pointer(skills) + createHint
+	searchable := ""
+	if r, err := registry.Load(); err == nil {
+		if c := cue(r, opts.Where.ProjectID()); c != "" {
+			searchable = c + "\n\n"
+		}
+	}
+	return usage + pointer(skills) + searchable + createHint
 }
 
 // Run serves MCP over stdin and stdout until the client disconnects.

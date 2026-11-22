@@ -102,7 +102,7 @@ func createSkill(sess *session, in createIn) (*mcp.CallToolResult, CreateResult,
 	for _, w := range out.Warnings {
 		fmt.Fprintf(&b, "Warning: %s\n", w)
 	}
-	b.WriteString("Load it with get_skill when it applies. The instructions list it from the next session on.")
+	b.WriteString("Load it with get_skill when it applies. The instructions list it from the next session on. Tell the user that quiver add " + out.ID + " --searchable makes it searchable instead of listed.")
 	return text(b.String()), out, nil
 }
 

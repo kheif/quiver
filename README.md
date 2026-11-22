@@ -60,9 +60,9 @@ quiver new release-notes
 
 In a terminal, `quiver init` asks before each step: registering the MCP server (`quiver install`), importing the skills in `~/.claude/skills` for every folder, and importing those in the current project's `.claude/skills`. Any step can be skipped and run later. `quiver init --yes`, or a run outside a terminal, only creates `~/.quiver`; any other command creates it too.
 
-`quiver new` opens the new `SKILL.md` in `$VISUAL` or `$EDITOR`. Write one sentence in `description` on when the assistant should use the skill, and the instructions below the frontmatter. Quiver commits the skill in `~/.quiver/local` and creates `~/code/app/.quiver.json`. Commit that file, so the project keeps its ID in every clone.
+`quiver new` makes the skill Searchable in the project: not listed at session start, found by the assistant when it searches (`quiver add release-notes` lists it instead). `quiver new` opens the new `SKILL.md` in `$VISUAL` or `$EDITOR`. Write one sentence in `description` on when the assistant should use the skill, and the instructions below the frontmatter. Quiver commits the skill in `~/.quiver/local` and creates `~/code/app/.quiver.json`. Commit that file, so the project keeps its ID in every clone.
 
-Then start Claude Code in `~/code/app` and ask for the task, such as "write the release notes for this version". The assistant sees `release-notes` in Quiver's skill list and loads it. You can also run it yourself as `/quiver:release-notes`.
+Then start Claude Code in `~/code/app` and ask for the task, such as "write the release notes for this version". The session-start text tells the assistant that some skills are not listed and when to look for one (the search cue, which names no skill), so it searches for `release-notes` and loads it. To list it at session start, and to run it yourself as `/quiver:release-notes`, run `quiver add release-notes`.
 
 `quiver status` shows what the assistant gets in the current folder. `quiver` alone sums it up in three lines, with a next step, before the command list.
 
@@ -98,11 +98,11 @@ Run `quiver help <command>` for the details and examples of each.
 |---|---|
 | `quiver` | Show the project here, how many skills it is served and a next step, then the command list. |
 | `quiver init` | Create the Quiver home and anything missing in it; in a terminal, then offer to register the MCP server and import existing skills (`--yes`: only create the home). |
-| `quiver new <name>` | Create a local skill and assign it to this project (`--global`: every folder, `--none`: nowhere). |
+| `quiver new <name>` | Create a local skill and make it Searchable in this project (`--global`: every folder, `--none`: nowhere). `quiver add <name>` lists it instead. |
 | `quiver edit <id>` | Open a local skill in your editor, then check and commit it. |
 | `quiver delete <id>` | Delete a local skill from the library. An assigned skill needs `--force`. |
 | `quiver fork <source/skill>` | Copy a source skill into your own skills to change it; `--as` names the copy. The copy takes the original's place wherever it is assigned, and `quiver update` no longer changes it. |
-| `quiver import` | Move the skills in this project's `.claude/skills` into the library (`--deep`: every folder of the project). Originals committed in git are kept; `--keep` keeps all. |
+| `quiver import` | Move the skills in this project's `.claude/skills` into the library, as Searchable skills (one that is already assigned keeps its level) (`--deep`: every folder of the project). Originals committed in git are kept; `--keep` keeps all. |
 | `quiver import <folder>` | Move every skill in a folder and its subfolders into the library. Files that are not valid skills are listed at the end. |
 | `quiver import <skill>` | Move one skill: its `SKILL.md`, its folder or a markdown file with frontmatter. `--name` renames it. |
 | `quiver add <id>...` | Assign skills to this project, or to every folder with `--global`. `--always` makes them always-on. `--searchable` makes them Searchable: not listed or loaded at session start, found by the assistant when it searches and loaded without asking. `--source <name> --searchable` does that for every skill of a source that is not assigned yet in the scope. A skill is at one level per scope: `--searchable` takes it off the listed skills of that scope, and `add` without it takes it off the Searchable ones. |
@@ -181,7 +181,7 @@ Claude Code starts the server in the project folder. Other assistants may start 
 | `get_skill_file` | `id`, `path` | One extra file of a skill, such as `references/checklist.md`. Large and binary files return their path instead. |
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |
 | `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. |
-| `search_skills` | `query` | Searches the skills that are Searchable in this project (assigned here, but not listed), ranked by words, and returns at most 10, with `more` for the matches left out. Every match is assigned here (`assigned` is true, `scope` is `project` or `global`); the assistant loads the one that fits with `get_skill`. Listed skills and skills that are not assigned are not searched. |
+| `search_skills` | `query` | Searches the skills that are Searchable in this project (assigned here, but not listed), ranked by words, and returns at most 10, with `more` for the matches left out. Every match is assigned here (`assigned` is true, `scope` is `project` or `global`); the assistant loads the one that fits with `get_skill`. Listed skills and skills that are not assigned are not searched. The description and the session-start text carry the search cue: when the topic of the conversation calls for a skill that is not listed, search with the topic in a few words, and load a fitting skill without asking. |
 
 **Prompts.** Every listed skill is also an MCP prompt; Searchable skills are not. In Claude Code it appears as `/quiver:<id>`; text after the command is passed to the skill as the task.
 

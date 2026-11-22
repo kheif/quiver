@@ -65,7 +65,8 @@ func addSearchTool(s *mcp.Server, sess *session, log *slog.Logger) {
 		Annotations: readOnly,
 		Description: `Search the skills that are searchable in this project: assigned here, but not listed. ` +
 			`Each match is assigned here, so load the one that fits the task with get_skill and follow it. ` +
-			`Skills that are listed already appear in the skill list, and skills that are not assigned are not searched.`,
+			`Skills that are listed already appear in the skill list, and skills that are not assigned are not searched. ` +
+			searchCue,
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in searchIn) (*mcp.CallToolResult, SearchResult, error) {
 		return searchSkills(ctx, warned, sess.projectID(), in.Query)
 	})

@@ -443,12 +443,12 @@ func TestTUIBackendCreatesASkillInTheProject(t *testing.T) {
 	dir := assignEnv(t)
 	b := &tuiBackend{}
 	text, err := b.NewSkill("release-notes", "Write release notes.", dir, false)
-	if err != nil || !strings.Contains(text, "Created skill release-notes.") || !strings.Contains(text, "Assigned to app: release-notes") {
+	if err != nil || !strings.Contains(text, "Created skill release-notes.") || !strings.Contains(text, "Assigned to app as Searchable: release-notes") {
 		t.Fatalf("text %q, err %v", text, err)
 	}
 	r := loadRegistry(t)
 	p, err := project.Find(dir)
-	if err != nil || !slices.Contains(r.Projects[p.ID].Skills, "release-notes") {
+	if err != nil || !slices.Contains(r.Projects[p.ID].Searchable, "release-notes") {
 		t.Errorf("registry %+v, err %v", r.Projects, err)
 	}
 	// Without a project it is only created.
@@ -496,5 +496,14 @@ func TestTUIBackendImportsAFolderOfSkills(t *testing.T) {
 	}
 	if ids, _ := b.SearchWords("greeter"); len(ids) != 1 {
 		t.Errorf("the skill is not in the library: %v", ids)
+	}
+	// What the panel imports is Searchable, like quiver import.
+	r := loadRegistry(t)
+	found := slices.Contains(r.Searchable, "greeter")
+	for id := range r.Projects {
+		found = found || r.ProjectLevel(id, "greeter") == registry.Searchable
+	}
+	if !found {
+		t.Errorf("greeter is not Searchable: %+v", r)
 	}
 }

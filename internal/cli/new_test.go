@@ -48,8 +48,8 @@ func TestNewScopes(t *testing.T) {
 		args []string
 		want string
 	}{
-		{[]string{"new", "g", "--description", "Global one.", "--global"}, "Assigned globally: g"},
-		{[]string{"new", "p", "--description", "Project one.", "--project", f.app}, "Assigned to app: p"},
+		{[]string{"new", "g", "--description", "Global one.", "--global"}, "Assigned globally as Searchable: g"},
+		{[]string{"new", "p", "--description", "Project one.", "--project", f.app}, "Assigned to app as Searchable: p"},
 		{[]string{"new", "w", "--description", "New project.", "--project", dir}, "Created " + filepath.Join(dir, project.FileName)},
 		{[]string{"new", "n", "--description", "No scope.", "--none"}, "Not assigned. Assign it with: quiver add n"},
 	} {
@@ -65,17 +65,21 @@ func TestNewScopes(t *testing.T) {
 		t.Errorf("editor ran %d times", *calls)
 	}
 	r := loadRegistry(t)
-	if !reflect.DeepEqual(r.Global, []string{"acme/review", "g", "pdf"}) {
-		t.Errorf("global = %v", r.Global)
+	// A skill the user writes is Searchable: in no listed scope list.
+	if !reflect.DeepEqual(r.Global, []string{"acme/review", "pdf"}) || !reflect.DeepEqual(r.Searchable, []string{"g"}) {
+		t.Errorf("global = %v, searchable %v", r.Global, r.Searchable)
 	}
-	if got := r.Projects["app-000001"].Skills; !reflect.DeepEqual(got, []string{"acme/review", "p", "tdd"}) {
+	if got := r.Projects["app-000001"].Skills; !reflect.DeepEqual(got, []string{"acme/review", "tdd"}) {
 		t.Errorf("app = %v", got)
+	}
+	if got := r.Projects["app-000001"].Searchable; !reflect.DeepEqual(got, []string{"p"}) {
+		t.Errorf("app searchable = %v", got)
 	}
 	p, err := project.Find(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := r.Projects[p.ID].Skills; !reflect.DeepEqual(got, []string{"w"}) {
+	if got := r.Projects[p.ID].Searchable; !reflect.DeepEqual(got, []string{"w"}) {
 		t.Errorf("web = %v", got)
 	}
 	if got := commits(t, f.home)[:4]; !reflect.DeepEqual(got, []string{"add n", "add w", "add p", "add g"}) {
@@ -96,8 +100,9 @@ func TestNewCurrentFolder(t *testing.T) {
 	if _, err := runIn(t, "", "new", "api-docs", "--description", "Write API docs."); err != nil {
 		t.Fatal(err)
 	}
-	if got := loadRegistry(t).Projects["api-000002"].Skills; !reflect.DeepEqual(got, []string{"api-docs", "tdd"}) {
-		t.Errorf("api = %v", got)
+	api := loadRegistry(t).Projects["api-000002"]
+	if !reflect.DeepEqual(api.Skills, []string{"tdd"}) || !reflect.DeepEqual(api.Searchable, []string{"api-docs"}) {
+		t.Errorf("api = %v, searchable %v", api.Skills, api.Searchable)
 	}
 }
 

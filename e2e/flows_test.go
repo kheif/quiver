@@ -66,7 +66,7 @@ func TestImport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, got)
 	}
-	mustContain(t, "import", got, "Imported deploy into the library and assigned it to this project.")
+	mustContain(t, "import", got, "Imported deploy into the library and made it Searchable in this project.")
 	if _, err := os.Stat(filepath.Join(app, ".claude", "skills", "deploy", "SKILL.md")); err != nil {
 		t.Errorf("original deleted: %v", err)
 	}
@@ -363,5 +363,44 @@ func TestEngineSetupThroughTheBinary(t *testing.T) {
 	mustContain(t, "remove", e.quiver(app, "engine", "remove", "--yes"), "Deleted the search index.", "Search engine: words", "model.safetensors")
 	if _, err := os.Stat(filepath.Join(e.qhome, "cache", "models", "tiny", "model.safetensors")); !os.IsNotExist(err) {
 		t.Errorf("the model was not deleted: %v", err)
+	}
+}
+
+// The session-start hook through the binary: a home with a Searchable skill
+// gets the cue, a home with only an unassigned skill gets nothing, and what
+// the user writes with quiver new is Searchable.
+func TestHookPassesTheSearchCue(t *testing.T) {
+	e := newEnv(t)
+	app := e.dir("app")
+	e.write(filepath.Join(e.qhome, "local"), map[string]string{
+		"loose/SKILL.md": skillMD("loose", "Assigned nowhere.", "Loose."),
+	})
+	input := `{"cwd": "` + filepath.ToSlash(app) + `", "hook_event_name": "SessionStart"}`
+	hook := func() string {
+		out, err := e.run(app, input, "hook", "session-start", "claude-code")
+		if err != nil {
+			t.Fatalf("hook: %v\n%s", err, out)
+		}
+		return out
+	}
+
+	if out := hook(); strings.TrimSpace(out) != "" {
+		t.Errorf("an unassigned skill gave output:\n%s", out)
+	}
+
+	mustContain(t, "new", e.quiver(app, "new", "style-guide", "--global", "--description", "House style."),
+		"Assigned globally as Searchable: style-guide", "quiver add style-guide moves it to another level.")
+	out := hook()
+	mustContain(t, "hook", out, "quiver-search", "call search_skills before you start", "No skills are listed in this folder")
+	mustNotContain(t, "hook", out, "style-guide", "loose")
+
+	e.quiver(app, "add", "loose", "--global")
+	out = hook()
+	mustContain(t, "hook with a listed skill", out, "loose: Assigned nowhere.", "quiver-search")
+	mustNotContain(t, "hook with a listed skill", out, "No skills are listed in this folder")
+
+	e.quiver(app, "add", "style-guide", "--global")
+	if out := hook(); strings.Contains(out, "quiver-search") {
+		t.Errorf("a cue without a Searchable skill:\n%s", out)
 	}
 }

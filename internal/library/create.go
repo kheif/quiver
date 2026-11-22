@@ -44,6 +44,12 @@ func LocalDir() (string, error) {
 // left behind when it fails before the commit. It returns the validation
 // warnings of the new skill.
 func CreateLocal(name, description, body string, files map[string]string, scope Scope, projectID string) (warnings []string, err error) {
+	return CreateLocalAs(name, description, body, files, scope, projectID, registry.OnDemand)
+}
+
+// CreateLocalAs is CreateLocal with the level of the new assignment: on
+// demand, or Searchable.
+func CreateLocalAs(name, description, body string, files map[string]string, scope Scope, projectID string, level registry.Level) (warnings []string, err error) {
 	if err := skill.ValidateName(name); err != nil {
 		return nil, err
 	}
@@ -69,7 +75,7 @@ func CreateLocal(name, description, body string, files map[string]string, scope 
 		if err != nil {
 			return err
 		}
-		if err := assign(r, scope, projectID, name); err != nil {
+		if err := assignAs(r, scope, projectID, name, level); err != nil {
 			return err
 		}
 		// Write into a hidden folder first, which the library skips, so a

@@ -112,9 +112,9 @@ func (m Model) askNewSkill() (Model, tea.Cmd) {
 // scopeHint explains the choices of the last question of a new skill.
 func (m Model) scopeHint(where string) string {
 	if where == "" {
-		return "none: only create it, assign it later. global: on demand in every folder."
+		return "none: only create it, assign it later. global: searchable in every folder."
 	}
-	return fmt.Sprintf("project: on demand in %s. global: on demand in every folder. none: only create it, assign it later.", m.data.Project.Name)
+	return fmt.Sprintf("project: searchable in %s. global: searchable in every folder. none: only create it, assign it later.", m.data.Project.Name)
 }
 
 // createSkill runs the creation once the three answers are in.

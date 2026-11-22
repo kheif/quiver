@@ -30,6 +30,7 @@ func (l Limit) size(s string) int {
 const (
 	alwaysOnTag = "quiver-always-on"
 	skillsTag   = "quiver-skills"
+	searchTag   = "quiver-search"
 	noticeTag   = "quiver-notice"
 
 	alwaysOnIntro   = "Always-on skills from Quiver. Follow each one for the whole conversation.\n"
@@ -211,6 +212,11 @@ func buildSessionContext(r *registry.Registry, l *library.Library, projectID str
 	if len(lines) > 0 {
 		units = append(units, unit{skillsTag, skillsIntro, 0, false})
 		units = append(units, lines...)
+	}
+	// The cue comes last, after the always-on skills and the catalog, and
+	// stands alone when nothing is listed.
+	if c := cue(r, projectID); c != "" {
+		units = append(units, unit{searchTag, c + "\n", 0, false})
 	}
 	if len(problems) > 0 {
 		var b strings.Builder

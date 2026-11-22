@@ -28,15 +28,19 @@ func newNewCmd() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "new <name>",
-		Short: "Create a local skill and assign it to this project",
-		Long: `Create a local skill in the Quiver home and assign it to this project, to
-every folder with --global, or nowhere with --none.
+		Short: "Create a local skill and make it Searchable in this project",
+		Long: `Create a local skill in the Quiver home and make it Searchable in this
+project, in every folder with --global, or nowhere with --none.
+
+A skill you write is your own, so it is Searchable: not listed at session
+start, found by the assistant when it searches. quiver add <id> moves it to
+another level, for example on demand (listed) or --always.
 
 Without --description the new SKILL.md opens in $VISUAL or $EDITOR.
 
 A folder without .quiver.json is registered first; in a terminal it asks
 before, unless --yes is given.`,
-		Example: `  # Write the skill in your editor; it is served in this project
+		Example: `  # Write the skill in your editor; it is Searchable in this project
   quiver new release-notes
 
   # Create it without an editor, for every folder
@@ -44,7 +48,9 @@ before, unless --yes is given.`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return newSkill(cmd.InOrStdin(), cmd.OutOrStdout(), t, none, description, args[0])
+			return offerAfterSearchable(cmd, func() error {
+				return newSkill(cmd.InOrStdin(), cmd.OutOrStdout(), t, none, description, args[0])
+			})
 		},
 	}
 	t.flags(cmd)
@@ -93,7 +99,7 @@ func newSkill(in io.Reader, out io.Writer, t target, none bool, description, nam
 	if edit {
 		description = todoDescription
 	}
-	warnings, err := library.CreateLocal(name, description, template(name), nil, scope, projectID)
+	warnings, err := library.CreateLocalAs(name, description, template(name), nil, scope, projectID, registry.Searchable)
 	if err != nil {
 		return err
 	}
@@ -116,6 +122,12 @@ func template(name string) string {
 	return "# " + strings.ToUpper(title[:1]) + title[1:] + "\n\nInstructions go here."
 }
 
+// searchableDefaultNote says what the default level of a skill the user made
+// means, and how to change it.
+func searchableDefaultNote(id string) string {
+	return "It is Searchable: not listed at session start, found by searching. quiver add " + id + " moves it to another level."
+}
+
 // reportAssigned prints where the new skill is served, and warns when it
 // shares its name with another served skill.
 func reportAssigned(out io.Writer, name string, scope library.Scope, projectID string) error {
@@ -128,15 +140,16 @@ func reportAssigned(out io.Writer, name string, scope library.Scope, projectID s
 		return err
 	}
 	if scope == library.ScopeGlobal {
-		fmt.Fprintf(out, "Assigned globally: %s\n", name)
+		fmt.Fprintf(out, "Assigned globally as Searchable: %s\n", name)
 	} else {
-		fmt.Fprintf(out, "Assigned to %s: %s\n", r.Projects[projectID].Name, name)
+		fmt.Fprintf(out, "Assigned to %s as Searchable: %s\n", r.Projects[projectID].Name, name)
 	}
+	fmt.Fprintln(out, searchableDefaultNote(name))
 	l, err := library.Load()
 	if err != nil {
 		return err
 	}
-	for _, c := range clashes(l, r.Served(projectID), []string{name}) {
+	for _, c := range clashes(l, append(r.Served(projectID), name), []string{name}) {
 		fmt.Fprintln(out, "warning:", c)
 	}
 	return nil

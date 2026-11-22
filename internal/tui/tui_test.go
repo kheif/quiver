@@ -1468,7 +1468,7 @@ func TestNewSkillWithDescriptionIsCreatedInTheProject(t *testing.T) {
 	contains(t, m, "NEW SKILL · release-notes", "Description:")
 	m = typed(t, m, "Write release notes.")
 	m = keys(t, m, "enter")
-	contains(t, m, "Assign to: project", "project: on demand in app")
+	contains(t, m, "Assign to: project", "project: searchable in app")
 	m = keys(t, m, "enter")
 	if f.callList() != "new release-notes Write release notes. /code/app" {
 		t.Errorf("calls %q", f.callList())

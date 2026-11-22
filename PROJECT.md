@@ -86,7 +86,7 @@ A project is identified by a small `.quiver.json` file in its root:
 
 A session-start hook (`quiver hook`, set up by `quiver install`) adds the available skills to the context: the always-on skills in full, then the ID and description of every other skill served in the folder, global and project. The assistant knows them from the first message and loads a fitting one with `get_skill`. Claude Code, Codex, Cursor, Antigravity and VS Code Copilot have such a hook. An assistant takes only so much text from one hook command, so the text is split over as many hook commands as it needs and nothing is left out.
 
-The server's `instructions` stay short: how to use the tools, and the names of the always-on skills for an assistant without a hook, which loads them with `get_skill`. Tool descriptions are not used for the catalog, because Claude Code defers MCP tools and the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). Claude Desktop uses no hook and drops `instructions`, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
+The server's `instructions` stay short: how to use the tools, and the names of the always-on skills for an assistant without a hook, which loads them with `get_skill`. When the folder has a Searchable skill, the session-start text and the instructions end with the search cue (some skills are not listed; call `search_skills` with the topic in a few words when the topic calls for one, and load a fitting skill without asking); when nothing is listed there, the cue alone is passed and says so. The check reads only `registry.json`. Tool descriptions are not used for the catalog, because Claude Code defers MCP tools and the model does not see their descriptions (see [docs/spike-b01-results.md](docs/spike-b01-results.md)). Claude Desktop uses no hook and drops `instructions`, so there skills are used only on request (see [docs/spike-mcp-clients.md](docs/spike-mcp-clients.md)).
 
 ### Tools
 
@@ -111,7 +111,7 @@ The session-start hook puts their full text into the context before the first re
 
 ### Searchable skills
 
-A skill that is only needed when its topic comes up (a style guide for Slack messages) should cost nothing until then. Assign it at the *Searchable* level: it is not listed at session start and not loaded. The assistant finds it by searching with `search_skills`, and loads it with `get_skill` without asking, because assigning a skill is the statement that you trust it.
+Skills you write or import yourself (`quiver new`, `quiver import`, the panel's `n` and `i`) are Searchable by default; `create_skill` and `quiver fork` are unchanged. A skill that is only needed when its topic comes up (a style guide for Slack messages) should cost nothing until then. Assign it at the *Searchable* level: it is not listed at session start and not loaded. The assistant finds it by searching with `search_skills`, and loads it with `get_skill` without asking, because assigning a skill is the statement that you trust it.
 
 ```bash
 quiver add slack-style --searchable --global

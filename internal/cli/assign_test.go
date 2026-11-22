@@ -390,7 +390,7 @@ func TestNewConfirmsNewProject(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(local, "notes")); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("skill created: %v", err)
 	}
-	if out, err = runIn(t, "", "new", "notes", "--description", "Keep notes.", "--project", dir, "-y"); err != nil || !strings.Contains(out, "Assigned to app: notes") {
+	if out, err = runIn(t, "", "new", "notes", "--description", "Keep notes.", "--project", dir, "-y"); err != nil || !strings.Contains(out, "Assigned to app as Searchable: notes") {
 		t.Errorf("--yes: %v\n%s", err, out)
 	}
 }

@@ -51,6 +51,11 @@ For each skill it asks where to assign it and a new name if the name is
 taken. --global makes every folder the default. With --yes it asks nothing:
 taken names are skipped.
 
+A skill you import is your own, so it is made Searchable: not listed at
+session start, found by the assistant when it searches. quiver add <id>
+moves it to another level. A skill that is already assigned there keeps its
+level.
+
 After a skill is imported, its original is deleted, so the assistant does
 not load it twice; the copy in the library is committed in its git. An
 original committed in the git of a project is kept unless you say so,
@@ -76,7 +81,9 @@ because teammates who do not use Quiver may need it; --yes keeps it too.
 				path = args[0]
 			}
 			o.terminal = interactive(cmd.InOrStdin())
-			return importSkills(cmd.InOrStdin(), cmd.OutOrStdout(), o, path)
+			return offerAfterSearchable(cmd, func() error {
+				return importSkills(cmd.InOrStdin(), cmd.OutOrStdout(), o, path)
+			})
 		},
 	}
 	cmd.Flags().BoolVar(&o.deep, "deep", false, "without a folder: search every folder of this project, not only .claude/skills")
@@ -302,7 +309,7 @@ func (im *importer) one(f library.Found) (ok bool, err error) {
 		}
 		projectID = im.proj.ID
 	}
-	res, err := library.ImportLocal(src, name, scope, projectID, im.from)
+	res, err := library.ImportLocalAs(src, name, scope, projectID, im.from, registry.Searchable)
 	if err != nil {
 		return false, err
 	}
@@ -313,7 +320,7 @@ func (im *importer) one(f library.Found) (ok bool, err error) {
 	if res.Reused {
 		fmt.Fprintf(im.out, "%s is already in the library with the same content; assigned it to %s.\n", name, where)
 	} else {
-		fmt.Fprintf(im.out, "Imported %s into the library and assigned it to %s.\n", name, where)
+		fmt.Fprintf(im.out, "Imported %s into the library and made it Searchable in %s. %s\n", name, where, searchableDefaultNote(name))
 	}
 	for _, w := range res.Warnings {
 		fmt.Fprintln(im.out, "warning:", w)

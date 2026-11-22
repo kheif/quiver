@@ -81,7 +81,7 @@ func TestInitGuided(t *testing.T) {
 	wantLines(t, out,
 		"Set up Quiver in your assistants? [Y/n] Registered with Claude Code: /opt/bin/quiver mcp",
 		"Found 1 skill in "+filepath.Dir(user)+". Import them into the library? [Y/n] Found 1 skill",
-		"Assign to (p)roject, (g)lobal, or (s)kip? [g] Imported greet into the library and assigned it to every folder.",
+		"Assign to (p)roject, (g)lobal, or (s)kip? [g] Imported greet into the library and made it Searchable in every folder.",
 		"Found 1 skill in "+filepath.Dir(proj)+". Import them into the library? [Y/n] Found 1 skill",
 		"See what the assistant gets in this folder with: quiver status",
 	)
@@ -89,14 +89,14 @@ func TestInitGuided(t *testing.T) {
 		t.Errorf("claude user %q", claude.User())
 	}
 	r := loadRegistry(t)
-	if !reflect.DeepEqual(r.Global, []string{"greet"}) {
-		t.Errorf("global = %v", r.Global)
+	if !reflect.DeepEqual(r.Searchable, []string{"greet"}) || len(r.Global) != 0 {
+		t.Errorf("global = %v, searchable %v", r.Global, r.Searchable)
 	}
 	p, err := project.Find(".")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := r.Projects[p.ID]; got == nil || !reflect.DeepEqual(got.Skills, []string{"review"}) {
+	if got := r.Projects[p.ID]; got == nil || !reflect.DeepEqual(got.Searchable, []string{"review"}) {
 		t.Errorf("project = %+v", got)
 	}
 	for _, dir := range []string{user, proj} {

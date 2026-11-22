@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/kheif/quiver/internal/library"
+	"github.com/kheif/quiver/internal/registry"
 	"github.com/spf13/cobra"
 )
 
@@ -235,4 +236,30 @@ func offerEngineSetup(ctx context.Context, in io.Reader, out, errOut io.Writer) 
 		return nil
 	}
 	return engineSetup(ctx, r, out, errOut, true)
+}
+
+// searchableCount is the number of Searchable assignments in the registry.
+func searchableCount() int {
+	r, err := registry.Load()
+	if err != nil {
+		return 0
+	}
+	n := len(r.Searchable)
+	for _, p := range r.Projects {
+		n += len(p.Searchable)
+	}
+	return n
+}
+
+// offerAfterSearchable runs a command that may make skills Searchable, as new
+// and import do, and offers the setup once when it did.
+func offerAfterSearchable(cmd *cobra.Command, run func() error) error {
+	before := searchableCount()
+	if err := run(); err != nil {
+		return err
+	}
+	if searchableCount() > before {
+		return offerEngineSetup(cmd.Context(), cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
+	}
+	return nil
 }

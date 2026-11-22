@@ -295,6 +295,8 @@ A skill is a folder with a SKILL.md, or a markdown file of any name whose frontm
 
 For each skill it asks where to assign it and a new name if the name is taken. --global makes every folder the default. With --yes it asks nothing: taken names are skipped.
 
+A skill you import is your own, so it is made Searchable: not listed at session start, found by the assistant when it searches. quiver add \<id\> moves it to another level. A skill that is already assigned there keeps its level.
+
 After a skill is imported, its original is deleted, so the assistant does not load it twice; the copy in the library is committed in its git. An original committed in the git of a project is kept unless you say so, because teammates who do not use Quiver may need it; --yes keeps it too. --keep keeps every original.
 
 ```sh
@@ -440,7 +442,9 @@ quiver mcp config
 
 ## quiver new
 
-Create a local skill in the Quiver home and assign it to this project, to every folder with --global, or nowhere with --none.
+Create a local skill in the Quiver home and make it Searchable in this project, in every folder with --global, or nowhere with --none.
+
+A skill you write is your own, so it is Searchable: not listed at session start, found by the assistant when it searches. quiver add \<id\> moves it to another level, for example on demand (listed) or --always.
 
 Without --description the new SKILL.md opens in $VISUAL or $EDITOR.
 
@@ -461,7 +465,7 @@ quiver new <name> [flags]
 **Examples**
 
 ```sh
-# Write the skill in your editor; it is served in this project
+# Write the skill in your editor; it is Searchable in this project
 quiver new release-notes
 
 # Create it without an editor, for every folder

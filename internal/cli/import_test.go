@@ -44,8 +44,8 @@ func TestImport(t *testing.T) {
 	for _, want := range []string{
 		"Found 3 skills in ",
 		"notes is already in the library with the same content; assigned it to this project.",
-		"the library already has a different skill named pdf.\nNew name (empty to skip): Imported pdf-web into the library and assigned it to this project.",
-		"Imported review into the library and assigned it to every folder.",
+		"the library already has a different skill named pdf.\nNew name (empty to skip): Imported pdf-web into the library and made it Searchable in this project.",
+		"Imported review into the library and made it Searchable in every folder.",
 		"Delete the original folder " + filepath.Join(".claude", "skills", "review") + "? [Y/n] Deleted the original folder " + filepath.Join(".claude", "skills", "review") + ".",
 	} {
 		if !strings.Contains(out, want) {
@@ -60,11 +60,12 @@ func TestImport(t *testing.T) {
 		t.Errorf("pdf-web:\n%s", data)
 	}
 	r := loadRegistry(t)
-	if got := r.Projects["web-000003"].Skills; !slices.Equal(got, []string{"notes", "pdf-web"}) {
-		t.Errorf("web skills = %v", got)
+	// What the user imports is Searchable, not listed.
+	if got := r.Projects["web-000003"].Searchable; !slices.Equal(got, []string{"notes", "pdf-web"}) {
+		t.Errorf("web searchable = %v", got)
 	}
-	if !slices.Contains(r.Global, "review") {
-		t.Errorf("global = %v", r.Global)
+	if !slices.Contains(r.Searchable, "review") || slices.Contains(r.Global, "review") {
+		t.Errorf("global = %v, searchable %v", r.Global, r.Searchable)
 	}
 	// Only review's original was deleted.
 	for name, kept := range map[string]bool{"pdf": true, "notes": true, "review": false} {
@@ -94,8 +95,8 @@ func TestImportYes(t *testing.T) {
 	}
 	r := loadRegistry(t)
 	for _, id := range []string{"notes", "review"} {
-		if !slices.Contains(r.Global, id) {
-			t.Errorf("%s not global: %v", id, r.Global)
+		if !slices.Contains(r.Searchable, id) || slices.Contains(r.Global, id) {
+			t.Errorf("%s not Searchable globally: %v, %v", id, r.Global, r.Searchable)
 		}
 	}
 	if _, ok := r.Projects["web-000003"]; ok {
@@ -208,7 +209,7 @@ func TestImportOneFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	wantLines(t, out, "Imported demo into the library and assigned it to this project.", "Delete the original file greeter.md? [Y/n] Kept.")
+	wantLines(t, out, "Imported demo into the library and made it Searchable in this project.", "Delete the original file greeter.md? [Y/n] Kept.")
 	data, _ := os.ReadFile(filepath.Join(f.home, "local", "demo", "SKILL.md"))
 	if want := "---\nname: demo\ndescription: Greet people.\n---\nSay hello.\n"; string(data) != want {
 		t.Errorf("SKILL.md = %q", data)
@@ -216,8 +217,8 @@ func TestImportOneFile(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(f.home, "local", "demo", "other.txt")); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("other.txt copied: %v", err)
 	}
-	if got := loadRegistry(t).Projects["app-000001"].Skills; !slices.Contains(got, "demo") {
-		t.Errorf("app skills = %v", got)
+	if got := loadRegistry(t).Projects["app-000001"].Searchable; !slices.Contains(got, "demo") {
+		t.Errorf("app searchable = %v", got)
 	}
 	if _, err := os.Stat(file); err != nil {
 		t.Errorf("original deleted: %v", err)
@@ -237,7 +238,7 @@ func TestImportOneSkillMD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	wantLines(t, out, "Imported deploy into the library and assigned it to every folder.", "Delete the original folder deploy? [Y/n] Deleted the original folder deploy.")
+	wantLines(t, out, "Imported deploy into the library and made it Searchable in every folder.", "Delete the original folder deploy? [Y/n] Deleted the original folder deploy.")
 	if _, err := os.Stat(filepath.Join(f.home, "local", "deploy", "scripts", "run.sh")); err != nil {
 		t.Errorf("scripts not copied: %v", err)
 	}
@@ -296,8 +297,8 @@ func TestImportFolder(t *testing.T) {
 	}
 	r := loadRegistry(t)
 	for _, id := range []string{"deploy", "greet-file", "lint"} {
-		if !slices.Contains(r.Global, id) {
-			t.Errorf("%s not imported: %v", id, r.Global)
+		if !slices.Contains(r.Searchable, id) {
+			t.Errorf("%s not imported: %v", id, r.Searchable)
 		}
 	}
 	// The lone file came alone; the skill folder with its files.

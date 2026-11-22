@@ -56,6 +56,19 @@ When it is done, `quiver install` prints one line per assistant on how always-on
 
 See [Always-on skills](/docs/concepts/always-on/) for how always-on skills reach each assistant.
 
+### Finding Searchable skills
+
+A Searchable skill is not listed, so the assistant has to be told that such skills exist and when to look for one. Quiver adds a short cue for that, without any name or description, whenever the folder has a Searchable skill:
+
+| Assistant | Gets the cue from | Finding Searchable skills |
+| --- | --- | --- |
+| Claude Code | the hook and the server instructions | Measured: the fitting skill was found in all 20 runs of the main test |
+| Cursor, Codex, Antigravity, VS Code | the hook and the server instructions | Not yet measured |
+| Other clients that take the server instructions | the server instructions | Not yet measured |
+| Claude Desktop | nothing: it drops the instructions and has no hook | Not measured; name Quiver in the prompt |
+
+Only Claude Code has been measured for finding Searchable skills. The others work through the same tool and cue, but their rate is not known yet. See [Finding skills](/docs/guides/finding-skills/).
+
 ### Claude Code
 
 A session-start hook adds the always-on skills in full, and the ID and description of every other skill served in the folder, to the context, so the model knows the skills from the first message. Claude Code also adds the server's short instructions to its system prompt. It starts the server in the folder you start Claude Code in, so project skills work.

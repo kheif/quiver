@@ -1,6 +1,10 @@
 package server
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/kheif/quiver/internal/registry"
+)
 
 // maxDescription guards the catalog against huge descriptions. The Agent
 // Skills format allows at most 1024 characters.
@@ -10,6 +14,29 @@ const maxDescription = 1024
 // always-on skills are not in the instructions: Claude Code cuts them at about
 // 4096 characters, so the session-start hook carries them (BuildSessionContext).
 const usage = "Quiver serves skills: reusable instructions for specific tasks. At the start of a session Quiver adds a <quiver-skills> block with the id and description of the skills served here, and a <quiver-always-on> block with the always-on skills in full, to the conversation. If there is no <quiver-skills> block, call the list_skills tool of this server before your first reply.\nBefore starting a task, check whether a skill fits. If it does, call the get_skill tool of this server with its id and follow it. The get_skill_file tool loads an extra file of a skill, and search_skills finds skills by words.\n\n"
+
+// searchCue tells the assistant that searchable skills exist and when to look
+// for one, without a list of them: Quiver sees only the message, the assistant
+// knows the topic of the conversation. It is the second wording of the
+// discovery spike (docs/spike-discovery-results.md), which met the threshold.
+const searchCue = "Some skills are not listed because the user made them searchable. When the topic of the conversation, not only the last message, calls for something that such a skill could cover (writing for a tool or a channel, working with a service, a file type, a style guide), call search_skills before you start and again when the topic changes. Write the query as a few words that name the product, tool, service or channel the work is for, and what is being produced. If nothing fits, search once more from another angle (the product alone, or the kind of text). Load a fitting skill with get_skill without asking, because the user chose it. A plain question about the project needs no search."
+
+// nothingListed is added to the cue for a folder in which no skill is listed,
+// so that the instruction to call list_skills when there is no <quiver-skills>
+// block does not send the assistant to a tool that has nothing to say.
+const nothingListed = " No skills are listed in this folder, so there is no <quiver-skills> block and list_skills has nothing to show."
+
+// cue returns the cue for a folder, or "" when no skill is searchable there.
+// It reads only the lists of the registry, never a skill file.
+func cue(r *registry.Registry, projectID string) string {
+	if len(r.SearchableServed(projectID)) == 0 {
+		return ""
+	}
+	if len(r.Served(projectID)) == 0 {
+		return searchCue + nothingListed
+	}
+	return searchCue
+}
 
 // createHint points to create_skill. Claude Code defers MCP tools, so
 // without it the assistant does not know the tool exists, and saves a

@@ -12,13 +12,13 @@ cd ~/code/app
 quiver new release-notes
 ```
 
-`quiver new` creates `~/.quiver/local/release-notes/SKILL.md`, opens it in `$VISUAL` or `$EDITOR`, then checks and commits it. By default the skill is assigned to the project in the current folder.
+`quiver new` creates `~/.quiver/local/release-notes/SKILL.md`, opens it in `$VISUAL` or `$EDITOR`, then checks and commits it. By default the skill is made Searchable in the project of the current folder: a skill you write is your own, so it is not listed at session start, and the assistant finds it by searching. `quiver add release-notes` lists it instead, or `--always` loads it in full.
 
 | Flag | Effect |
 | --- | --- |
-| `--global` | Serve it in every folder instead. |
+| `--global` | Make it Searchable in every folder instead. |
 | `--none` | Create it without assigning it. |
-| `--project <folder>` | Assign it to another project. |
+| `--project <folder>` | Make it Searchable in another project. |
 | `--description "<text>"` | Set the description and skip the editor. |
 | `--yes` | Register a new project without asking. |
 

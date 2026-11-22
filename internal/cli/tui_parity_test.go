@@ -257,8 +257,8 @@ func TestTUIBackendNewSkillCanBeGlobal(t *testing.T) {
 	if err != nil || !strings.Contains(text, "Created skill notes.") {
 		t.Fatalf("%q, %v", text, err)
 	}
-	if r := loadRegistry(t); !slices.Contains(r.Global, "notes") {
-		t.Errorf("global %v", r.Global)
+	if r := loadRegistry(t); !slices.Contains(r.Searchable, "notes") {
+		t.Errorf("searchable %v", r.Searchable)
 	}
 }
 

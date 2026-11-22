@@ -248,6 +248,13 @@ type Imported struct {
 // name is an ErrSkillExists. Symbolic links and .git folders are not copied.
 // src is never changed.
 func ImportLocal(src, name string, scope Scope, projectID, from string) (Imported, error) {
+	return ImportLocalAs(src, name, scope, projectID, from, registry.OnDemand)
+}
+
+// ImportLocalAs is ImportLocal with the level of the new assignment: on
+// demand, or Searchable. A skill that is already assigned in the scope keeps
+// its level.
+func ImportLocalAs(src, name string, scope Scope, projectID, from string, level registry.Level) (Imported, error) {
 	var res Imported
 	if err := skill.ValidateName(name); err != nil {
 		return res, err
@@ -266,7 +273,7 @@ func ImportLocal(src, name string, scope Scope, projectID, from string) (Importe
 		if err != nil {
 			return err
 		}
-		if err := assign(r, scope, projectID, name); err != nil {
+		if err := assignAs(r, scope, projectID, name, level); err != nil {
 			return err
 		}
 		if _, err := os.Lstat(target); err == nil {
@@ -377,8 +384,23 @@ func setName(data []byte, name string) []byte {
 	return slices.Concat([]byte("---\n"), front, rest[end+1:])
 }
 
-// assign adds name to r for scope.
-func assign(r *registry.Registry, scope Scope, projectID, name string) error {
+// assignAs adds name to r for scope at the level: on demand, or Searchable.
+// A skill that is already assigned in the scope keeps its level.
+func assignAs(r *registry.Registry, scope Scope, projectID, name string, level registry.Level) error {
+	if level == registry.Searchable {
+		switch scope {
+		case ScopeGlobal:
+			if r.GlobalLevel(name) == registry.NotAssigned {
+				r.AssignSearchableGlobal(name)
+			}
+			return nil
+		case ScopeProject:
+			if r.ProjectLevel(projectID, name) == registry.NotAssigned {
+				return r.AssignSearchable(projectID, name)
+			}
+			return nil
+		}
+	}
 	switch scope {
 	case ScopeNone:
 	case ScopeGlobal:
