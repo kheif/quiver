@@ -20,11 +20,11 @@ The skills themselves come from the session-start hook: the always-on skills in 
 
 | Tool | Input | Result |
 | --- | --- | --- |
-| `list_skills` | — | Every skill served here, project skills first: ID, name, whole description, `global` or `project`, and whether it is always-on. |
+| `list_skills` | — | Every listed skill here, project skills first: ID, name, whole description, `global` or `project`, and whether it is always-on. Searchable skills are not listed. |
 | `get_skill` | `id` | The skill's instructions, its extra files and its folder. |
 | `get_skill_file` | `id`, `path` | One extra file of a skill, such as `references/checklist.md`. Large and binary files return their path instead. |
 | `create_skill` | `name`, `description`, `body`, `scope` (`project` or `global`), optional `files` | Creates a local skill, commits it and assigns it. In a folder that is not a project yet, `project` scope registers it. |
-| `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. It changes only skills served in the session's project, and never an always-on skill: change those with `quiver edit`. |
+| `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. It changes only skills served in the session's project, and never an always-on or Searchable skill: change those with `quiver edit`, or make a Searchable skill listed with `quiver add <id>` first. |
 | `search_skills` | `query` | Searches the whole library, also skills not assigned here, and marks each match as assigned here (`global` or `project`) or not. The assistant may suggest an unassigned skill, but asks before using it. |
 
 ## Prompts

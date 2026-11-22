@@ -15,6 +15,7 @@ Skills give instructions to your assistant, and a skill can include scripts the 
 - **Review what a sync brings.** `quiver sync` takes in what another machine pushed. It lists changes that make a skill always-on, change the files of an always-on skill or add or change a source, and asks before it pulls. Use a private remote.
 - **Know what the whole library exposes.** `get_skill` and `search_skills` read the whole library, not only the skills assigned to the project. Assign only what you want a project's sessions to see by name.
 - **Always-on skills are changed by you.** `update_skill` changes only skills served in the session's project, and never an always-on skill: every session starts with that text, so change it yourself with `quiver edit`.
+- **Searchable skills are changed by you too.** The assistant loads a Searchable skill without asking when a search finds it, so `update_skill` does not change one either: an assistant that was talked into rewriting it would rewrite what it then loads. Make the skill listed with `quiver add <id>` first, or use `quiver edit`. `quiver source add` asks before it makes the skills of a new source Searchable, and `quiver sync` lists skills that another machine made Searchable before it pulls them.
 
 Every change to your own skills is a commit in `~/.quiver/local` (in `~/.quiver` once you use `quiver sync`). `git -C ~/.quiver/local log -p` shows them, and `git revert` undoes one.
 

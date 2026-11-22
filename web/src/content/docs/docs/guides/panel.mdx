@@ -37,7 +37,7 @@ Skills is the library. Four views, switched with `←` and `→`:
 - **Global:** the skills assigned to every folder.
 - **All:** the whole library, assigned or not.
 
-Skills are grouped by where they come from: your own, and one group per source. The detail on the right shows two independent settings. The first is for the project you are managing, the second for every folder. Each is *Not assigned*, *On demand* or *Always on*, and changing one never touches the other.
+Skills are grouped by where they come from: your own, and one group per source. The detail on the right shows two independent settings. The first is for the project you are managing, the second for every folder. Each is *Not assigned*, *Searchable*, *On demand* or *Always on*, and changing one never touches the other.
 
 <PanelScreen step="search" label="Searching the panel's list" />
 
@@ -45,7 +45,7 @@ Press `/` and type. The list narrows as you type, and the words may come in any 
 
 <PanelScreen step="assign" label="Choosing how a skill is assigned" />
 
-Press `enter` on a skill and then on one of the two settings to choose. *On demand* means the assistant loads the skill when a task fits. *Always on* means it is in the conversation before the first reply, from the next session. A change for every folder asks you to confirm first, because it reaches every project.
+Press `enter` on a skill and then on one of the two settings to choose. *Searchable* means it is not listed and the assistant finds it by searching. *On demand* means it is listed and the assistant loads it when a task fits. *Always on* means it is in the conversation before the first reply, from the next session. A change for every folder asks you to confirm first, because it reaches every project. A Searchable skill shows in the views and is marked as such.
 
 More keys in Skills:
 
@@ -71,7 +71,7 @@ You can also rename a project (`r`), forget it (`f`), or split a copied folder f
 
 <PanelScreen step="sources" label="The Sources section of the panel" />
 
-A source is a git repository of skills. The list shows each one, its repository, its latest commit, and whether it has updates. The views show all sources, the ones your project uses, and the ones used globally. Press `a` to add one; Quiver refuses an unencrypted `http://` or `git://` address unless you allow it in `config.json`.
+A source is a git repository of skills. The list shows each one, its repository, its latest commit, and whether it has updates. The views show all sources, the ones your project uses, and the ones used globally. Press `a` to add one; Quiver refuses an unencrypted `http://` or `git://` address unless you allow it in `config.json`. When the source has skills, the panel then asks whether to make them searchable in every folder; no is the default.
 
 While the panel is open, Quiver asks the sources in the background whether they have changes. It does this one source at a time and only when you are online, and it pulls nothing. When a source has news, a line appears at the bottom of every section, such as `anthropic has updates — press u to review`. To change how often Quiver asks, set `updateCheckInterval` in `config.json` to a duration such as `"12h"`; the default is 6 hours.
 

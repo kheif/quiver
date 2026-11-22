@@ -20,6 +20,10 @@ A folder without .quiver.json is registered first; in a terminal it asks before,
 
 With --always the skills are also always-on: the assistant loads them before its first reply, from the next session on.
 
+With --searchable the skills are neither listed nor loaded at the start of a session: the assistant finds them by searching and loads them when one fits. A skill moves: --searchable takes it off the served list of the same scope, and without the flag it leaves the Searchable list of that scope.
+
+With --source \<name\> and --searchable, every skill of that source that is not assigned yet in the scope becomes Searchable. A skill that is listed or always-on there keeps its level.
+
 ```sh
 quiver add <id>... [flags]
 ```
@@ -29,6 +33,8 @@ quiver add <id>... [flags]
 | `--always` | also make the skills always-on: loaded before the first reply |
 | `--global` | change the skills served in every folder |
 | `--project <string>` | project folder (default: the current folder) |
+| `--searchable` | make the skills Searchable: found by searching, not listed or loaded at session start |
+| `--source <string>` | every skill of this source that is not assigned yet, instead of IDs (needs --searchable) |
 | `-y, --yes` | register a new project without asking |
 
 **Examples**
@@ -36,6 +42,12 @@ quiver add <id>... [flags]
 ```sh
 # Assign two skills to the project in this folder
 quiver add pdf anthropic/docx
+
+# Let the assistant find a skill by searching, in every folder
+quiver add slack-style --searchable --global
+
+# Make the skills of a source Searchable, except those already assigned
+quiver add --source anthropic --searchable --global
 
 # Serve a skill in every folder, and load it before the first reply
 quiver add caveman --global --always
@@ -281,7 +293,7 @@ quiver install claude-code claude-desktop
 
 ## quiver list
 
-List every skill in the library: your own (source "local") and those from sources. ASSIGNED says whether a skill is global and how many projects have it. Skills that cannot be loaded are listed as warnings at the end.
+List every skill in the library: your own (source "local") and those from sources. ASSIGNED says whether a skill is global and how many projects have it, and where it is Searchable (found by searching, not listed at session start), as stored for each scope. Skills that cannot be loaded are listed as warnings at the end.
 
 To see what one folder gets, use quiver status; for one skill, quiver where.
 
@@ -457,9 +469,11 @@ quiver projects split
 
 ## quiver remove
 
-Unassign skills from this project, or from every folder with --global. The skills stay in the library.
+Unassign skills from this project, or from every folder with --global. The skills stay in the library. A skill is removed from every level of the scope: always-on, on demand and Searchable.
 
 With --always only the always-on mark is removed; the skills stay assigned.
+
+With --source \<name\> every skill of that source is removed from the scope, including those that the source no longer has.
 
 ```sh
 quiver remove <id>... [flags]
@@ -470,6 +484,7 @@ quiver remove <id>... [flags]
 | `--always` | only remove the always-on mark and keep the skills assigned |
 | `--global` | change the skills served in every folder |
 | `--project <string>` | project folder (default: the current folder) |
+| `--source <string>` | every skill of this source, instead of IDs |
 
 **Examples**
 
@@ -477,13 +492,16 @@ quiver remove <id>... [flags]
 quiver remove pdf
 quiver remove caveman --global
 
+# Undo quiver add --source acme --searchable --global
+quiver remove --source acme --global
+
 # Keep the skill assigned, but stop loading it before the first reply
 quiver remove caveman --global --always
 ```
 
 ## quiver search
 
-Search the IDs, names and descriptions of every skill in the library, ignoring case. Exact names come first, then names that start with the text, then names that contain it, then descriptions. HERE says whether a skill is served in this folder: global or project.
+Search the IDs, names and descriptions of every skill in the library, ignoring case. Exact names come first, then names that start with the text, then names that contain it, then descriptions. HERE says whether a skill is served in this folder: global or project, or "searchable" when the assistant only finds it by searching. The JSON gains a level field for this folder.
 
 ```sh
 quiver search <text> [flags]
@@ -502,7 +520,7 @@ quiver search "pull request" --json
 
 ## quiver show
 
-Show a skill of the library: its ID and name, where it comes from (local, or the source and its commit), its folder, where it is assigned and whether it is always-on there, its extra files, then the text of its SKILL.md.
+Show a skill of the library: its ID and name, where it comes from (local, or the source and its commit), its folder, where it is assigned and whether it is always-on there or only Searchable, its extra files, then the text of its SKILL.md.
 
 ```sh
 quiver show <id> [flags]
@@ -543,6 +561,8 @@ Clone a repository and add its skills to the library.
 
 \<repo\> is owner/repo (GitHub), host/owner/repo, a git URL or a local path. The source name defaults to the repository owner.
 
+In a terminal it then asks whether to make the skills Searchable in every folder: not listed or loaded at session start, found by the assistant when it searches. The default is no. --searchable answers yes; without a terminal and without the flag nothing is assigned.
+
 ```sh
 quiver source add <repo> [flags]
 ```
@@ -550,6 +570,7 @@ quiver source add <repo> [flags]
 | Flag | Description |
 | --- | --- |
 | `--name <string>` | source name (default: the repository owner) |
+| `--searchable` | make the skills Searchable in every folder, without asking |
 
 **Examples**
 
@@ -560,6 +581,9 @@ quiver source add anthropics/skills --name anthropic
 # Any git URL, or a local folder
 quiver source add git@github.com:acme/skills.git
 quiver source add ~/code/team-skills
+
+# Make its skills Searchable right away
+quiver source add anthropics/skills --name anthropic --searchable
 ```
 
 ## quiver source list
@@ -623,7 +647,7 @@ Sync the Quiver home with a git remote, so every machine has the same local skil
 
 quiver sync commits the changes on this machine, pulls the others with rebase and pushes. When registry.json or config.json changed on both machines, the changes are merged: a skill assigned on either machine stays assigned. Any other conflict stops the sync with nothing pulled or pushed, and says how to resolve it. Sources added on another machine are cloned afterwards.
 
-Whatever another machine pushed becomes live here, so when it makes a skill always-on, changes the files of an always-on skill or adds a source, sync lists those changes and asks before it pulls. --yes takes them without asking; without a terminal and without --yes, sync pulls nothing.
+Whatever another machine pushed becomes live here, so when it makes a skill always-on or searchable, changes the files of such a skill or adds a source, sync lists those changes and asks before it pulls. --yes takes them without asking; without a terminal and without --yes, sync pulls nothing.
 
 Only local/, config.json and registry.json are synced. sources/ is cloned again from config.json, and the folders where each project was seen stay on each machine.
 
@@ -725,7 +749,7 @@ quiver update acme --reset
 
 ## quiver where
 
-Show where a skill is assigned: "global" if it is served in every folder, then each project that has it, with its folders.
+Show where a skill is assigned: "global" if it is served in every folder, then each project that has it, with its folders. Where a skill is Searchable (found by searching, not listed at session start) it says so.
 
 ```sh
 quiver where <id> [flags]

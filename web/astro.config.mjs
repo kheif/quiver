@@ -80,6 +80,7 @@ export default defineConfig({
 						'docs/guides/panel',
 						'docs/guides/importing-skills',
 						'docs/guides/sources',
+						'docs/guides/finding-skills',
 						'docs/guides/updating-and-pinning',
 						'docs/guides/multiple-machines',
 						'docs/guides/troubleshooting',

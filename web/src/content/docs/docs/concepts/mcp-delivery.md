@@ -41,7 +41,7 @@ While a session runs, the server watches the library and the assignments. Skills
 The assistant can also write to your library:
 
 - `create_skill` creates a local skill, commits it and assigns it to this project or globally.
-- `update_skill` changes a local skill served in this project and commits the change. Source skills are read-only, and so are always-on skills: change those with `quiver edit`.
+- `update_skill` changes a local skill served in this project and commits the change. Source skills are read-only, and so are always-on and Searchable skills: change those with `quiver edit`.
 - `search_skills` searches the whole library, also skills not assigned here. The assistant may suggest an unassigned skill, but asks before using it.
 
 See [MCP tools and prompts](/docs/reference/mcp/) for the inputs and results of every tool.
