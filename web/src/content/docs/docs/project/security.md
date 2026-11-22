@@ -39,7 +39,7 @@ Quiver makes network requests only for:
 
 - git operations on the sources and the sync remote you configure,
 - a daily check of the latest release on GitHub, off with `QUIVER_NO_UPDATE_CHECK=1`,
-- the one download of the model file of the `local` search engine. A search makes no network call: the model runs inside the Quiver process.
+- the one download of the model file of the `local` search engine (`quiver engine setup`, after you say yes): two files from huggingface.co at one pinned revision, over HTTPS, each checked against its pinned SHA-256 before it is used. A search makes no network call: the model runs inside the Quiver process, and Quiver installs and starts no program for it.
 
 There is no telemetry.
 

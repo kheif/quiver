@@ -167,6 +167,9 @@ func status(out io.Writer, asJSON bool) error {
 	if engine.Problem != "" {
 		fmt.Fprintln(out, "warning:", engine.Problem)
 	}
+	if engine.Engine == library.EngineWords && anySearchable(r) {
+		fmt.Fprintln(out, "search by meaning:", setupCommand)
+	}
 	if len(copies) > 0 {
 		fmt.Fprintln(out, "Run quiver doctor --fix to delete the copies.")
 	}
@@ -197,4 +200,17 @@ func installedAssistants() []statusAssistant {
 		as = append(as, statusAssistant{Name: t.name(), Delivery: level})
 	}
 	return as
+}
+
+// anySearchable reports whether a skill is Searchable in any scope.
+func anySearchable(r *registry.Registry) bool {
+	if len(r.Searchable) > 0 {
+		return true
+	}
+	for _, p := range r.Projects {
+		if len(p.Searchable) > 0 {
+			return true
+		}
+	}
+	return false
 }

@@ -62,6 +62,7 @@ type doc struct {
 	in       *bufio.Reader
 	out      io.Writer
 	fix      bool
+	ask      bool // a person can answer: the fixes that download may run
 	home     string
 	cfg      *config.Config
 	reg      *registry.Registry
@@ -75,7 +76,7 @@ func doctor(in io.Reader, out io.Writer, fix bool) error {
 	if err != nil {
 		return err
 	}
-	d := &doc{in: bufio.NewReader(in), out: out, fix: fix, home: home}
+	d := &doc{in: bufio.NewReader(in), out: out, fix: fix, ask: interactive(in), home: home}
 	for _, check := range append(d.checks(), d.checkVersion) {
 		check()
 	}
@@ -132,8 +133,10 @@ func (d *doc) skip(title, reason string) {
 
 // checkSearch shows the search engine and a problem found in its settings
 // file. Search is best effort, so a problem is a warning. For the local engine
-// it checks the model file, the dimension and how much of the library the
-// index covers.
+// it checks each link of the chain: the model files and their hashes, the
+// dimension and how much of the library the index covers. With --fix it
+// repeats the missing step; a download is made only after the question of the
+// setup, so never without a terminal and never from the panel.
 func (d *doc) checkSearch() {
 	cur := library.LoadEngine()
 	if cur.Problem != "" {
@@ -141,31 +144,56 @@ func (d *doc) checkSearch() {
 		return
 	}
 	if cur.Engine != library.EngineLocal {
-		d.report("ok", "search engine: "+cur.Engine)
+		var more []string
+		if d.hasSearchable() {
+			more = []string{"search by meaning: " + setupCommand}
+		}
+		d.report("ok", "search engine: "+cur.Engine, more...)
 		return
 	}
 	name := cmp.Or(cur.Local.Model, library.DefaultModel)
+	title := "search engine: local, model " + name
 	spec, ok := library.KnownModel(name)
 	if !ok {
 		d.report("warn", "search engine: local", fmt.Sprintf("unknown model %q: search runs as words", name))
 		return
 	}
 	if err := spec.VerifyModelFile(); err != nil {
-		d.report("warn", "search engine: local, model "+name, err.Error(), "Search runs as words until the model file is there.")
+		d.report("warn", title, err.Error(), "Search runs as words until the model file is there.", "Repair: "+setupCommand+" (or quiver doctor --fix in a terminal)")
+		if d.fix && d.ask {
+			err := engineSetup(context.Background(), d.in, d.out, d.out, false)
+			d.fixed("warn", err, "the model file and the index are in place")
+		}
 		return
 	}
 	l, err := library.Load()
 	if err != nil {
-		d.report("warn", "search engine: local, model "+name, err.Error())
+		d.report("warn", title, err.Error())
 		return
 	}
 	st, _ := l.IndexStatus(name)
 	line := fmt.Sprintf("model file intact, %d values per vector, %d of %d skills indexed", spec.Config.Hidden, st.Indexed, st.Total)
 	if st.Stale > 0 {
-		d.report("warn", "search engine: local, model "+name, line, fmt.Sprintf("%d skills are stale; the next search embeds them, or run quiver engine reindex", st.Stale))
+		d.report("warn", title, line, fmt.Sprintf("%d skills are stale; the next search embeds them, or run quiver engine reindex", st.Stale))
+		if d.fix && d.ask {
+			_, err := l.Reindex(context.Background(), name, indexProgress(d.out))
+			d.fixed("warn", err, "rebuilt the index")
+		}
 		return
 	}
-	d.report("ok", "search engine: local, model "+name, line)
+	d.report("ok", title, line)
+}
+
+// hasSearchable reports whether any skill is Searchable somewhere.
+func (d *doc) hasSearchable() bool {
+	r := d.reg
+	if r == nil {
+		var err error
+		if r, err = registry.Load(); err != nil {
+			return false
+		}
+	}
+	return anySearchable(r)
 }
 
 // 1. The layout of the Quiver home and its JSON files.

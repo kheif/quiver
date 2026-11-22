@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -285,6 +286,9 @@ func add(in io.Reader, out io.Writer, t target, o addOptions, ids []string) erro
 		return err
 	}
 	sessionNote(out)
+	if o.searchable && len(ids) > 0 {
+		return offerEngineSetup(context.Background(), in, out, out)
+	}
 	return nil
 }
 

@@ -15,6 +15,10 @@ import (
 // DefaultModel is the model of the local engine: all-MiniLM-L6-v2, English.
 const DefaultModel = "all-minilm-l6-v2"
 
+// defaultModelBase is the pinned revision of the model on the hub: the full
+// commit, never a branch. docs/spike-discovery-results.md records it.
+const defaultModelBase = "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
+
 // ModelSpec is a model Quiver knows: the shape its loader checks, and the
 // pinned size and hash of its weight file. TASK62.7 downloads the files; the
 // hash of a file is checked there and by quiver doctor, not at every search,
@@ -26,7 +30,11 @@ type ModelSpec struct {
 	// tokenizer.json.
 	Size            int64
 	SHA256          string
+	TokenizerSize   int64
 	TokenizerSHA256 string
+	// BaseURL is the folder of the pinned revision that the two files are
+	// downloaded from. Only the models of tests have another one.
+	BaseURL string
 	// MinScore is the cosine below which a vector match is dropped, from the
 	// calibration of TASK62.1: the highest top score of the queries that fit
 	// nothing.
@@ -41,7 +49,9 @@ var models = map[string]ModelSpec{
 		Config:          embed.MiniLM,
 		Size:            90868376,
 		SHA256:          "53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db",
+		TokenizerSize:   466247,
 		TokenizerSHA256: "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037",
+		BaseURL:         defaultModelBase,
 		MinScore:        0.287,
 	},
 }

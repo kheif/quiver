@@ -124,34 +124,38 @@ func addSource(cmd *cobra.Command, name, url string, searchable bool) error {
 	for i, f := range s.Discovery.Skills {
 		ids[i] = name + "/" + f.ID
 	}
-	return offerSearchable(cmd.InOrStdin(), out, name, ids, searchable)
+	made, err := offerSearchable(cmd.InOrStdin(), out, name, ids, searchable)
+	if err != nil || !made {
+		return err
+	}
+	return offerEngineSetup(cmd.Context(), cmd.InOrStdin(), out, cmd.ErrOrStderr())
 }
 
 // offerSearchable makes the skills of a new source Searchable in every
 // folder when the user says yes: with the flag, or at the question in a
 // terminal. Without either nothing is assigned. A source that is new has no
 // other skill assigned, so the printed command undoes exactly this.
-func offerSearchable(in io.Reader, out io.Writer, name string, ids []string, flag bool) error {
+func offerSearchable(in io.Reader, out io.Writer, name string, ids []string, flag bool) (made bool, err error) {
 	if len(ids) == 0 {
-		return nil
+		return false, nil
 	}
 	yes := flag
 	if !yes && interactive(in) {
 		yes = confirm(in, out, fmt.Sprintf("Make the %d skills searchable in every folder? The assistant will then load them without asking when a search finds them.", len(ids)))
 	}
 	if !yes {
-		return nil
+		return false, nil
 	}
-	err := registry.Update(func(r *registry.Registry) error {
+	err = registry.Update(func(r *registry.Registry) error {
 		r.AssignSearchableGlobal(ids...)
 		return nil
 	})
 	if err != nil {
-		return err
+		return false, err
 	}
 	fmt.Fprintf(out, "Made %d skills Searchable in every folder.\n", len(ids))
 	fmt.Fprintf(out, "To undo: quiver remove --source %s --global\n", name)
-	return nil
+	return true, nil
 }
 
 func newSourceListCmd() *cobra.Command {

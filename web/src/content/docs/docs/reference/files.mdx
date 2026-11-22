@@ -87,7 +87,7 @@ Project folders are not in `registry.json`. They are machine-local, in `state/pr
 { "version": 1, "engine": "words" }
 ```
 
-`words` is the only engine now, and it is what a missing file or key means. An engine this Quiver does not know warns and uses `words`. A file with a newer `version` is refused: Quiver neither reads nor rewrites it, search runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show `search.json has version N, but this quiver supports only up to 1: update quiver`. Choose the engine with `quiver engine use <engine>`.
+`words` is the default and what a missing file or key means; `quiver engine setup` writes `local` with its model after the download. The file also holds `offered` (the setup was offered once) and `installed` (the model files Quiver downloaded, with their SHA-256, so `quiver engine remove` deletes only these). An engine this Quiver does not know warns and uses `words`. A file with a newer `version` is refused: Quiver neither reads nor rewrites it, search runs as `words`, and `quiver engine`, `quiver status` and `quiver doctor` show `search.json has version N, but this quiver supports only up to 1: update quiver`. Choose the engine with `quiver engine use <engine>`.
 
 ## In a project
 

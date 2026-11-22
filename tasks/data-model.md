@@ -76,7 +76,7 @@ Machine-local data. It is never synced.
 Derived data. It is never synced or committed, and a file of another format version is ignored and rebuilt, never refused.
 
 - `hook/`: the parts of a session-start text, shared by its hook commands.
-- `models/<name>/`: the files of an embedding model for the `local` engine, `model.safetensors` and `tokenizer.json` (TASK62.6; TASK62.7 downloads them). The weight file is mapped, read-only, and only ever replaced by a rename.
+- `models/<name>/`: the files of an embedding model for the `local` engine, `model.safetensors` and `tokenizer.json` (TASK62.6; `quiver engine setup` downloads them, TASK62.7). The weight file is mapped, read-only, and only ever replaced by a rename.
 - `embeddings.json`: the vectors of the `local` engine for the whole library (TASK62.6).
 
 ```json

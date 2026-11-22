@@ -140,6 +140,7 @@ quiver engine [command]
 
 ```sh
 quiver engine
+quiver engine setup
 quiver engine use words
 ```
 
@@ -155,6 +156,47 @@ quiver engine reindex [flags]
 
 ```sh
 quiver engine reindex
+```
+
+## quiver engine remove
+
+Delete the index of the local engine, cache/embeddings.json, and, after asking, the model files that quiver engine setup downloaded. A file that you put there by hand is never deleted. The engine goes back to words.
+
+```sh
+quiver engine remove [flags]
+```
+
+| Flag | Description |
+| --- | --- |
+| `-y, --yes` | delete the downloaded model file without asking |
+
+**Examples**
+
+```sh
+quiver engine remove
+```
+
+## quiver engine setup
+
+Set up search by meaning: download the model file of the local engine (all-MiniLM-L6-v2, English, 91 MB) over HTTPS from one pinned address, check its SHA-256, build the index of the library, check that the vector search finds a skill of yours, and make local the engine of this machine.
+
+It asks once before it changes anything. The only thing that leaves the machine is the download of the model file; a search makes no network call. Quiver installs and starts no program: the model runs inside Quiver.
+
+A model file that you put in cache/models/all-minilm-l6-v2/ in the Quiver home is accepted when its SHA-256 matches, and is not downloaded again. Without a terminal and without --yes nothing changes.
+
+```sh
+quiver engine setup [flags]
+```
+
+| Flag | Description |
+| --- | --- |
+| `-y, --yes` | answer the question with yes |
+
+**Examples**
+
+```sh
+quiver engine setup
+quiver engine setup --yes
 ```
 
 ## quiver engine use

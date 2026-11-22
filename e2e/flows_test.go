@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -301,4 +302,66 @@ func TestLocalEngine(t *testing.T) {
 	}
 	got, _ = e.run(app, "", "doctor")
 	mustContain(t, "doctor without the model file", got, "model.safetensors is missing")
+}
+
+// The setup through the binary against a fake model host: the question, the
+// download, the checks, the record, and the undo. The binary is built with the
+// tag tinymodel, which can trust the host of the test.
+func TestEngineSetupThroughTheBinary(t *testing.T) {
+	dir := t.TempDir()
+	tiny := filepath.Join(dir, "quiver-tiny")
+	if runtime.GOOS == "windows" {
+		tiny += ".exe"
+	}
+	build := exec.Command("go", "build", "-tags", "tinymodel", "-o", tiny, "../cmd/quiver")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("build: %v\n%s", err, out)
+	}
+	saved := bin
+	bin = tiny
+	defer func() { bin = saved }()
+
+	host := embedtest.NewHost(t, 1)
+	pin := strings.Join([]string{host.URL, strconv.Itoa(len(host.Weights)), embedtest.Hash(host.Weights), strconv.Itoa(len(host.Tokenizer)), embedtest.Hash(host.Tokenizer)}, " ")
+	t.Setenv("QUIVER_TINY_MODEL_PIN", pin)
+
+	e := newEnv(t)
+	app := e.dir("app")
+	e.write(filepath.Join(e.qhome, "local"), map[string]string{
+		"deploy-check/SKILL.md": skillMD("deploy-check", "Check a deploy.", "Check."),
+		"slack-style/SKILL.md":  skillMD("slack-style", "How to write a Slack message.", "Style."),
+	})
+	e.write(filepath.Join(e.qhome, "state"), map[string]string{
+		"search.json": `{"version": 1, "engine": "words", "local": {"model": "tiny", "minScore": -1}}`,
+	})
+
+	// Without a terminal and without --yes nothing changes.
+	out, err := e.run(app, "y\n", "engine", "setup")
+	if err != nil || !strings.Contains(out, "Nothing changed") || host.Requests() != 0 {
+		t.Fatalf("setup without a terminal: %v, %d requests\n%s", err, host.Requests(), out)
+	}
+
+	out, err = e.run(app, "", "engine", "setup", "--yes")
+	if err != nil {
+		t.Fatalf("setup: %v\n%s", err, out)
+	}
+	mustContain(t, "setup", out, "Search by meaning is on.", "Downloading model.safetensors: 100%", "Indexing skills for the search: 2 of 2")
+	if host.Requests() != 2 {
+		t.Errorf("%d requests", host.Requests())
+	}
+	mustContain(t, "engine", e.quiver(app, "engine"), "Search engine: local")
+	mustContain(t, "search", e.quiver(app, "search", "deploy"), "deploy-check")
+	if host.Requests() != 2 {
+		t.Errorf("a search used the network: %d requests", host.Requests())
+	}
+	settings, _ := os.ReadFile(filepath.Join(e.qhome, "state", "search.json"))
+	mustContain(t, "settings", string(settings), `"installed"`, embedtest.Hash(host.Weights))
+	got, _ := e.run(app, "", "doctor")
+	mustContain(t, "doctor", got, "ok     search engine: local, model tiny")
+
+	// Undo: the engine goes back to words, the model stays until it is asked for.
+	mustContain(t, "remove", e.quiver(app, "engine", "remove", "--yes"), "Deleted the search index.", "Search engine: words", "model.safetensors")
+	if _, err := os.Stat(filepath.Join(e.qhome, "cache", "models", "tiny", "model.safetensors")); !os.IsNotExist(err) {
+		t.Errorf("the model was not deleted: %v", err)
+	}
 }

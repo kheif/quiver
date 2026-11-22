@@ -4,7 +4,7 @@
 
 **Part of:** [TASK62](TASK62-finding-unassigned-skills.md): Finding unassigned skills
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK62.1, TASK62.4, TASK62.6
 
@@ -23,3 +23,15 @@ The user answers one question; Quiver does the rest: it downloads the model file
 11. **Docs.** The README and the guide page "Finding skills" (TASK62.4) describe the setup, what it downloads, the sizes, that the model understands English only, how to place the file by hand and how to undo; the help text of `quiver engine` lists its commands. The website's security page ("Network access") names the one download of the model file and says that a search makes no network call, and the doctor lines follow the `ok`, `warn` and `error` format that the panel's Health section parses (`internal/cli/tui_parity_test.go`). tasks/decisions.md records that Quiver installs no runtime and runs the model in its own process.
 
 **Done when:** tests, with a fake download server that serves a tiny model under test hashes, cover: the setup end to end; a hash that does not match, a cut download and a file larger than announced (deleted, engine stays `words`); a redirect to another host over HTTPS (accepted, hash checked), a redirect to plain HTTP and a fourth redirect (refused); the download being the only network call and a search making none (a test dialer fails any other address); no command run by any step (a command runner that fails the test when called); the question being asked once and `--yes`; no terminal without `--yes` (nothing changes, the command is printed); the offer after the first Searchable assignment (made once, recorded in `offered`, never repeated, default no, nothing without a terminal); a file placed by hand, accepted by its hash and refused by another; a check that fails because the vector path is broken while `words` still finds the skill (the engine stays `words`); the record of what was downloaded; `engine remove` removing only what Quiver downloaded and asking first; `doctor` and `doctor --fix` for each broken link; the advice line of `quiver status` (shown while Searchable skills exist and the engine is `words`, and never starting a setup); `engine use words` keeping everything; the Health section of the panel; and the panel's `Fix` running nothing of the setup. An end-to-end test runs the setup through the binary against the fake server. Before the release the maintainer runs the setup against the real address on a machine for each system that is available and the result is written in the task; a system that could not be tried is documented as such.
+
+## Built
+
+- `quiver engine setup` asks once (default no, `--yes`, nothing without a terminal), downloads the two pinned files, builds the index, checks the vector path alone and then writes `engine: local`; `quiver engine remove` deletes the index and, after asking, only what the `installed` record says Quiver downloaded. A failed step leaves the engine at `words`; what was already downloaded stays recorded.
+- The offer after the first Searchable assignment (`quiver add --searchable`, a source added with a yes) is made once and recorded in `offered`. `quiver new` and `quiver import` do not assign Searchable yet; TASK62.8 adds the offer there.
+- `quiver doctor` shows each link, `quiver doctor --fix` repeats the missing step with the same question in a terminal; the panel's `Fix` runs no download and the Health item points to the command line. `quiver status` and `quiver doctor` advise the setup while Searchable skills exist and the engine is `words`.
+- The pinned URLs, sizes and hashes are constants of `internal/library/models.go`; a test compares them with `docs/spike-discovery-results.md`. A fresh download of `tokenizer.json` on 2026-11-22 has the pinned size and hash, which the results had taken from the spike's copy. Tests replace the download only through `RegisterModel` and `SetModelTransport`; the binary built with the tag `tinymodel` can trust the fake host of the end-to-end test, and the production binary cannot.
+
+## Still open for the release (TASK62.10)
+
+- The one real download of `model.safetensors` (91 MB) through `quiver engine setup` on each available system, with the result written here. Not made yet.
+- The decision on a second pinned URL in the project's release assets (item 4).

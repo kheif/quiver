@@ -362,7 +362,7 @@ func TestOfferSearchable(t *testing.T) {
 			interactive = func(io.Reader) bool { return c.terminal }
 			t.Cleanup(func() { interactive = old })
 			var out strings.Builder
-			if err := offerSearchable(strings.NewReader(c.input), &out, "acme", ids, c.flag); err != nil {
+			if _, err := offerSearchable(strings.NewReader(c.input), &out, "acme", ids, c.flag); err != nil {
 				t.Fatal(err)
 			}
 			if asked := strings.Contains(out.String(), "searchable in every folder? The assistant will then load them without asking when a search finds them. [y/N]"); asked != c.asked {
@@ -381,7 +381,7 @@ func TestOfferSearchable(t *testing.T) {
 	assignEnv(t)
 	fakeTerminal(t)
 	var out strings.Builder
-	if err := offerSearchable(strings.NewReader("y\n"), &out, "acme", nil, false); err != nil || out.Len() != 0 {
+	if _, err := offerSearchable(strings.NewReader("y\n"), &out, "acme", nil, false); err != nil || out.Len() != 0 {
 		t.Errorf("no skills: %v %q", err, out.String())
 	}
 }

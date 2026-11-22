@@ -22,11 +22,18 @@ Engines:
   words  names and descriptions, ranked by words (the default)
   local  words and meaning: a small model that Quiver runs itself finds a
          skill that shares no word with the query. It understands English
-         only, and needs the model file in the cache folder; without it
-         the search runs as words.
+         only, and needs the model file in the cache folder (quiver engine
+         setup downloads it); without it the search runs as words.
+
+Commands:
+  setup    download the model, build the index and switch to local
+  remove   delete the index and the model that setup downloaded
+  use      choose the engine
+  reindex  rebuild the index
 
 A missing file or an engine this quiver does not know also means words.`,
 		Example: `  quiver engine
+  quiver engine setup
   quiver engine use words`,
 		ValidArgsFunction: noArgs,
 		Args:              cobra.NoArgs,
@@ -35,7 +42,7 @@ A missing file or an engine this quiver does not know also means words.`,
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print JSON")
-	cmd.AddCommand(newEngineUseCmd(), newEngineReindexCmd())
+	cmd.AddCommand(newEngineUseCmd(), newEngineSetupCmd(), newEngineRemoveCmd(), newEngineReindexCmd())
 	return cmd
 }
 
