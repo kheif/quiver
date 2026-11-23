@@ -118,12 +118,18 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-      # A new version can take several minutes to show up on the registry.
+      # A new version can take several minutes to show up on the registry, and
+      # the tarball of a platform package a little after its metadata does. So
+      # the check that the installed binary runs is part of the retry: an
+      # install that lacks the platform package is not a failure yet.
       - run: |
           for i in $(seq 1 30); do
-            npm install -g "@kheif/quiver@${GITHUB_REF_NAME#v}" && exit 0
+            if npm install -g "@kheif/quiver@${GITHUB_REF_NAME#v}" && quiver --version | grep -F "${GITHUB_REF_NAME#v}"; then
+              exit 0
+            fi
+            # A repeated install of the same version would keep what is there.
+            npm uninstall -g @kheif/quiver || true
             sleep 30
           done
-          echo "@kheif/quiver@${GITHUB_REF_NAME#v} did not show up on npm within 15 minutes"
+          echo "@kheif/quiver@${GITHUB_REF_NAME#v} did not install and run within 15 minutes"
           exit 1
-      - run: quiver --version | grep -F "${GITHUB_REF_NAME#v}"
