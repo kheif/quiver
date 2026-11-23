@@ -162,3 +162,42 @@ func TestGoldenHomeV150(t *testing.T) {
 		}
 	}
 }
+
+// The home that the v1.6.0 binary made: a registry of version 3 with a
+// Searchable skill. The current code reads it as it is, and a write keeps it.
+func TestGoldenHomeV160(t *testing.T) {
+	home := goldenHome(t, "v1.6.0")
+	registered(t)
+	regBefore := readHomeFile(t, home, "registry.json")
+	cfgBefore := readHomeFile(t, home, "config.json")
+
+	r, err := registry.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(r.Global, []string{"acme/one", "notes"}) || !reflect.DeepEqual(r.AlwaysOn, []string{"notes"}) || !reflect.DeepEqual(r.Searchable, []string{"journal"}) {
+		t.Errorf("global %v, always-on %v, searchable %v", r.Global, r.AlwaysOn, r.Searchable)
+	}
+	if out := quiver(t, "doctor"); !strings.HasSuffix(out, "\nEverything is fine.\n") || strings.Contains(out, "warn") {
+		t.Errorf("doctor:\n%s", out)
+	}
+	if got := readHomeFile(t, home, "registry.json"); got != regBefore {
+		t.Errorf("reading changed registry.json:\n%s", got)
+	}
+	if got := readHomeFile(t, home, "config.json"); got != cfgBefore {
+		t.Errorf("reading changed config.json:\n%s", got)
+	}
+	if out := quiver(t, "engine"); out != "Search engine: words\n" {
+		t.Errorf("engine: %q", out)
+	}
+
+	// A write keeps version 3 and the Searchable skill.
+	quiver(t, "add", "acme/two", "--global")
+	data := readHomeFile(t, home, "registry.json")
+	if !strings.Contains(data, `"version": 3`) || !strings.Contains(data, `"journal"`) {
+		t.Errorf("registry.json after a write:\n%s", data)
+	}
+	if out := quiver(t, "status"); !strings.Contains(out, "1 Searchable") {
+		t.Errorf("status:\n%s", out)
+	}
+}

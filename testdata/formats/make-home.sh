@@ -42,6 +42,13 @@ mkdir -p "$proj"
 	"$bin" add deploy --always --yes
 )
 
+# From v1.6 a skill that the user writes is Searchable, so the home also holds
+# the Searchable level and a registry of version 3. Older binaries have no such
+# level and skip the step.
+if "$bin" add --help 2>&1 | grep -q -- --searchable; then
+	"$bin" new journal --global --description "Keep a journal."
+fi
+
 rm -rf "$out"
 mkdir -p "$out"
 cp -R "$QUIVER_HOME/." "$out/"

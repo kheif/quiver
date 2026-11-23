@@ -4,7 +4,7 @@
 
 **Part of:** [TASK62](TASK62-finding-unassigned-skills.md): Finding unassigned skills
 
-**Status:** Todo
+**Status:** ✅ Done
 
 **Depends on:** TASK62.2, TASK62.3, TASK62.4, TASK62.5, TASK62.6, TASK62.7, TASK62.8, TASK62.9
 
@@ -29,3 +29,10 @@
 - **Repository (item 7):** the files of B19 are done (`AGENTS.md`, `CODEOWNERS`, the pull request template, `/web` in `dependabot.yml`, `permissions` in every workflow, a release job that refuses a lightweight tag and waits for green CI). The repository settings of B19 are open and are the maintainer's.
 - **README and help (item 1):** every change of the phase is in the README, the help texts and the website; PROJECT.md lists v1.6 with the wording "search within your own library", distinct from "Search and a marketplace".
 - **Release notes (item 2):** drafted in `docs/release-notes/v1.6.0.md`, with the two behaviour changes first; they are put in front of the generated changelog after the release (`docs/releasing.md`).
+
+## Released
+
+- **v1.6.0** was tagged (annotated) on 2026-11-23 and published to GitHub and npm; the install checks passed after one rerun of the Windows npm check, which had raced the registry (the tarball of a platform package showed up a little after its metadata). **v1.6.1** followed the same day with a shorter list of Searchable skills in `status` and `add` and a retry of the npm check until the installed binary runs; its macOS npm check had to be run again once for the same kind of registry delay.
+- **Model file (item 8):** the maintainer postponed two things, a second pinned URL in the release assets and the real download on Linux and Windows (it was made on macOS only). Both stay open: the copy in the release assets is listed under B20, and the missing Linux and Windows runs are recorded in TASK62.7. The setup works without the project's copy because the hash decides and a file placed by hand is accepted.
+- **Golden home (item 10):** made with the released v1.6.0 binary through `testdata/formats/make-home.sh` (which gained a step for the Searchable level) and committed under `testdata/formats/v1.6.0/`; `TestGoldenHomeV160` reads it.
+- **Website (item 6):** the next-release marks are gone and `latestRelease` is v1.6.1.

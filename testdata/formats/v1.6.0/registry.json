@@ -1,0 +1,25 @@
+{
+  "version": 3,
+  "global": [
+    "acme/one",
+    "notes"
+  ],
+  "alwaysOn": [
+    "notes"
+  ],
+  "searchable": [
+    "journal"
+  ],
+  "projects": {
+    "app-bvzxnb": {
+      "name": "app",
+      "skills": [
+        "acme/two",
+        "deploy"
+      ],
+      "alwaysOn": [
+        "deploy"
+      ]
+    }
+  }
+}

@@ -162,7 +162,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 
 | Status | Task | Title | Depends on |
 |---|---|---|---|
-| 🚧 | [TASK62](TASK62-finding-unassigned-skills.md) | Finding unassigned skills | TASK61 |
+| ✅ | [TASK62](TASK62-finding-unassigned-skills.md) | Finding unassigned skills | TASK61 |
 | ✅ | ↳ [TASK62.1](TASK62.1-discovery-spike.md) | Discovery spike | TASK61 |
 | ✅ | ↳ [TASK62.2](TASK62.2-searchable-level-in-the-registry.md) | Searchable level in the registry | TASK61, TASK62.1 |
 | ✅ | ↳ [TASK62.3](TASK62.3-assigning-the-searchable-level.md) | Assigning the Searchable level | TASK62.2 |
@@ -172,7 +172,7 @@ and every new assistant session follows caveman from the first message. Use Quiv
 | ✅ | ↳ [TASK62.7](TASK62.7-guided-local-model-setup.md) | Guided setup of the local model | TASK62.1, TASK62.4, TASK62.6 |
 | ✅ | ↳ [TASK62.8](TASK62.8-search-cue-and-instructions.md) | Search cue and default level of new skills | TASK62.1, TASK62.3, TASK62.4, TASK62.5 |
 | ✅ | ↳ [TASK62.9](TASK62.9-catalog-cost.md) | Catalog cost | TASK58.1, TASK62.4, TASK62.5 |
-|  | ↳ [TASK62.10](TASK62.10-release-v1-6-0.md) | Release v1.6.0 | TASK62.2, TASK62.3, TASK62.4, TASK62.5, TASK62.6, TASK62.7, TASK62.8, TASK62.9 |
+| ✅ | ↳ [TASK62.10](TASK62.10-release-v1-6-0.md) | Release v1.6.0 | TASK62.2, TASK62.3, TASK62.4, TASK62.5, TASK62.6, TASK62.7, TASK62.8, TASK62.9 |
 
 ### Phase 7c: Tool bundles (v1.7)
 
