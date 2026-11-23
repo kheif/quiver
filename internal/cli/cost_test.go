@@ -135,3 +135,40 @@ func TestPanelCarriesTheSameCostForTheManagedProject(t *testing.T) {
 		t.Errorf("searchable %+v", d.Cost)
 	}
 }
+
+// A source made Searchable at once holds hundreds of skills: the listing names
+// the first ten and says how many more there are, and -v names them all.
+func TestSearchableListIsShortenedUnlessVerbose(t *testing.T) {
+	f := listEnv(t)
+	var ids []string
+	for i := range 14 {
+		name := fmt.Sprintf("bulk-%02d", i)
+		dir := filepath.Join(f.home, "local", name)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: "+name+"\ndescription: Bulk skill.\n---\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		ids = append(ids, name)
+	}
+	out := mustRun(t, "", append(append([]string{"add"}, ids...), "--searchable", "--global")...)
+	wantOut(t, out, "bulk-09", ", and 4 more (-v names them all)")
+	if strings.Contains(out, "bulk-10") {
+		t.Errorf("the add listing names more than ten:\n%s", out)
+	}
+	out = statusAt(t, f.app)
+	wantOut(t, out, "Searchable in app (not listed; found by searching): ", ", and 4 more (-v names them all)")
+	if strings.Contains(out, "bulk-13") {
+		t.Errorf("status names more than ten:\n%s", out)
+	}
+	out = statusAt(t, f.app, "-v")
+	wantOut(t, out, "bulk-13")
+	if strings.Contains(out, "more (-v names them all)") {
+		t.Errorf("-v still shortens the list:\n%s", out)
+	}
+	// Ten or fewer are named in full, as before.
+	if got := searchableList([]string{"a", "b"}, false); got != "a, b" {
+		t.Errorf("short list %q", got)
+	}
+}

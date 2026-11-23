@@ -270,9 +270,9 @@ func add(in io.Reader, out io.Writer, t target, o addOptions, ids []string) erro
 	case len(ids) == 0:
 		fmt.Fprintf(out, "Every skill of source %s is assigned in %s already; nothing changed.\n", o.source, where)
 	case t.global:
-		fmt.Fprintf(out, "%s globally: %s\n", verb, strings.Join(ids, ", "))
+		fmt.Fprintf(out, "%s globally: %s\n", verb, searchableList(ids, verbose))
 	default:
-		fmt.Fprintf(out, "%s to %s: %s\n", verb, where, strings.Join(ids, ", "))
+		fmt.Fprintf(out, "%s to %s: %s\n", verb, where, searchableList(ids, verbose))
 	}
 	for _, id := range ids {
 		moved(out, id, before[id], o.searchable)
@@ -544,13 +544,27 @@ func clashes(l *library.Library, served, added []string) []string {
 // printServed lists the skills served in the project, each marked global or
 // project, and always-on where it is. An empty projectID lists only the
 // global skills. where names the place in the heading.
+// maxSearchableShown is how many Searchable skills a listing names before it
+// says how many more there are; a source made Searchable at once can hold
+// hundreds, and -v names them all.
+const maxSearchableShown = 10
+
+// searchableList names the Searchable skills, or the first maxSearchableShown
+// and the number of the rest.
+func searchableList(ids []string, all bool) string {
+	if all || len(ids) <= maxSearchableShown {
+		return strings.Join(ids, ", ")
+	}
+	return fmt.Sprintf("%s, and %d more (-v names them all)", strings.Join(ids[:maxSearchableShown], ", "), len(ids)-maxSearchableShown)
+}
+
 func printServed(out io.Writer, r *registry.Registry, projectID, where string) error {
 	fmt.Fprintf(out, "Served in %s:\n", where)
 	served := r.Served(projectID)
 	searchable := r.SearchableServed(projectID)
 	defer func() {
 		if len(searchable) > 0 {
-			fmt.Fprintf(out, "Searchable in %s (not listed; found by searching): %s\n", where, strings.Join(searchable, ", "))
+			fmt.Fprintf(out, "Searchable in %s (not listed; found by searching): %s\n", where, searchableList(searchable, verbose))
 		}
 	}()
 	if len(served) == 0 {
