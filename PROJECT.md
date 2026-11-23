@@ -97,7 +97,7 @@ The server's `instructions` stay short: how to use the tools, and the names of t
 | `get_skill_file` | Returns one extra file of a skill (`references/…`, templates, examples). |
 | `create_skill` | Creates a new skill from the conversation. `scope: "project"` assigns it to the current project only; `scope: "global"` makes it available everywhere. |
 | `update_skill` | Edits an existing local skill. Remote skills are read-only. |
-| `search_skills` | Searches the skills that are Searchable in this project, ranked by words, at most 10 matches. Every match is assigned here; the assistant loads the one that fits with `get_skill`. |
+| `search_skills` | Searches the skills that are Searchable in this project, ranked by words (and by meaning under the `local` engine), at most 10 matches. Every match is assigned here; the assistant loads the one that fits with `get_skill`. |
 
 ### Always-on skills
 

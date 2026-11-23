@@ -30,7 +30,7 @@ A skill moves between them: `--searchable` takes it off the listed skills of tha
 
 A Searchable skill is not an MCP prompt and is not in `list_skills`. The assistant calls `search_skills` with a query that names what it needs, and gets the ID and description of the best matches, not their text. If one fits, it calls `get_skill` and follows it. It does not ask you first: assigning a skill is your statement that you trust it, which is why you should read a skill with `quiver show <id>` before you make it Searchable, and why the assistant cannot change one through `update_skill`.
 
-Search is ranked by words. A name that is, starts with or contains your text comes first; after that, skills whose name and description fit the words of the text, best first. A query that fits nothing returns nothing. `search_skills` searches only the Searchable skills of the folder and returns at most 10, so a few skills are never crowded out by the rest of the library; `quiver search` and the panel search the whole library and show the level of each match.
+With the default engine, search is ranked by words (the `local` engine adds meaning, below). A name that is, starts with or contains your text comes first; after that, skills whose name and description fit the words of the text, best first. A query that fits nothing returns nothing. `search_skills` searches only the Searchable skills of the folder and returns at most 10, so a few skills are never crowded out by the rest of the library; `quiver search` and the panel search the whole library and show the level of each match.
 
 ## Make skills Searchable
 

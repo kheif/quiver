@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -111,5 +112,19 @@ func TestNewAndImportOfferTheSetupOnce(t *testing.T) {
 	out = mustRun(t, "y\n", "new", "loose", "--description", "Not assigned.", "--none")
 	if strings.Contains(out, "Set up search") {
 		t.Errorf("offered after --none:\n%s", out)
+	}
+}
+
+// import offers the setup too, once, after it made a skill Searchable.
+func TestImportOffersTheSetup(t *testing.T) {
+	f := listEnv(t)
+	setupHost(t)
+	asTerminal(t)
+	dir := importProject(t, f)
+	t.Chdir(dir)
+	out := mustRun(t, "\nn\n\nn\n", "import", filepath.Join(dir, ".claude", "skills", "review"))
+	wantOut(t, out, "made it Searchable in this project", "Set up search by meaning now?")
+	if !library.LoadEngine().Offered {
+		t.Error("the offer was not recorded")
 	}
 }
