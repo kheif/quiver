@@ -22,6 +22,12 @@ git push origin v1.0.1
 
 Tags are annotated (`-a`), like every earlier release tag. The Release workflow refuses a lightweight tag, and waits for the CI run of the tagged commit and stops unless it succeeded, so tag a commit that is already on `main` and green. Then watch the Release workflow: `gh run watch`.
 
+GoReleaser builds the changelog of the release from the commits. A release whose notes are written by hand keeps them in `docs/release-notes/<tag>.md`; after the workflow has published the release, put them in front of the changelog:
+
+```sh
+gh release edit v1.6.0 --notes "$(cat docs/release-notes/v1.6.0.md; echo; gh release view v1.6.0 --json body --jq .body)"
+```
+
 ## The first npm release (once)
 
 npm trusted publishing is set up per package, on the package's page, so the packages must exist first. The first version is published by hand from your machine, with your npm login and 2FA. No npm token goes into CI.
