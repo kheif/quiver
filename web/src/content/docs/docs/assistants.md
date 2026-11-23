@@ -58,10 +58,6 @@ See [Always-on skills](/docs/concepts/always-on/) for how always-on skills reach
 
 ### Finding Searchable skills
 
-:::note[Next release]
-The search cue ships after v1.5.0.
-:::
-
 A Searchable skill is not listed, so the assistant has to be told that such skills exist and when to look for one. Quiver adds a short cue for that, without any name or description, whenever the folder has a Searchable skill:
 
 | Assistant | Gets the cue from | Finding Searchable skills |

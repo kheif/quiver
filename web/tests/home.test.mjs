@@ -79,7 +79,7 @@ test('assistants and releases come from the data files', { skip }, () => {
 	const assistants = JSON.parse(readFileSync(new URL('../src/data/assistants.json', import.meta.url), 'utf8'));
 	for (const a of assistants) assert.ok(tiles.includes(a.name), `no ${a.name}`);
 	const open = text(part('id="open"'));
-	for (const tag of ['v1.5.0', 'v1.4.0', 'v1.3.0', 'v1.2.0']) assert.ok(open.includes(tag), `no ${tag}`);
+	for (const tag of ['v1.6.1', 'v1.6.0', 'v1.5.0', 'v1.4.0']) assert.ok(open.includes(tag), `no ${tag}`);
 	assert.ok(!open.includes('v1.1.0'), 'more than the latest four releases');
 	assert.equal((part('id="open"').match(/<em[ >]/g) ?? []).length, 4, 'a release has no summary');
 });

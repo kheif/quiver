@@ -43,7 +43,7 @@ test('every skill that can be always on has a text to show', () => {
 test('site.ts lists the releases newest first', () => {
 	const site = readFileSync(new URL('../src/data/site.ts', import.meta.url), 'utf8');
 	const tags = [...site.matchAll(/tag: '(v[\d.]+)'/g)].map((m) => m[1]);
-	assert.deepEqual(tags, ['v1.5.0', 'v1.4.0', 'v1.3.0', 'v1.2.0', 'v1.1.0', 'v1.0.0']);
+	assert.deepEqual(tags, ['v1.6.1', 'v1.6.0', 'v1.5.0', 'v1.4.0', 'v1.3.0', 'v1.2.0', 'v1.1.0', 'v1.0.0']);
 	assert.equal((site.match(/summary: '/g) ?? []).length, tags.length, 'a release has no summary');
 	assert.ok(existsSync(new URL('../src/data/site.ts', import.meta.url)));
 });

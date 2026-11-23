@@ -27,10 +27,6 @@ The skills themselves come from the session-start hook: the always-on skills in 
 | `update_skill` | `id`, any of `description`, `body`, `files` (an empty content deletes the file) | Changes a local skill and commits it as `update <name> (via MCP)`. Other frontmatter fields are kept. Source skills are read-only. It changes only skills served in the session's project, and never an always-on or Searchable skill: change those with `quiver edit`, or make a Searchable skill listed with `quiver add <id>` first. |
 | `search_skills` | `query` | Searches the skills that are [Searchable](/docs/guides/finding-skills/) in this project, ranked by words (and by meaning with the `local` engine), and returns at most 10, with `more` for the matches left out. Every match is assigned here (`assigned` is true, `scope` is `project` or `global`); the assistant loads the one that fits with `get_skill`. Listed skills and skills that are not assigned are not searched. |
 
-:::note[Next release]
-`search_skills` searches only the Searchable skills of the folder and returns at most 10 matches, ranked by words, or by words and meaning when the `local` engine is set up. Before v1.6 it searched the whole library, returned up to 50 matches by the text of the ID, name and description, and marked each match as assigned here or not. Skills that are listed are already in the assistant's list, and skills that are not assigned are not your choice, so the tool no longer returns them.
-:::
-
 ## Prompts
 
 Every served skill is also an MCP prompt, named by its ID. In Claude Code it appears as `/quiver:<id>`. Text after the command is passed to the skill as the task.

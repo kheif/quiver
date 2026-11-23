@@ -51,10 +51,6 @@ An assistant cannot change an always-on skill through `update_skill`. Change it 
 
 ## Searchable skills
 
-:::note[Next release]
-Searchable skills are on the main branch and ship after v1.5.0.
-:::
-
 A skill that is only needed when its topic comes up, such as a style guide for Slack messages, should cost nothing until then. Make it Searchable. The skills you create with `quiver new` and import with `quiver import` are Searchable from the start; a skill the assistant creates with `create_skill` is on demand until you decide otherwise, and a fork takes the level of the original:
 
 ```sh

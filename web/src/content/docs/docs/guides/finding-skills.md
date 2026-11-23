@@ -1,15 +1,7 @@
 ---
 title: Finding skills
 description: Keep skills out of the session-start list and let the assistant find them by searching, with the Searchable level.
-sidebar:
-  badge:
-    text: Next
-    variant: default
 ---
-
-:::note[Next release]
-The Searchable level is on the main branch and ships after v1.5.0.
-:::
 
 Listed skills cost tokens in every session: each one adds its ID and description to the text the assistant starts with. A skill that is needed only when its topic comes up, such as a style guide for Slack messages or a guide to writing like a person, should cost nothing until then. Make it **Searchable**.
 
@@ -62,7 +54,7 @@ quiver status       # the Searchable skills of this folder
 
 ## What a listing costs
 
-Every listed skill adds a line (its ID and description) to the text that starts each session. `quiver status` says how much: how many skills are listed, the size of the listing in characters and in estimated tokens (characters divided by four), the always-on skills counted apart because their whole text is loaded, and how many skills are Searchable, which add nothing. `quiver status -v` lists the ten listed skills with the longest descriptions, each with the command that makes it Searchable. The panel's Skills header shows the same count for the project it manages, and the detail of a Searchable skill says that it costs nothing in the listing. The numbers inform; Quiver never refuses an assignment or trims the listing.
+Every listed skill adds a line (its ID and description) to the text that starts each session. `quiver status` says how much: how many skills are listed, the size of the listing in characters and in estimated tokens (characters divided by four), the always-on skills counted apart because their whole text is loaded, and how many skills are Searchable, which add nothing. `quiver status -v` lists the ten listed skills with the longest descriptions, each with the command that makes it Searchable. The panel's Skills header shows the same count for the project it manages, and the detail of a Searchable skill says that it costs nothing in the listing. The numbers inform; Quiver never refuses an assignment or trims the listing. A list of Searchable skills in the output of `quiver status` and `quiver add` names the first ten and says how many more there are; `-v` names them all.
 
 When the library has skills that are at no level in a folder and the folder has no Searchable skill, `quiver status` adds a line: `search_skills` finds only Searchable skills, where v1.5 searched the whole library, so those skills are not found. It names the source with the most of them and the command that makes them Searchable. The line goes away with the first Searchable skill.
 

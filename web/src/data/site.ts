@@ -21,11 +21,21 @@ export function url(path = '/'): string {
  * Assistants supported on the main branch but not yet in the latest release.
  * The home page's assistant tiles mark them; empty the set after the next release.
  */
-export const latestRelease = 'v1.5.0';
+export const latestRelease = 'v1.6.1';
 export const unreleased = new Set<string>([]);
 
 /** Every release, newest first. The home page shows the latest four. */
 export const releases: { tag: string; date: string; summary?: string }[] = [
+	{
+		tag: 'v1.6.1',
+		date: '23 November 2026',
+		summary: 'quiver status and quiver add name the first ten Searchable skills instead of hundreds',
+	},
+	{
+		tag: 'v1.6.0',
+		date: '23 November 2026',
+		summary: 'a Searchable level that keeps skills out of the session-start list, search by words or by meaning with a small model inside Quiver, quiver status shows what the list costs',
+	},
 	{
 		tag: 'v1.5.0',
 		date: '19 November 2026',

@@ -22,10 +22,6 @@ A skill is a folder with a `SKILL.md`, or a markdown file of any name whose fron
 
 For each skill, `quiver import` asks where to assign it, and asks for a new name if the name is taken. An imported skill is your own, so it is made Searchable there: not listed at session start, found by the assistant when it searches. A skill that is already assigned in that scope keeps its level, and `quiver add <id>` lists a skill instead.
 
-:::note[Next release]
-Importing skills as Searchable ships after v1.5.0. In v1.5.0 `quiver import` assigns them on demand.
-:::
-
 | Flag | Effect |
 | --- | --- |
 | `--global` | Make every folder the default instead of the project. |

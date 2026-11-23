@@ -34,10 +34,6 @@ Added source "anthropic" with 19 skills:
 Note: skills give instructions to your assistant and may contain scripts. Read them with quiver show <id> before you assign them.
 ```
 
-:::note[Next release]
-In a terminal, `quiver source add` then asks once: `Make the 19 skills searchable in every folder?` The default is no, and `--searchable` answers yes. The skills become [Searchable](/docs/concepts/assignments/#searchable-skills), and the output prints the command that undoes it, `quiver remove --source anthropic --global`. Before v1.6 nothing is assigned.
-:::
-
 Without a yes, nothing is assigned yet. Read a skill, then assign it:
 
 ```sh

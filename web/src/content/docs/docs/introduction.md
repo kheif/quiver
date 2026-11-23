@@ -25,9 +25,9 @@ Agent skills are instruction files that teach an assistant how your work is done
 ## How it fits together
 
 1. **Library.** You write skills, import the ones you have, or add a git repository of skills.
-2. **Assignments.** You put each skill on a layer: global for you, or one project, and optionally always on. Assignments live in your `~/.quiver`, not in the project.
+2. **Assignments.** You put each skill on a layer: global for you, or one project, and at one of three levels: *Searchable* (not listed, the assistant finds it by searching), *On demand* (listed) or *Always on*. Assignments live in your `~/.quiver`, not in the project.
 3. **MCP server.** `quiver install` sets Quiver up for every assistant it finds. When a session starts, the server finds the project of its folder and serves its skills.
-4. **The assistant decides.** The server tells the assistant each skill's ID and description. When a skill fits the task, the assistant loads it with the `get_skill` tool. Always-on skills are there from the start.
+4. **The assistant decides.** The server tells the assistant each listed skill's ID and description. When a skill fits the task, the assistant loads it with the `get_skill` tool. A Searchable skill is not listed: the assistant finds it with `search_skills` when the topic calls for it. Always-on skills are there from the start.
 
 Read [How MCP delivery works](/docs/concepts/mcp-delivery/) for the details.
 
